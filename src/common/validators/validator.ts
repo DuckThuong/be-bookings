@@ -1,4 +1,4 @@
-import { emailRegex, phoneRegex } from '../../assests/regexs/regex';
+import { emailRegex, phoneRegex } from '../../assets/regexs/regex';
 
 export const isEmail = (email: string): boolean => {
   return emailRegex.test(email);

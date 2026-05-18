@@ -6,7 +6,7 @@ export class JwtPayload {
   username: string;
   email: string;
   fullName?: string;
-  dateOfBirth?: Date;
+  dateOfBirth?: string;
   status: UserStatus;
   role: UserRole;
   isEmailVerified: boolean;

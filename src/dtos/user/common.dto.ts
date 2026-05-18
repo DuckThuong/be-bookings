@@ -9,3 +9,17 @@ export enum UserRole {
   OWNER = 1,
   USER = 2,
 }
+
+export class UserDecoratorDtoResponse {
+  id: number;
+  userCode: string;
+  username: string;
+  email: string;
+  password: string;
+  phone?: string;
+  fullName?: string;
+  dateOfBirth?: string;
+  status: UserStatus;
+  role: UserRole;
+  isEmailVerified: boolean;
+}
