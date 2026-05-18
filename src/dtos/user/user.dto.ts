@@ -11,9 +11,11 @@ export class LoginPayloadDto {
     type: String,
   })
   phoneNumber: string;
+
+  idToken: string;
 }
 
-export class SignInPayloadDto {
+export class SignUpPayloadDto {
   @ApiProperty({
     example: 'John Doe',
     description: 'Tên đầy đủ của người dùng',
@@ -84,4 +86,10 @@ export class AuthResponseDto {
     type: String,
   })
   accessToken: string;
+}
+
+export class FirebaseLoginDto {
+  example: string;
+  /** Firebase ID token (from client) */
+  idToken: string;
 }

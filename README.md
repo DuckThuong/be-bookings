@@ -96,3 +96,27 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Firebase Phone Auth Integration
+
+This project includes a server-side integration to accept Firebase ID tokens (phone authentication).
+
+Setup:
+
+1. Install the admin SDK:
+
+```bash
+$ npm install firebase-admin
+```
+
+2. Provide service account credentials via one of the environment variables:
+
+- `FIREBASE_SERVICE_ACCOUNT` — JSON string of the service account
+- `FIREBASE_SERVICE_ACCOUNT_PATH` — path to the service account JSON file
+
+3. From the client, sign in with Firebase Phone Auth and send the ID token to the backend endpoint:
+
+- POST `/auth/firebase-login` with body `{ "idToken": "<FIREBASE_ID_TOKEN>" }`
+
+The backend will verify the token using `firebase-admin`, create the user (if missing), and return the application JWT.
+

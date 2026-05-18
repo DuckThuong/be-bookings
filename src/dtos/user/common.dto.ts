@@ -13,10 +13,9 @@ export enum UserRole {
 export class UserDecoratorDtoResponse {
   id: number;
   userCode: string;
-  username: string;
+  phone: string;
   email: string;
   password: string;
-  phone?: string;
   fullName?: string;
   dateOfBirth?: string;
   status: UserStatus;
