@@ -12,7 +12,14 @@ export class LoginPayloadDto {
   })
   phoneNumber: string;
 
-  idToken: string;
+  @ApiProperty({
+    example: '',
+    description: 'Mật khẩu của người dùng',
+    required: true,
+    nullable: false,
+    type: String,
+  })
+  password: string;
 }
 
 export class SignUpPayloadDto {
@@ -25,7 +32,7 @@ export class SignUpPayloadDto {
     nullable: false,
     type: String,
   })
-  fullName: string;
+  name: string;
 
   @ApiProperty({
     example: '0812345678',
@@ -36,7 +43,25 @@ export class SignUpPayloadDto {
     nullable: false,
     type: String,
   })
-  phoneNumber: string;
+  phone: string;
+
+  @ApiProperty({
+    example: '',
+    description: 'Mật khẩu của người dùng',
+    required: true,
+    nullable: false,
+    type: String,
+  })
+  password: string;
+
+  @ApiProperty({
+    example: '',
+    description: 'Mật khẩu của người dùng',
+    required: true,
+    nullable: false,
+    type: String,
+  })
+  confirm_password: string;
 
   @ApiProperty({
     example: 1,
@@ -47,7 +72,7 @@ export class SignUpPayloadDto {
     nullable: false,
     type: Number,
   })
-  submitRule: number;
+  acceptRole: number;
 
   @ApiProperty({
     example: 'john.doe@example.com',
@@ -63,7 +88,7 @@ export class SignUpPayloadDto {
     required: true,
     type: String,
   })
-  dob: string;
+  dateOfBirth: string;
 
   @ApiProperty({
     example: 1,
@@ -88,8 +113,3 @@ export class AuthResponseDto {
   accessToken: string;
 }
 
-export class FirebaseLoginDto {
-  example: string;
-  /** Firebase ID token (from client) */
-  idToken: string;
-}

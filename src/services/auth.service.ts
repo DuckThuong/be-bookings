@@ -1,25 +1,42 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ErrorLoginMessage } from '../assets/messages/auth.message';
+import {
+  ErrorLoginMessage,
+  ErrorRegisterMessage,
+} from '../assets/messages/auth.message';
 import { CommonErrorMessage } from '../assets/messages/common.message';
-import { validString } from '../common/helpers/common.helper';
+import {
+  equalString,
+  randomString,
+  validString,
+} from '../common/helpers/common.helper';
 import { JwtPayload } from '../dtos/jwt.dto';
-import { AuthResponseDto, LoginPayloadDto } from '../dtos/user/user.dto';
+import {
+  AuthResponseDto,
+  LoginPayloadDto,
+  SignUpPayloadDto,
+} from '../dtos/user/user.dto';
 import { AuthRepository } from '../repositories/auth.repository';
-import { FirebaseService } from './firebase.service';
+import { UserRole, UserStatus } from '../dtos/user/common.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private authRepository: AuthRepository,
-    private firebaseService?: FirebaseService,
   ) {}
 
   public async doLogin(payload: LoginPayloadDto): Promise<AuthResponseDto> {
     if (!validString(payload.phoneNumber)) {
       throw new HttpException(
         ErrorLoginMessage.PHONE_NOT_VALID.toString(),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    if (!validString(payload.password)) {
+      throw new HttpException(
+        ErrorLoginMessage.PASSWORD_EMPTY.toString(),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -33,9 +50,9 @@ export class AuthService {
       );
     }
 
-    if (!user.isEmailVerified) {
+    if (!equalString(user.password, payload.password)) {
       throw new HttpException(
-        ErrorLoginMessage.USER_NOT_VERIFIED.toString(),
+        ErrorLoginMessage.PASSWORD_INCORRECT.toString(),
         HttpStatus.UNAUTHORIZED,
       );
     }
@@ -62,14 +79,66 @@ export class AuthService {
     }
   }
 
-  // public async doSignUp(payload: SignUpPayloadDto): Promise<AuthResponseDto> {
-  //   try {
-  //   } catch (error) {
-  //     console.log('error: ', error);
-  //     throw new HttpException(
-  //       CommonErrorMessage.CATCH_ERROR.toString(),
-  //       HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   }
-  // }
+  public async doSignUp(payload: SignUpPayloadDto): Promise<AuthResponseDto> {
+    if (!validString(payload.phone)) {
+      throw new HttpException(
+        ErrorLoginMessage.PHONE_NOT_VALID.toString(),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    if (!validString(payload.password)) {
+      throw new HttpException(
+        ErrorLoginMessage.PASSWORD_EMPTY.toString(),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    const user = await this.authRepository.findByPhone(payload.phone);
+
+    if (user) {
+      throw new HttpException(
+        ErrorRegisterMessage.USER_ALREADY_EXISTS.toString(),
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (!equalString(payload.password, payload.confirm_password)) {
+      throw new HttpException(
+        ErrorRegisterMessage.PASSWORD_NOT_VALID.toString(),
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    try {
+      const userRegis = await this.authRepository.createUser({
+        userCode: randomString(),
+        email: payload.email,
+        isEmailVerified: true,
+        password: payload.password,
+        phone: payload.phone,
+        role: UserRole.USER,
+        status: UserStatus.ACTIVE,
+      });
+
+      const jwtPayload: JwtPayload = {
+        sub: userRegis.id,
+        userCode: userRegis.userCode,
+        phone: userRegis.phone,
+        email: userRegis.email,
+        status: userRegis.status,
+        role: userRegis.role,
+        isEmailVerified: userRegis.isEmailVerified,
+      };
+
+      return {
+        accessToken: this.jwtService.sign(jwtPayload),
+      };
+    } catch (error) {
+      console.log('error: ', error);
+      throw new HttpException(
+        CommonErrorMessage.CATCH_ERROR.toString(),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

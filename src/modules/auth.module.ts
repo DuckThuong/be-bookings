@@ -8,14 +8,12 @@ import { AuthController } from '../controllers/auth.controller';
 import { AuthService } from '../services/auth.service';
 import { AuthRepository } from '../repositories/auth.repository';
 import { TbBasicUser } from '../entities/user/basic-user.entity';
-import { FirebaseModule } from './firebase.module';
 
 @Module({
   imports: [
     ConfigModule,
     PassportModule,
     TypeOrmModule.forFeature([TbBasicUser]),
-    FirebaseModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
