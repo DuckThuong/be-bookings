@@ -5,6 +5,7 @@ import { TbInfoUser } from './entities/user/info-user.entity';
 import { TbBasicUser } from './entities/user/basic-user.entity';
 import { AuthModule } from './modules/auth.module';
 import { MasterDataModule } from './modules/master-data.module';
+import { UserModule } from './modules/user.module';
 import { TbMasterData } from './entities/master-data.entity';
 
 @Module({
@@ -41,6 +42,7 @@ import { TbMasterData } from './entities/master-data.entity';
 
     AuthModule,
     MasterDataModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],

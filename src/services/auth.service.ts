@@ -120,6 +120,13 @@ export class AuthService {
         status: UserStatus.ACTIVE,
       });
 
+      await this.authRepository.createInfoUser({
+        userName: payload.name,
+        userDob: payload.dateOfBirth,
+        userGender: payload.gender,
+        avatar: '',
+      });
+
       const jwtPayload: JwtPayload = {
         sub: userRegis.id,
         userCode: userRegis.userCode,
