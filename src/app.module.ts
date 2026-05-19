@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TbInfoUser } from './entities/user/info-user.entity';
 import { TbBasicUser } from './entities/user/basic-user.entity';
 import { AuthModule } from './modules/auth.module';
+import { MasterDataModule } from './modules/master-data.module';
+import { TbMasterData } from './entities/master-data.entity';
 
 @Module({
   imports: [
@@ -31,13 +33,14 @@ import { AuthModule } from './modules/auth.module';
         extra: {
           connectTimeout: 60000,
         },
-        entities: [TbInfoUser, TbBasicUser],
-        migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+        entities: [TbInfoUser, TbBasicUser, TbMasterData],
+        migrations: [__dirname + '/migrations/**/*.migration.{ts,js}'],
         migrationsRun: false,
       }),
     }),
 
     AuthModule,
+    MasterDataModule,
   ],
   controllers: [],
   providers: [],

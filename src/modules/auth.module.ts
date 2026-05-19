@@ -27,6 +27,6 @@ import { TbBasicUser } from '../entities/user/basic-user.entity';
   ],
   providers: [AuthService, JwtStrategy, AuthRepository],
   controllers: [AuthController],
-  exports: [AuthService, JwtModule, AuthRepository],
+  exports: [AuthService, JwtModule, AuthRepository, JwtStrategy],
 })
 export class AuthModule {}
