@@ -4,6 +4,7 @@ import { TbBasicUser } from '../entities/user/basic-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TbInfoUser } from '../entities/user/info-user.entity';
 import {
+  AdminUpdateUserPayloadDto,
   UpdateUserPayloadDto,
   UserFilterPayloadDto,
   UserInformationResponseDto,
@@ -122,6 +123,20 @@ export class UserRepository {
     userId: number,
     payload: UpdateUserPayloadDto,
   ): Promise<UserInformationResponseDto | null> {
+    return this.updateUser(userId, payload);
+  }
+
+  public async updateUserByAdmin(
+    userId: number,
+    payload: AdminUpdateUserPayloadDto,
+  ): Promise<UserInformationResponseDto | null> {
+    return this.updateUser(userId, payload);
+  }
+
+  private async updateUser(
+    userId: number,
+    payload: UpdateUserPayloadDto | AdminUpdateUserPayloadDto,
+  ): Promise<UserInformationResponseDto | null> {
     const basic = await this.repo.findOne({ where: { id: userId } });
     if (!basic) {
       return null;
@@ -140,6 +155,17 @@ export class UserRepository {
     }
     if (payload.userEmail !== undefined) {
       basicUpdate.email = payload.userEmail;
+    }
+
+    const adminPayload = payload as AdminUpdateUserPayloadDto;
+    if (adminPayload.userRole !== undefined) {
+      basicUpdate.role = adminPayload.userRole;
+    }
+    if (adminPayload.userStatus !== undefined) {
+      basicUpdate.status = adminPayload.userStatus;
+    }
+    if (adminPayload.userIsEmailVerified !== undefined) {
+      basicUpdate.isEmailVerified = adminPayload.userIsEmailVerified;
     }
 
     const infoUpdate: Partial<TbInfoUser> = {};

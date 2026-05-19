@@ -3,7 +3,9 @@ import { ErrorRegisterMessage } from '../assets/messages/auth.message';
 import { CommonErrorMessage } from '../assets/messages/common.message';
 import { ErrorUserMessage } from '../assets/messages/user.message';
 import { validString } from '../common/helpers/common.helper';
+import { UserRole, UserStatus } from '../dtos/user/common.dto';
 import {
+  AdminUpdateUserPayloadDto,
   UpdateUserPayloadDto,
   UserFilterPayloadDto,
   UserInformationResponseDto,
@@ -41,6 +43,28 @@ export class UserService {
     userId: number,
     payload: UpdateUserPayloadDto,
   ): Promise<UserInformationResponseDto> {
+    this.validateProfilePayload(payload);
+    return this.persistUserUpdate(userId, payload, () =>
+      this.userRepository.updateUserInformation(userId, payload),
+    );
+  }
+
+  public async adminUpdateUser(
+    adminId: number,
+    targetUserId: number,
+    payload: AdminUpdateUserPayloadDto,
+  ): Promise<UserInformationResponseDto> {
+    this.validateProfilePayload(payload);
+    this.validateAdminPayload(adminId, targetUserId, payload);
+
+    return this.persistUserUpdate(targetUserId, payload, () =>
+      this.userRepository.updateUserByAdmin(targetUserId, payload),
+    );
+  }
+
+  private validateProfilePayload(
+    payload: UpdateUserPayloadDto | AdminUpdateUserPayloadDto,
+  ): void {
     if (!this.hasUpdateFields(payload)) {
       throw new HttpException(
         ErrorUserMessage.PAYLOAD_EMPTY.toString(),
@@ -85,7 +109,63 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
 
+  private validateAdminPayload(
+    adminId: number,
+    targetUserId: number,
+    payload: AdminUpdateUserPayloadDto,
+  ): void {
+    if (
+      payload.userRole !== undefined &&
+      ![UserRole.ADMIN, UserRole.OWNER, UserRole.USER].includes(payload.userRole)
+    ) {
+      throw new HttpException(
+        ErrorUserMessage.USER_ROLE_NOT_VALID.toString(),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (
+      payload.userStatus !== undefined &&
+      ![UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED].includes(
+        payload.userStatus,
+      )
+    ) {
+      throw new HttpException(
+        ErrorUserMessage.USER_STATUS_NOT_VALID.toString(),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (adminId === targetUserId) {
+      if (
+        payload.userRole !== undefined &&
+        payload.userRole !== UserRole.ADMIN
+      ) {
+        throw new HttpException(
+          ErrorUserMessage.ADMIN_CANNOT_CHANGE_OWN_ROLE.toString(),
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (
+        payload.userStatus !== undefined &&
+        payload.userStatus !== UserStatus.ACTIVE
+      ) {
+        throw new HttpException(
+          ErrorUserMessage.ADMIN_CANNOT_DEACTIVATE_SELF.toString(),
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+  }
+
+  private async persistUserUpdate(
+    userId: number,
+    payload: UpdateUserPayloadDto | AdminUpdateUserPayloadDto,
+    updateFn: () => Promise<UserInformationResponseDto | null>,
+  ): Promise<UserInformationResponseDto> {
     try {
       if (payload.userPhone) {
         const phoneExists =
@@ -115,10 +195,7 @@ export class UserService {
         }
       }
 
-      const user = await this.userRepository.updateUserInformation(
-        userId,
-        payload,
-      );
+      const user = await updateFn();
       if (!user) {
         throw new HttpException(
           CommonErrorMessage.DATA_NOT_FOUND.toString(),
@@ -138,7 +215,9 @@ export class UserService {
     }
   }
 
-  private hasUpdateFields(payload: UpdateUserPayloadDto): boolean {
+  private hasUpdateFields(
+    payload: UpdateUserPayloadDto | AdminUpdateUserPayloadDto,
+  ): boolean {
     return Object.values(payload).some((value) => value !== undefined);
   }
 }

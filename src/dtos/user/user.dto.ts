@@ -260,6 +260,34 @@ export class UpdateUserPayloadDto {
   userEmail?: string;
 }
 
+export class AdminUpdateUserPayloadDto extends UpdateUserPayloadDto {
+  @ApiProperty({
+    example: UserRole.USER,
+    description: 'Vai trò: 0 Admin, 1 Owner, 2 User',
+    required: false,
+    enum: UserRole,
+    type: Number,
+  })
+  userRole?: UserRole;
+
+  @ApiProperty({
+    example: UserStatus.ACTIVE,
+    description: 'Trạng thái: 0 Active, 1 Inactive, 2 Blocked',
+    required: false,
+    enum: UserStatus,
+    type: Number,
+  })
+  userStatus?: UserStatus;
+
+  @ApiProperty({
+    example: true,
+    description: 'Xác thực email',
+    required: false,
+    type: Boolean,
+  })
+  userIsEmailVerified?: boolean;
+}
+
 export class UserFilterPayloadDto {
   @ApiProperty({
     example: 1,
