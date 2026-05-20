@@ -18,6 +18,7 @@ import { TbCompany } from './entities/company/company.entity';
 import { TbTicket } from './entities/ticket.entity';
 import { TbRoad } from './entities/road.entity';
 import { TbSeat } from './entities/seat.entity';
+import { AppController } from "./app.controller";
 
 @Module({
   imports: [
@@ -70,7 +71,7 @@ import { TbSeat } from './entities/seat.entity';
     SalesModule,
     CustomerModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}
