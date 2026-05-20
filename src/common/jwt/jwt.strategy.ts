@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayload } from '../../dtos/jwt/jwt.dto';
-import { UserDecoratorDtoResponse } from '../../dtos/user/user.dto';
+import { JwtPayload } from '../../dtos/jwt.dto';
+import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -18,10 +18,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: payload.sub,
       userCode: payload.userCode,
-      username: payload.username,
-      email: payload.email,
+      phone: payload.phone,
       password: '',
-      fullName: payload.fullName,
+      email: payload.email,
       dateOfBirth: payload.dateOfBirth,
       status: payload.status,
       role: payload.role,

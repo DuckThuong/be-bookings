@@ -3,10 +3,9 @@ import { UserRole, UserStatus } from './user/common.dto';
 export class JwtPayload {
   sub: number;
   userCode: string;
-  username: string;
+  phone: string;
   email: string;
-  fullName?: string;
-  dateOfBirth?: Date;
+  dateOfBirth?: string;
   status: UserStatus;
   role: UserRole;
   isEmailVerified: boolean;
