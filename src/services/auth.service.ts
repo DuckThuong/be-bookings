@@ -12,6 +12,7 @@ import {
 import { CommonErrorMessage } from '../assets/messages/common.message';
 import {
   equalString,
+  generateEntityCode,
   generateOtp,
   randomString,
   validString,
@@ -130,7 +131,7 @@ export class AuthService {
     }
     try {
       const userRegis = await this.authRepository.createUser({
-        userCode: randomString(),
+        userCode: generateEntityCode('USR'),
         email: payload.email,
         isEmailVerified: true,
         password: payload.password,
