@@ -7,6 +7,14 @@ import { AuthModule } from './modules/auth.module';
 import { MasterDataModule } from './modules/master-data.module';
 import { UserModule } from './modules/user.module';
 import { TbMasterData } from './entities/master-data.entity';
+import { TbCompanyTrip } from './entities/company/company-trip.entity';
+import { TbVerhical } from './entities/verhical.entity';
+import { TbTrip } from './entities/trip.entity';
+import { TbDriver } from './entities/driver.entity';
+import { TbCompany } from './entities/company/company.entity';
+import { TbTicket } from './entities/ticket.entity';
+import { TbRoad } from './entities/road.entity';
+import { TbSeat } from './entities/seat.entity';
 
 @Module({
   imports: [
@@ -34,7 +42,19 @@ import { TbMasterData } from './entities/master-data.entity';
         extra: {
           connectTimeout: 60000,
         },
-        entities: [TbInfoUser, TbBasicUser, TbMasterData],
+        entities: [
+          TbInfoUser,
+          TbBasicUser,
+          TbMasterData,
+          TbCompany,
+          TbCompanyTrip,
+          TbDriver,
+          TbSeat,
+          TbTrip,
+          TbVerhical,
+          TbRoad,
+          TbTicket,
+        ],
         migrations: [__dirname + '/migrations/**/*.migration.{ts,js}'],
         migrationsRun: false,
       }),
