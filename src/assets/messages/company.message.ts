@@ -17,4 +17,6 @@ export class CompanyErrorMessage {
   static readonly CODE_CONFLICT = 'Mã đã tồn tại';
   static readonly INVALID_ROAD_ID = 'ID tuyến đường không hợp lệ';
   static readonly INVALID_REFERENCE = 'Tham chiếu dữ liệu không hợp lệ';
+  static readonly TICKET_NOT_FOUND = 'Không tìm thấy vé';
+  static readonly SEAT_NOT_BELONG_VEHICLE = 'Ghế không thuộc phương tiện này';
 }

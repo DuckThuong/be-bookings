@@ -11,4 +11,5 @@ export const CODE_PREFIX = {
   DRIVER: 'DRV',
   COMPANY_TRIP: 'CT',
   SEAT: 'SEA',
+  TICKET: 'TKT',
 } as const;

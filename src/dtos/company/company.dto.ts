@@ -30,6 +30,9 @@ export class UpdateCompanyDto {
 }
 
 export class CreateRoadDto {
+  @ApiProperty({ example: 1, description: 'ID nhà xe' })
+  companyId: number;
+
   @ApiProperty({ example: 'Hà Nội - Đà Nẵng' })
   name: string;
 
@@ -110,6 +113,9 @@ export class UpdateTripDto {
 }
 
 export class CreateVehicleDto {
+  @ApiProperty({ example: 1, description: 'ID nhà xe' })
+  companyId: number;
+
   @ApiProperty({ example: '51B-12345', description: 'Biển số xe' })
   code: string;
 
@@ -156,6 +162,9 @@ export class UpdateVehicleDto {
 }
 
 export class CreateDriverDto {
+  @ApiProperty({ example: 1, description: 'ID nhà xe' })
+  companyId: number;
+
   @ApiProperty({ example: 'Nguyễn Văn A' })
   name: string;
 
@@ -202,6 +211,9 @@ export class UpdateDriverDto {
 }
 
 export class CreateCompanyTripDto {
+  @ApiProperty({ example: 1, description: 'ID nhà xe' })
+  companyId: number;
+
   @ApiProperty({ example: 1, description: 'ID chuyến mẫu (tb_trip)' })
   tripId: number;
 
@@ -248,6 +260,12 @@ export class UpdateCompanyTripDto {
 }
 
 export class CreateSeatDto {
+  @ApiProperty({ example: 1, description: 'ID nhà xe (kiểm tra quyền)' })
+  companyId: number;
+
+  @ApiProperty({ example: 1, description: 'ID phương tiện' })
+  verhicalId: number;
+
   @ApiProperty({ example: 'A1' })
   name: string;
 
@@ -264,9 +282,32 @@ export class CreateSeatDto {
   description?: string;
 }
 
+export class CreateSeatItemDto {
+  @ApiProperty({ example: 'A1' })
+  name: string;
+
+  @ApiProperty({ example: '1-1' })
+  index: string;
+
+  @ApiProperty({ example: 'STANDARD' })
+  type: string;
+
+  @ApiPropertyOptional({ enum: EntityStatus })
+  status?: string;
+
+  @ApiPropertyOptional()
+  description?: string;
+}
+
 export class CreateSeatsBatchDto {
-  @ApiProperty({ type: [CreateSeatDto] })
-  seats: CreateSeatDto[];
+  @ApiProperty({ example: 1 })
+  companyId: number;
+
+  @ApiProperty({ example: 1 })
+  verhicalId: number;
+
+  @ApiProperty({ type: [CreateSeatItemDto] })
+  seats: CreateSeatItemDto[];
 }
 
 export class CompanyOverviewDto {

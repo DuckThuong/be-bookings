@@ -1,0 +1,92 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CompanyErrorMessage } from '../assets/messages/company.message';
+import { TbDriver } from '../entities/driver.entity';
+import { DriverRepository } from '../repositories/driver.repository';
+import {
+  CODE_PREFIX,
+  EntityStatus,
+} from '../assets/constants/company.constants';
+import { generateEntityCode } from '../common/helpers/common.helper';
+import { CreateDriverDto, UpdateDriverDto } from '../dtos/company/company.dto';
+import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
+import { CompanyAccessService } from './company-access.service';
+
+@Injectable()
+export class DriverService {
+  constructor(
+    private readonly driverRepository: DriverRepository,
+    private readonly companyAccess: CompanyAccessService,
+  ) {}
+
+  async create(
+    user: UserDecoratorDtoResponse,
+    payload: CreateDriverDto,
+  ): Promise<TbDriver> {
+    await this.companyAccess.assertCompanyAccess(user, payload.companyId);
+    await this.companyAccess.assertVehicleBelongsToCompany(
+      payload.companyId,
+      payload.verhicalId,
+    );
+
+    return this.driverRepository.save({
+      companyId: payload.companyId,
+      verhicalId: payload.verhicalId,
+      code: generateEntityCode(CODE_PREFIX.DRIVER),
+      name: payload.name,
+      license: payload.license,
+      phone: payload.phone,
+      email: payload.email,
+      description: payload.description ?? undefined,
+      status: payload.status ?? EntityStatus.ACTIVE,
+      rate: 0,
+      totalTurn: 0,
+    });
+  }
+
+  async findAll(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+  ): Promise<TbDriver[]> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    return this.driverRepository.findByCompany(companyId);
+  }
+
+  async findOne(
+    user: UserDecoratorDtoResponse,
+    id: number,
+  ): Promise<TbDriver> {
+    const driver = await this.driverRepository.findById(id);
+    if (!driver) {
+      throw new NotFoundException(CompanyErrorMessage.DRIVER_NOT_FOUND);
+    }
+    await this.companyAccess.assertCompanyAccess(user, driver.companyId);
+    return driver;
+  }
+
+  async update(
+    user: UserDecoratorDtoResponse,
+    id: number,
+    payload: UpdateDriverDto,
+  ): Promise<TbDriver> {
+    const driver = await this.findOne(user, id);
+
+    if (payload.verhicalId !== undefined) {
+      await this.companyAccess.assertVehicleBelongsToCompany(
+        driver.companyId,
+        payload.verhicalId,
+      );
+    }
+
+    await this.driverRepository.update(id, payload);
+    return this.findOne(user, id);
+  }
+
+  async remove(
+    user: UserDecoratorDtoResponse,
+    id: number,
+  ): Promise<{ message: string }> {
+    await this.findOne(user, id);
+    await this.driverRepository.update(id, { status: EntityStatus.INACTIVE });
+    return { message: 'Đã vô hiệu hóa tài xế' };
+  }
+}
