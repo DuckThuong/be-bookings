@@ -9,6 +9,7 @@ import {
   UserFilterPayloadDto,
   UserInformationResponseDto,
 } from '../dtos/user/user.dto';
+import { UserRole } from '../dtos/user/common.dto';
 import {
   mapToUserInformationResponse,
   mergeUserInformationList,
@@ -23,6 +24,37 @@ export class UserRepository {
     @InjectRepository(TbInfoUser)
     private readonly infoRepo: Repository<TbInfoUser>,
   ) {}
+
+  public async findUserByUserCode(
+    userCode: string,
+  ): Promise<UserInformationResponseDto | null> {
+    const basic = await this.repo.findOne({ where: { userCode } });
+    if (!basic) {
+      return null;
+    }
+    const info = await this.infoRepo.findOne({ where: { userCode } });
+    if (!info) {
+      return null;
+    }
+    return mapToUserInformationResponse(basic, info);
+  }
+
+  public async findUsersByUserCodes(
+    userCodes: string[],
+  ): Promise<UserInformationResponseDto[]> {
+    if (userCodes.length === 0) {
+      return [];
+    }
+    const basicUsers = await this.repo.find({
+      where: { userCode: In(userCodes), role: UserRole.USER },
+    });
+    return this.loadMergedUsers(basicUsers);
+  }
+
+  public async findAllCustomers(): Promise<UserInformationResponseDto[]> {
+    const basicUsers = await this.repo.find({ where: { role: UserRole.USER } });
+    return this.loadMergedUsers(basicUsers);
+  }
 
   public async findUserById(
     userId: number,

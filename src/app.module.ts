@@ -8,6 +8,7 @@ import { MasterDataModule } from './modules/master-data.module';
 import { UserModule } from './modules/user.module';
 import { CompanyModule } from './modules/company.module';
 import { SalesModule } from './modules/sales.module';
+import { CustomerModule } from './modules/customer.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbCompanyTrip } from './entities/company/company-trip.entity';
 import { TbVerhical } from './entities/verhical.entity';
@@ -67,6 +68,7 @@ import { TbSeat } from './entities/seat.entity';
     UserModule,
     CompanyModule,
     SalesModule,
+    CustomerModule,
   ],
   controllers: [],
   providers: [],

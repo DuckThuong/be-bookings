@@ -13,6 +13,6 @@ import { AuthModule } from './auth.module';
   imports: [TypeOrmModule.forFeature([TbBasicUser, TbInfoUser]), AuthModule],
   providers: [UserService, UserRepository, RolesGuard],
   controllers: [UserController, AdminUserController],
-  exports: [UserService],
+  exports: [UserService, UserRepository],
 })
 export class UserModule {}
