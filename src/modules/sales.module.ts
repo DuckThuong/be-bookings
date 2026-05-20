@@ -86,6 +86,10 @@ import { AuthModule } from './auth.module';
     RefundService,
     SettlementService,
     CompanyStatService,
+    BookingRepository,
+    PaymentRepository,
+    CommissionRepository,
+    TypeOrmModule,
   ],
 })
 export class SalesModule {}
