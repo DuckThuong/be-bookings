@@ -16,6 +16,13 @@ export class TbInfoUser {
   })
   avatar: string;
 
+  @Column('varchar', {
+    comment: 'Mã người dùng',
+    length: 24,
+    unique: true,
+  })
+  userCode: string;
+
   @Column({
     type: 'varchar',
     length: 100,
