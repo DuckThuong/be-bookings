@@ -9,6 +9,12 @@ export class TbRoad {
   })
   id: number;
 
+  @Column({
+    type: 'int',
+    comment: 'ID công ty (tb_company)',
+  })
+  companyId: number;
+
   @Column('varchar', {
     length: 24,
     unique: true,

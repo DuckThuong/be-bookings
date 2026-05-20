@@ -6,8 +6,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('tb_ticket')
-export class TbTicket {
+@Entity('tb_booking')
+export class TbBooking {
   @PrimaryGeneratedColumn('increment', {
     comment: 'Primary key',
     type: 'int',
@@ -18,7 +18,7 @@ export class TbTicket {
   @Column('varchar', {
     length: 24,
     unique: true,
-    comment: 'Mã vé',
+    comment: 'Mã đặt chỗ',
   })
   code: string;
 
@@ -48,11 +48,17 @@ export class TbTicket {
   customerId: string;
 
   @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Trạng thái: PENDING, PAID, CANCELLED, REFUNDED',
+    type: 'json',
+    comment: 'Danh sách ID ghế giữ chỗ (tb_seat.id)',
   })
-  status: string;
+  seatIds: number[];
+
+  @Column({
+    type: 'int',
+    default: 0,
+    comment: 'Số ghế giữ',
+  })
+  totalSeat: number;
 
   @Column({
     type: 'decimal',
@@ -96,31 +102,24 @@ export class TbTicket {
   promoCode: string;
 
   @Column({
-    type: 'int',
-    nullable: true,
-    comment: 'ID đặt chỗ gốc (tb_booking)',
+    type: 'varchar',
+    length: 50,
+    comment: 'Trạng thái: HOLD, EXPIRED, CONVERTED, CANCELLED',
   })
-  bookingId: number;
+  status: string;
+
+  @Column({
+    type: 'datetime',
+    comment: 'Thời điểm hết hạn giữ chỗ',
+  })
+  holdExpiresAt: Date;
 
   @Column({
     type: 'int',
-    default: 0,
-    comment: 'Tổng số ghế',
-  })
-  totalSeat: number;
-
-  @Column({
-    type: 'json',
-    comment: 'Danh sách ID ghế đã chọn (tb_seat.id)',
-  })
-  seatIds: number[];
-
-  @Column({
-    type: 'text',
     nullable: true,
-    comment: 'Mô tả vé',
+    comment: 'ID vé sau khi chuyển đổi (tb_ticket)',
   })
-  description: string;
+  ticketId: number;
 
   @CreateDateColumn({
     name: 'created_at',
