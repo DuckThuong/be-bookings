@@ -102,6 +102,86 @@ export class SignUpPayloadDto {
   gender: number;
 }
 
+export class ForgotPasswordPayloadDto {
+  @ApiProperty({
+    example: 'john.doe@example.com',
+    description: 'Email đã đăng ký',
+    required: true,
+    type: String,
+  })
+  email: string;
+}
+
+export class ResetPasswordPayloadDto {
+  @ApiProperty({
+    example: 'john.doe@example.com',
+    description: 'Email đã đăng ký',
+    required: true,
+    type: String,
+  })
+  email: string;
+
+  @ApiProperty({
+    example: '123456',
+    description: 'Mã OTP nhận qua email',
+    required: true,
+    type: String,
+  })
+  otp: string;
+
+  @ApiProperty({
+    example: 'newPassword123',
+    description: 'Mật khẩu mới',
+    required: true,
+    type: String,
+  })
+  password: string;
+
+  @ApiProperty({
+    example: 'newPassword123',
+    description: 'Xác nhận mật khẩu mới',
+    required: true,
+    type: String,
+  })
+  confirm_password: string;
+}
+
+export class ChangePasswordPayloadDto {
+  @ApiProperty({
+    example: 'oldPassword123',
+    description: 'Mật khẩu hiện tại',
+    required: true,
+    type: String,
+  })
+  oldPassword: string;
+
+  @ApiProperty({
+    example: 'newPassword123',
+    description: 'Mật khẩu mới',
+    required: true,
+    type: String,
+  })
+  password: string;
+
+  @ApiProperty({
+    example: 'newPassword123',
+    description: 'Xác nhận mật khẩu mới',
+    required: true,
+    type: String,
+  })
+  confirm_password: string;
+}
+
+export class MessageResponseDto {
+  @ApiProperty({
+    example: 'Đổi mật khẩu thành công',
+    description: 'Thông báo kết quả',
+    required: true,
+    type: String,
+  })
+  message: string;
+}
+
 export class AuthResponseDto {
   @ApiProperty({
     example:
