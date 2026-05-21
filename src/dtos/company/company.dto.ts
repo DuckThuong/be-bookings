@@ -25,7 +25,9 @@ export class UpdateCompanyDto {
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
 
-  @ApiPropertyOptional({ description: 'Chỉ Admin — mã userCode người đại diện' })
+  @ApiPropertyOptional({
+    description: 'Chỉ Admin — mã userCode người đại diện',
+  })
   userLeadId?: string;
 }
 
@@ -113,9 +115,6 @@ export class UpdateTripDto {
 }
 
 export class CreateVehicleDto {
-  @ApiProperty({ example: 1, description: 'ID nhà xe' })
-  companyId: number;
-
   @ApiProperty({ example: '51B-12345', description: 'Biển số xe' })
   code: string;
 
@@ -162,9 +161,6 @@ export class UpdateVehicleDto {
 }
 
 export class CreateDriverDto {
-  @ApiProperty({ example: 1, description: 'ID nhà xe' })
-  companyId: number;
-
   @ApiProperty({ example: 'Nguyễn Văn A' })
   name: string;
 

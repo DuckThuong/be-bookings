@@ -130,8 +130,9 @@ export class AuthService {
       );
     }
     try {
+      const code = generateEntityCode('USR');
       const userRegis = await this.authRepository.createUser({
-        userCode: generateEntityCode('USR'),
+        userCode: code,
         email: payload.email,
         isEmailVerified: true,
         password: payload.password,
@@ -140,7 +141,10 @@ export class AuthService {
         status: UserStatus.ACTIVE,
       });
 
+      console.log(code);
+
       await this.authRepository.createInfoUser({
+        userCode: code,
         userName: payload.name,
         userDob: payload.dateOfBirth,
         userGender: payload.gender,
