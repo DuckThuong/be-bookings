@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { UserRole, UserStatus } from '../../dtos/user/common.dto';
+import { TbCompany } from "../company/company.entity";
 
 @Entity('tb_basic_user')
 export class TbBasicUser {

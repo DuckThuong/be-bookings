@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { TbTrip } from '../entities/trip.entity';
 import { TripRepository } from '../repositories/trip.repository';
-import { RoadRepository } from '../repositories/road.repository';
+import { RoadRepository } from '../repositories/route.repository';
 import {
   CODE_PREFIX,
   EntityStatus,
@@ -28,11 +28,11 @@ export class TripService {
     if (!roadEntity) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
     }
-    const road = await this.companyAccess.assertRoadBelongsToCompany(
+    const route = await this.companyAccess.assertRoadBelongsToCompany(
       roadEntity.companyId,
       payload.roadId,
     );
-    await this.companyAccess.assertCompanyAccess(user, road.companyId);
+    await this.companyAccess.assertCompanyAccess(user, route.companyId);
 
     const trip = await this.tripRepository.save({
       code: generateEntityCode(CODE_PREFIX.TRIP),
@@ -43,7 +43,7 @@ export class TripService {
     });
 
     await this.roadRepository.update(payload.roadId, {
-      totalTurn: road.totalTurn + 1,
+      totalTurn: route.totalTurn + 1,
     });
 
     return trip;
@@ -62,27 +62,24 @@ export class TripService {
     user: UserDecoratorDtoResponse,
     roadId: number,
   ): Promise<TbTrip[]> {
-    const road = await this.roadRepository.findById(roadId);
-    if (!road) {
+    const route = await this.roadRepository.findById(roadId);
+    if (!route) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
     }
-    await this.companyAccess.assertCompanyAccess(user, road.companyId);
+    await this.companyAccess.assertCompanyAccess(user, route.companyId);
     return this.tripRepository.findByRoadId(roadId);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbTrip> {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbTrip> {
     const trip = await this.tripRepository.findById(id);
     if (!trip) {
       throw new NotFoundException(CompanyErrorMessage.TRIP_NOT_FOUND);
     }
-    const road = await this.roadRepository.findById(trip.roadId);
-    if (!road) {
+    const route = await this.roadRepository.findById(trip.roadId);
+    if (!route) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
     }
-    await this.companyAccess.assertCompanyAccess(user, road.companyId);
+    await this.companyAccess.assertCompanyAccess(user, route.companyId);
     return trip;
   }
 
@@ -93,11 +90,11 @@ export class TripService {
   ): Promise<TbTrip> {
     await this.findOne(user, id);
     if (payload.roadId !== undefined) {
-      const road = await this.roadRepository.findById(payload.roadId);
-      if (!road) {
+      const route = await this.roadRepository.findById(payload.roadId);
+      if (!route) {
         throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
       }
-      await this.companyAccess.assertCompanyAccess(user, road.companyId);
+      await this.companyAccess.assertCompanyAccess(user, route.companyId);
     }
     await this.tripRepository.update(id, payload);
     return this.findOne(user, id);

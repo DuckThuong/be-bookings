@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TbRoad } from '../entities/road.entity';
+import { TbRoad } from '../entities/route.entity';
 import { EntityStatus } from '../assets/constants/company.constants';
 
 @Injectable()

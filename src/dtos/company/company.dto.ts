@@ -135,6 +135,9 @@ export class CreateVehicleDto {
 
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional({ example: 50 })
+  seatNumber?: number;
 }
 
 export class UpdateVehicleDto {
@@ -165,7 +168,7 @@ export class CreateDriverDto {
   name: string;
 
   @ApiProperty({ example: 1, description: 'ID phương tiện mặc định' })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 'B2-123456' })
   license: string;
@@ -188,7 +191,7 @@ export class UpdateDriverDto {
   name?: string;
 
   @ApiPropertyOptional()
-  verhicalId?: number;
+  vehicleId?: number;
 
   @ApiPropertyOptional()
   license?: string;
@@ -214,7 +217,7 @@ export class CreateCompanyTripDto {
   tripId: number;
 
   @ApiProperty({ example: 1, description: 'ID phương tiện' })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 1, description: 'ID tài xế' })
   driverId: number;
@@ -237,7 +240,7 @@ export class UpdateCompanyTripDto {
   tripId?: number;
 
   @ApiPropertyOptional()
-  verhicalId?: number;
+  vehicleId?: number;
 
   @ApiPropertyOptional()
   driverId?: number;
@@ -260,7 +263,7 @@ export class CreateSeatDto {
   companyId: number;
 
   @ApiProperty({ example: 1, description: 'ID phương tiện' })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 'A1' })
   name: string;
@@ -300,7 +303,7 @@ export class CreateSeatsBatchDto {
   companyId: number;
 
   @ApiProperty({ example: 1 })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ type: [CreateSeatItemDto] })
   seats: CreateSeatItemDto[];

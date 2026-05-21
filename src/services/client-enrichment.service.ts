@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { TbCompany } from '../entities/company/company.entity';
-import { TbRoad } from '../entities/road.entity';
+import { TbRoad } from '../entities/route.entity';
 import { TbTrip } from '../entities/trip.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbSeat } from '../entities/seat.entity';
 import { TbTicket } from '../entities/ticket.entity';
@@ -33,8 +33,8 @@ export class ClientEnrichmentService {
     private readonly tripRepo: Repository<TbTrip>,
     @InjectRepository(TbCompanyTrip)
     private readonly companyTripRepo: Repository<TbCompanyTrip>,
-    @InjectRepository(TbVerhical)
-    private readonly vehicleRepo: Repository<TbVerhical>,
+    @InjectRepository(TbVehicle)
+    private readonly vehicleRepo: Repository<TbVehicle>,
     @InjectRepository(TbDriver)
     private readonly driverRepo: Repository<TbDriver>,
     @InjectRepository(TbSeat)
@@ -100,23 +100,21 @@ export class ClientEnrichmentService {
     if (roads.length === 0) {
       return [];
     }
-    const companyMap = await this.loadCompanies(
-      roads.map((r) => r.companyId),
-    );
-    return roads.map((road) => ({
-      ...road,
-      company: companyMap.get(road.companyId) ?? null,
+    const companyMap = await this.loadCompanies(roads.map((r) => r.companyId));
+    return roads.map((route) => ({
+      ...route,
+      company: companyMap.get(route.companyId) ?? null,
     }));
   }
 
-  async enrichRoadDetail(road: TbRoad) {
+  async enrichRoadDetail(route: TbRoad) {
     const company = await this.companyRepo.findOne({
-      where: { id: road.companyId },
+      where: { id: route.companyId },
     });
-    const trips = await this.catalogRepository.findTripsByRoadId(road.id);
+    const trips = await this.catalogRepository.findTripsByRoadId(route.id);
     const tripDetails = await this.enrichTrips(trips);
     return {
-      ...road,
+      ...route,
       company,
       trips: tripDetails,
     };
@@ -130,16 +128,16 @@ export class ClientEnrichmentService {
     const companyIds = [...roadMap.values()].map((r) => r.companyId);
     const companyMap = await this.loadCompanies(companyIds);
     return trips.map((trip) => {
-      const road = roadMap.get(trip.roadId) ?? null;
-      const company = road ? (companyMap.get(road.companyId) ?? null) : null;
-      return { ...trip, road, company };
+      const route = roadMap.get(trip.roadId) ?? null;
+      const company = route ? (companyMap.get(route.companyId) ?? null) : null;
+      return { ...trip, route, company };
     });
   }
 
   async enrichTripDetail(trip: TbTrip) {
-    const road = await this.roadRepo.findOne({ where: { id: trip.roadId } });
-    const company = road
-      ? await this.companyRepo.findOne({ where: { id: road.companyId } })
+    const route = await this.roadRepo.findOne({ where: { id: trip.roadId } });
+    const company = route
+      ? await this.companyRepo.findOne({ where: { id: route.companyId } })
       : null;
     const companyTrips = await this.companyTripRepo.find({
       where: { tripId: trip.id, status: 'ACTIVE' },
@@ -148,7 +146,7 @@ export class ClientEnrichmentService {
     const schedules = await this.enrichCompanyTrips(companyTrips);
     return {
       ...trip,
-      road,
+      route,
       company,
       companyTrips: schedules,
     };
@@ -161,7 +159,7 @@ export class ClientEnrichmentService {
     const [companyMap, tripMap, vehicleMap, driverMap] = await Promise.all([
       this.loadCompanies(companyTrips.map((c) => c.companyId)),
       this.loadTrips(companyTrips.map((c) => c.tripId)),
-      this.loadVehicles(companyTrips.map((c) => c.verhicalId)),
+      this.loadVehicles(companyTrips.map((c) => c.vehicleId)),
       this.loadDrivers(companyTrips.map((c) => c.driverId)),
     ]);
     const roadIds = [...tripMap.values()].map((t) => t.roadId);
@@ -170,15 +168,15 @@ export class ClientEnrichmentService {
     return Promise.all(
       companyTrips.map(async (ct) => {
         const trip = tripMap.get(ct.tripId) ?? null;
-        const road = trip ? (roadMap.get(trip.roadId) ?? null) : null;
+        const route = trip ? (roadMap.get(trip.roadId) ?? null) : null;
         const availableSeats = ct.totalSeat - ct.totalSeatBooked;
         return {
           ...ct,
           availableSeats,
           company: companyMap.get(ct.companyId) ?? null,
           trip,
-          road,
-          vehicle: vehicleMap.get(ct.verhicalId) ?? null,
+          route,
+          vehicle: vehicleMap.get(ct.vehicleId) ?? null,
           driver: driverMap.get(ct.driverId) ?? null,
         };
       }),
@@ -186,19 +184,20 @@ export class ClientEnrichmentService {
   }
 
   async enrichCompanyTripDetail(companyTrip: TbCompanyTrip) {
-    const occupiedSeatIds =
-      await this.catalogRepository.getOccupiedSeatIds(companyTrip.id);
+    const occupiedSeatIds = await this.catalogRepository.getOccupiedSeatIds(
+      companyTrip.id,
+    );
     const seats = await this.seatRepo.find({
-      where: { verhicalId: companyTrip.verhicalId },
+      where: { vehicleId: companyTrip.vehicleId },
       order: { id: 'ASC' },
     });
     const [company, trip, vehicle, driver] = await Promise.all([
       this.companyRepo.findOne({ where: { id: companyTrip.companyId } }),
       this.tripRepo.findOne({ where: { id: companyTrip.tripId } }),
-      this.vehicleRepo.findOne({ where: { id: companyTrip.verhicalId } }),
+      this.vehicleRepo.findOne({ where: { id: companyTrip.vehicleId } }),
       this.driverRepo.findOne({ where: { id: companyTrip.driverId } }),
     ]);
-    const road = trip
+    const route = trip
       ? await this.roadRepo.findOne({ where: { id: trip.roadId } })
       : null;
 
@@ -213,7 +212,7 @@ export class ClientEnrichmentService {
       occupiedSeatIds,
       company,
       trip,
-      road,
+      route,
       vehicle,
       driver,
       seats: seatDetails,
@@ -278,7 +277,9 @@ export class ClientEnrichmentService {
       return [];
     }
     const ticketIds = [...new Set(payments.map((p) => p.ticketId))];
-    const tickets = await this.ticketRepo.find({ where: { id: In(ticketIds) } });
+    const tickets = await this.ticketRepo.find({
+      where: { id: In(ticketIds) },
+    });
     const ticketMap = new Map(
       (await this.enrichTickets(tickets)).map((t) => [t.id, t]),
     );
@@ -339,7 +340,9 @@ export class ClientEnrichmentService {
         : [];
     let ticket: TbTicket | null = null;
     if (booking.ticketId) {
-      ticket = await this.ticketRepo.findOne({ where: { id: booking.ticketId } });
+      ticket = await this.ticketRepo.findOne({
+        where: { id: booking.ticketId },
+      });
     }
     return {
       ...booking,
@@ -379,7 +382,7 @@ export class ClientEnrichmentService {
   private async loadVehicles(ids: number[]) {
     const unique = [...new Set(ids)];
     if (unique.length === 0) {
-      return new Map<number, TbVerhical>();
+      return new Map<number, TbVehicle>();
     }
     const rows = await this.vehicleRepo.find({ where: { id: In(unique) } });
     return new Map(rows.map((r) => [r.id, r]));
@@ -393,5 +396,4 @@ export class ClientEnrichmentService {
     const rows = await this.driverRepo.find({ where: { id: In(unique) } });
     return new Map(rows.map((r) => [r.id, r]));
   }
-
 }

@@ -2,37 +2,24 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('tb_driver')
-export class TbDriver {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
-  id: number;
+import { BaseEntity } from './base.entity';
+import { TbCompany } from "./company/company.entity";
+import { TbTrip } from "./trip.entity";
 
+@Entity('tb_driver')
+export class TbDriver extends BaseEntity {
   @Column('varchar', {
     length: 24,
     unique: true,
     comment: 'Mã tài xế',
   })
   code: string;
-
-  @Column({
-    type: 'int',
-    comment: 'ID công ty',
-  })
-  companyId: number;
-
-  @Column({
-    type: 'int',
-    comment: 'ID phương tiện mặc định (tb_verhical)',
-  })
-  verhicalId: number;
 
   @Column({
     type: 'varchar',
@@ -43,10 +30,17 @@ export class TbDriver {
 
   @Column({
     type: 'varchar',
-    length: 50,
-    comment: 'Số bằng lái',
+    length: 10,
+    comment: 'Loại bằng lái',
   })
   license: string;
+
+  @Column({
+    type: 'varchar',
+    length: 32,
+    comment: 'Số bằng lái',
+  })
+  licenseNumber: string;
 
   @Column({
     type: 'varchar',
@@ -74,7 +68,7 @@ export class TbDriver {
     nullable: true,
     comment: 'Mô tả',
   })
-  description: string;
+  description?: string;
 
   @Column({
     type: 'decimal',
@@ -92,15 +86,17 @@ export class TbDriver {
   })
   totalTurn: number;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Ngày tạo',
+  @Column({
+    type: 'int',
+    comment: 'ID công ty',
   })
-  createdAt: Date;
+  companyId: number;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    comment: 'Ngày cập nhật',
-  })
-  updatedAt: Date;
+  @ManyToOne(() => TbCompany, (company) => company.companyDrivers)
+  company: TbCompany;
+
+  @OneToMany(() => TbTrip, (trip) => trip.driver)
+  trips: TbTrip[];
 }
+
+

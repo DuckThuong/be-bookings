@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
-import { TbRoad } from '../entities/road.entity';
-import { RoadRepository } from '../repositories/road.repository';
+import { TbRoad } from '../entities/route.entity';
+import { RoadRepository } from '../repositories/route.repository';
 import {
   CODE_PREFIX,
   EntityStatus,
@@ -25,7 +25,7 @@ export class RoadService {
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
     return this.roadRepository.save({
       companyId: payload.companyId,
-      code: generateEntityCode(CODE_PREFIX.ROAD),
+      code: generateEntityCode(CODE_PREFIX.ROUTE),
       name: payload.name,
       length: payload.length,
       type: payload.type,
@@ -46,16 +46,13 @@ export class RoadService {
     return this.roadRepository.findByCompany(companyId);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbRoad> {
-    const road = await this.roadRepository.findById(id);
-    if (!road) {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbRoad> {
+    const route = await this.roadRepository.findById(id);
+    if (!route) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
     }
-    await this.companyAccess.assertCompanyAccess(user, road.companyId);
-    return road;
+    await this.companyAccess.assertCompanyAccess(user, route.companyId);
+    return route;
   }
 
   async update(

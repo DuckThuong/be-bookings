@@ -4,12 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { validString } from '../common/helpers/common.helper';
-import { CreateVehicleDto, UpdateVehicleDto } from '../dtos/company/company.dto';
+import {
+  CreateVehicleDto,
+  UpdateVehicleDto,
+} from '../dtos/company/company.dto';
 import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
 import { CompanyAccessService } from './company-access.service';
 
@@ -23,7 +26,7 @@ export class VehicleService {
   async create(
     user: UserDecoratorDtoResponse,
     payload: CreateVehicleDto,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
 
     if (!validString(payload.code)) {
@@ -49,16 +52,16 @@ export class VehicleService {
       type: payload.type,
       name: payload.name,
       image: payload.image ?? undefined,
-      schedule: payload.schedule ?? undefined,
       description: payload.description ?? undefined,
       status: payload.status ?? EntityStatus.ACTIVE,
+      seatNumber: payload.seatNumber ?? undefined,
     });
   }
 
   async findAll(
     user: UserDecoratorDtoResponse,
     companyId?: number,
-  ): Promise<TbVerhical[]> {
+  ): Promise<TbVehicle[]> {
     const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
       user,
       companyId,
@@ -69,7 +72,7 @@ export class VehicleService {
   async findOne(
     user: UserDecoratorDtoResponse,
     id: number,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const vehicle = await this.vehicleRepository.findById(id);
     if (!vehicle) {
       throw new NotFoundException(CompanyErrorMessage.VEHICLE_NOT_FOUND);
@@ -82,7 +85,7 @@ export class VehicleService {
     user: UserDecoratorDtoResponse,
     id: number,
     payload: UpdateVehicleDto,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const vehicle = await this.findOne(user, id);
 
     if (payload.code) {

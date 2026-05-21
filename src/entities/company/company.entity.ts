@@ -2,25 +2,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { BaseEntity } from '../base.entity';
+import { TbTrip } from "../trip.entity";
+import { TbDriver } from "../driver.entity";
+import { TbVehicle } from "../vehicle.entity";
+import { TbRoute } from "../route.entity";
 
 @Entity('tb_company')
-export class TbCompany {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
-  id: number;
-
-  @Column({
-    type: 'varchar',
-    length: 24,
-    comment: 'Mã người đại diện (userCode)',
-  })
-  userLeadId: string;
+export class TbCompany extends BaseEntity {
 
   @Column({
     type: 'varchar',
@@ -29,12 +22,6 @@ export class TbCompany {
   })
   companyName: string;
 
-  @Column('varchar', {
-    length: 24,
-    unique: true,
-    comment: 'Mã công ty',
-  })
-  code: string;
 
   @Column({
     type: 'text',
@@ -50,15 +37,36 @@ export class TbCompany {
   })
   status: string;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Ngày tạo',
+  @Column({
+    type: 'varchar',
+    length: 255,
+    comment: "Email công ty",
   })
-  createdAt: Date;
+  email: string;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    comment: 'Ngày cập nhật',
+  @Column({
+    type: 'varchar',
+    length: 20,
+    comment: "Số điện thoại công ty",
   })
-  updatedAt: Date;
+  phone: string;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    comment: "Họ tên người đại diện",
+  })
+  representative: string;
+
+  @OneToMany(() => TbTrip, (companyTrip) => companyTrip.company)
+  companyTrips: TbTrip[];
+
+  @OneToMany(()=> TbDriver, (companyDriver) => companyDriver.company)
+  companyDrivers: TbDriver[];
+
+  @OneToMany(()=> TbVehicle, (companyVehicle) => companyVehicle.company)
+  companyVehicles: TbVehicle[];
+
+  @OneToMany(() => TbRoute, (companyRoute) => companyRoute.company)
+  companyRoutes: TbRoute[];
 }

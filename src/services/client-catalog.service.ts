@@ -53,11 +53,11 @@ export class ClientCatalogService {
   }
 
   async getRoad(id: number) {
-    const road = await this.catalogRepository.findRoadById(id);
-    if (!road) {
+    const route = await this.catalogRepository.findRoadById(id);
+    if (!route) {
       throw new NotFoundException(ClientErrorMessage.ROAD_NOT_FOUND);
     }
-    return this.enrichment.enrichRoadDetail(road);
+    return this.enrichment.enrichRoadDetail(route);
   }
 
   async listTrips(query: ClientTripQueryDto) {

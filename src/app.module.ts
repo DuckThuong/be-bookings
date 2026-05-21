@@ -12,14 +12,14 @@ import { CustomerModule } from './modules/customer.module';
 import { ClientModule } from './modules/client.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbCompanyTrip } from './entities/company/company-trip.entity';
-import { TbVerhical } from './entities/verhical.entity';
+import { TbVehicle } from './entities/vehicle.entity';
 import { TbTrip } from './entities/trip.entity';
 import { TbDriver } from './entities/driver.entity';
 import { TbCompany } from './entities/company/company.entity';
 import { TbTicket } from './entities/ticket.entity';
-import { TbRoad } from './entities/road.entity';
+import { TbRoute } from './entities/route.entity';
 import { TbSeat } from './entities/seat.entity';
-import { AppController } from "./app.controller";
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -56,8 +56,8 @@ import { AppController } from "./app.controller";
           TbDriver,
           TbSeat,
           TbTrip,
-          TbVerhical,
-          TbRoad,
+          TbVehicle,
+          TbRoute,
           TbTicket,
         ],
         migrations: [__dirname + '/migrations/**/*.migration.{ts,js}'],

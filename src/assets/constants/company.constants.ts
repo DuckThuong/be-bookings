@@ -5,7 +5,7 @@ export enum EntityStatus {
 
 export const CODE_PREFIX = {
   COMPANY: 'CMP',
-  ROAD: 'ROD',
+  ROUTE: 'ROU',
   TRIP: 'TRP',
   VEHICLE: 'VEH',
   DRIVER: 'DRV',

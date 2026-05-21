@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { TbCompany } from '../entities/company/company.entity';
 import { CompanyRepository } from '../repositories/company.repository';
-import { RoadRepository } from '../repositories/road.repository';
+import { RoadRepository } from '../repositories/route.repository';
 import { TripRepository } from '../repositories/trip.repository';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { DriverRepository } from '../repositories/driver.repository';
@@ -157,15 +157,21 @@ export class CompanyService {
     const roadIds = roads.map((r) => r.id);
     const vehicles = await this.vehicleRepository.findIdsByCompany(companyId);
 
-    const [roadCount, tripCount, vehicleCount, driverCount, companyTripCount, seatCount] =
-      await Promise.all([
-        this.roadRepository.countActiveByCompany(companyId),
-        this.tripRepository.countActiveByRoadIds(roadIds),
-        this.vehicleRepository.countActiveByCompany(companyId),
-        this.driverRepository.countActiveByCompany(companyId),
-        this.companyTripRepository.countActiveByCompany(companyId),
-        this.seatRepository.countByVehicleIds(vehicles.map((v) => v.id)),
-      ]);
+    const [
+      roadCount,
+      tripCount,
+      vehicleCount,
+      driverCount,
+      companyTripCount,
+      seatCount,
+    ] = await Promise.all([
+      this.roadRepository.countActiveByCompany(companyId),
+      this.tripRepository.countActiveByRoadIds(roadIds),
+      this.vehicleRepository.countActiveByCompany(companyId),
+      this.driverRepository.countActiveByCompany(companyId),
+      this.companyTripRepository.countActiveByCompany(companyId),
+      this.seatRepository.countByVehicleIds(vehicles.map((v) => v.id)),
+    ]);
 
     return {
       roadCount,

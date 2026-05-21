@@ -16,14 +16,17 @@ export class ClientSeatFlowService {
   ) {}
 
   async getAvailability(companyTripId: number) {
-    const companyTrip = await this.companyTripRepository.findById(companyTripId);
+    const companyTrip =
+      await this.companyTripRepository.findById(companyTripId);
     if (!companyTrip || companyTrip.status !== EntityStatus.ACTIVE) {
       throw new NotFoundException(ClientErrorMessage.COMPANY_TRIP_NOT_FOUND);
     }
 
     const occupiedSeatIds =
       await this.catalogRepository.getOccupiedSeatIds(companyTripId);
-    const seats = await this.seatRepository.findByVehicle(companyTrip.verhicalId);
+    const seats = await this.seatRepository.findByVehicle(
+      companyTrip.vehicleId,
+    );
 
     const seatDetails = seats.map((seat) => ({
       ...seat,

@@ -5,14 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { TbCompany } from '../entities/company/company.entity';
-import { TbRoad } from '../entities/road.entity';
+import { TbRoad } from '../entities/route.entity';
 import { TbTrip } from '../entities/trip.entity';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbSeat } from '../entities/seat.entity';
 import { CompanyRepository } from '../repositories/company.repository';
-import { RoadRepository } from '../repositories/road.repository';
+import { RoadRepository } from '../repositories/route.repository';
 import { TripRepository } from '../repositories/trip.repository';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { DriverRepository } from '../repositories/driver.repository';
@@ -78,11 +78,11 @@ export class CompanyAccessService {
     companyId: number,
     roadId: number,
   ): Promise<TbRoad> {
-    const road = await this.roadRepository.findById(roadId);
-    if (!road || road.companyId !== companyId) {
+    const route = await this.roadRepository.findById(roadId);
+    if (!route || route.companyId !== companyId) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_BELONG_COMPANY);
     }
-    return road;
+    return route;
   }
 
   async assertTripBelongsToCompany(
@@ -93,8 +93,8 @@ export class CompanyAccessService {
     if (!trip) {
       throw new NotFoundException(CompanyErrorMessage.TRIP_NOT_FOUND);
     }
-    const road = await this.roadRepository.findById(trip.roadId);
-    if (!road || road.companyId !== companyId) {
+    const route = await this.roadRepository.findById(trip.roadId);
+    if (!route || route.companyId !== companyId) {
       throw new NotFoundException(CompanyErrorMessage.TRIP_NOT_BELONG_COMPANY);
     }
     return trip;
@@ -103,7 +103,7 @@ export class CompanyAccessService {
   async assertVehicleBelongsToCompany(
     companyId: number,
     vehicleId: number,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const vehicle = await this.vehicleRepository.findById(vehicleId);
     if (!vehicle || vehicle.companyId !== companyId) {
       throw new NotFoundException(
@@ -146,7 +146,7 @@ export class CompanyAccessService {
     if (!seat) {
       throw new NotFoundException(CompanyErrorMessage.SEAT_NOT_FOUND);
     }
-    await this.assertVehicleBelongsToCompany(companyId, seat.verhicalId);
+    await this.assertVehicleBelongsToCompany(companyId, seat.vehicleId);
     return seat;
   }
 }

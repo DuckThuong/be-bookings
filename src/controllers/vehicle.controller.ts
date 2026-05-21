@@ -24,7 +24,7 @@ import { CreateVehicleDto, UpdateVehicleDto } from '../dtos/company/company.dto'
 import { OptionalCompanyIdQueryDto } from '../dtos/transport/common.dto';
 
 @ApiTags('Vehicle')
-@Controller('vehicles')
+@Controller('cms/vehicles')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.OWNER)
 @ApiBearerAuth('JWT-auth')

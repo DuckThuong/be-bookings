@@ -14,16 +14,13 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/jwt/jwt.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { User } from '../user.decorator';
-import { RoadService } from '../services/road.service';
+import { RoadService } from '../services/route.service';
 import { CreateRoadDto, UpdateRoadDto } from '../dtos/company/company.dto';
 import { CompanyIdQueryDto } from '../dtos/transport/common.dto';
 
-@ApiTags('Road')
+@ApiTags('Route')
 @Controller('roads')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.OWNER)
@@ -33,7 +30,10 @@ export class RoadController {
 
   @Post()
   @ApiOperation({ summary: 'Tạo tuyến đường' })
-  create(@User() user: UserDecoratorDtoResponse, @Body() payload: CreateRoadDto) {
+  create(
+    @User() user: UserDecoratorDtoResponse,
+    @Body() payload: CreateRoadDto,
+  ) {
     return this.roadService.create(user, payload);
   }
 

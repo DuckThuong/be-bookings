@@ -28,7 +28,7 @@ export class CompanyTripService {
     );
     await this.companyAccess.assertVehicleBelongsToCompany(
       payload.companyId,
-      payload.verhicalId,
+      payload.vehicleId,
     );
     await this.companyAccess.assertDriverBelongsToCompany(
       payload.companyId,
@@ -38,7 +38,7 @@ export class CompanyTripService {
     return this.companyTripRepository.save({
       companyId: payload.companyId,
       tripId: payload.tripId,
-      verhicalId: payload.verhicalId,
+      vehicleId: payload.vehicleId,
       driverId: payload.driverId,
       description: payload.description ?? '',
       totalSeat: payload.totalSeat,
@@ -82,10 +82,10 @@ export class CompanyTripService {
         payload.tripId,
       );
     }
-    if (payload.verhicalId !== undefined) {
+    if (payload.vehicleId !== undefined) {
       await this.companyAccess.assertVehicleBelongsToCompany(
         current.companyId,
-        payload.verhicalId,
+        payload.vehicleId,
       );
     }
     if (payload.driverId !== undefined) {

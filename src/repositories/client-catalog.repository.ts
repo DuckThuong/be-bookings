@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, ObjectLiteral, Repository, SelectQueryBuilder } from 'typeorm';
 import { TbCompany } from '../entities/company/company.entity';
-import { TbRoad } from '../entities/road.entity';
+import { TbRoad } from '../entities/route.entity';
 import { TbTrip } from '../entities/trip.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbTicket } from '../entities/ticket.entity';
