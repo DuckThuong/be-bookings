@@ -22,14 +22,14 @@ export class DriverService {
     user: UserDecoratorDtoResponse,
     payload: CreateDriverDto,
   ): Promise<TbDriver> {
-    await this.companyAccess.assertCompanyAccess(user, payload.companyId);
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
     await this.companyAccess.assertVehicleBelongsToCompany(
-      payload.companyId,
+      companyId,
       payload.verhicalId,
     );
 
     return this.driverRepository.save({
-      companyId: payload.companyId,
+      companyId,
       verhicalId: payload.verhicalId,
       code: generateEntityCode(CODE_PREFIX.DRIVER),
       name: payload.name,
@@ -45,16 +45,16 @@ export class DriverService {
 
   async findAll(
     user: UserDecoratorDtoResponse,
-    companyId: number,
+    companyId?: number,
   ): Promise<TbDriver[]> {
-    await this.companyAccess.assertCompanyAccess(user, companyId);
-    return this.driverRepository.findByCompany(companyId);
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user,
+      companyId,
+    );
+    return this.driverRepository.findByCompany(resolvedCompanyId);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbDriver> {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbDriver> {
     const driver = await this.driverRepository.findById(id);
     if (!driver) {
       throw new NotFoundException(CompanyErrorMessage.DRIVER_NOT_FOUND);

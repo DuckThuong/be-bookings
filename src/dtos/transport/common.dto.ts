@@ -10,6 +10,18 @@ export class CompanyIdQueryDto {
   companyId: number;
 }
 
+export class OptionalCompanyIdQueryDto {
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'ID nhà xe (bắt buộc với Admin; Owner tự lấy theo userLeadId)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  companyId?: number;
+}
+
 export class VehicleIdQueryDto extends CompanyIdQueryDto {
   @ApiProperty({ example: 1, description: 'ID phương tiện' })
   @Type(() => Number)
