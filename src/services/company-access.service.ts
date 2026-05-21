@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -18,10 +19,7 @@ import { DriverRepository } from '../repositories/driver.repository';
 import { CompanyTripRepository } from '../repositories/company-trip.repository';
 import { SeatRepository } from '../repositories/seat.repository';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 
 @Injectable()
 export class CompanyAccessService {
@@ -53,6 +51,27 @@ export class CompanyAccessService {
     }
 
     throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
+  }
+
+  async resolveCompanyIdForUser(
+    user: UserDecoratorDtoResponse,
+    companyId?: number,
+  ): Promise<number> {
+    if (user.role === UserRole.ADMIN) {
+      if (companyId == null) {
+        throw new BadRequestException(CompanyErrorMessage.COMPANY_ID_REQUIRED);
+      }
+      return (await this.assertCompanyAccess(user, companyId)).id;
+    }
+
+    const companies = await this.companyRepository.findCompaniesByUserLead(
+      user.userCode,
+    );
+    const active = companies.find((c) => c.status === 'ACTIVE');
+    if (!active) {
+      throw new NotFoundException(CompanyErrorMessage.COMPANY_NOT_FOUND);
+    }
+    return active.id;
   }
 
   async assertRoadBelongsToCompany(
@@ -111,7 +130,8 @@ export class CompanyAccessService {
     companyId: number,
     companyTripId: number,
   ): Promise<TbCompanyTrip> {
-    const companyTrip = await this.companyTripRepository.findById(companyTripId);
+    const companyTrip =
+      await this.companyTripRepository.findById(companyTripId);
     if (!companyTrip || companyTrip.companyId !== companyId) {
       throw new NotFoundException(CompanyErrorMessage.COMPANY_TRIP_NOT_FOUND);
     }

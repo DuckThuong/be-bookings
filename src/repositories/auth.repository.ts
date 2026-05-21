@@ -20,6 +20,12 @@ export class AuthRepository {
     });
   }
 
+  public async findByEmail(email: string) {
+    return await this.repo.findOne({
+      where: { email },
+    });
+  }
+
   public async createUser(userData: Partial<TbBasicUser>) {
     const user = this.repo.create(userData);
     return await this.repo.save(user);

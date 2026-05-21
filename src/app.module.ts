@@ -9,6 +9,7 @@ import { UserModule } from './modules/user.module';
 import { CompanyModule } from './modules/company.module';
 import { SalesModule } from './modules/sales.module';
 import { CustomerModule } from './modules/customer.module';
+import { ClientModule } from './modules/client.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbCompanyTrip } from './entities/company/company-trip.entity';
 import { TbVerhical } from './entities/verhical.entity';
@@ -70,6 +71,7 @@ import { AppController } from "./app.controller";
     CompanyModule,
     SalesModule,
     CustomerModule,
+    ClientModule,
   ],
   controllers: [AppController],
   providers: [],

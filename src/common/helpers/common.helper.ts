@@ -21,6 +21,12 @@ export const validString = (value?: string) => {
   } else return true;
 };
 
+export const generateOtp = (length = 6): string => {
+  const min = Math.pow(10, length - 1);
+  const max = Math.pow(10, length) - 1;
+  return String(Math.floor(min + Math.random() * (max - min + 1)));
+};
+
 export const equalString = (value1: string, value2: string) => {
   if (!validString(value1) || !validString(value2)) {
     return false;

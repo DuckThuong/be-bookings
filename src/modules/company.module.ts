@@ -92,6 +92,7 @@ import { AuthModule } from './auth.module';
     TicketService,
     CompanyRepository,
     CompanyTripRepository,
+    SeatRepository,
     TicketRepository,
     TypeOrmModule,
   ],

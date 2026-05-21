@@ -18,10 +18,7 @@ import { CODE_PREFIX } from '../../assets/constants/company.constants';
 import { TicketStatus } from '../../assets/constants/ticket.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
 import { CreateBookingDto } from '../../dtos/sales/sales.dto';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { CompanyAccessService } from '../company-access.service';
 
 @Injectable()
@@ -152,7 +149,9 @@ export class BookingService {
       );
     }
 
-    await this.bookingRepository.update(id, { status: BookingStatus.CANCELLED });
+    await this.bookingRepository.update(id, {
+      status: BookingStatus.CANCELLED,
+    });
     return { message: 'Đã hủy đặt chỗ' };
   }
 

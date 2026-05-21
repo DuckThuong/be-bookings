@@ -24,7 +24,7 @@ export class VehicleService {
     user: UserDecoratorDtoResponse,
     payload: CreateVehicleDto,
   ): Promise<TbVerhical> {
-    await this.companyAccess.assertCompanyAccess(user, payload.companyId);
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
 
     if (!validString(payload.code)) {
       throw new HttpException(
@@ -44,7 +44,7 @@ export class VehicleService {
     }
 
     return this.vehicleRepository.save({
-      companyId: payload.companyId,
+      companyId,
       code: payload.code.trim(),
       type: payload.type,
       name: payload.name,
@@ -57,10 +57,13 @@ export class VehicleService {
 
   async findAll(
     user: UserDecoratorDtoResponse,
-    companyId: number,
+    companyId?: number,
   ): Promise<TbVerhical[]> {
-    await this.companyAccess.assertCompanyAccess(user, companyId);
-    return this.vehicleRepository.findByCompany(companyId);
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user,
+      companyId,
+    );
+    return this.vehicleRepository.findByCompany(resolvedCompanyId);
   }
 
   async findOne(
