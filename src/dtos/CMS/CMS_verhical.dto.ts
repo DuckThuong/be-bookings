@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
@@ -172,53 +173,80 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: Number,
   })
+  @Type(() => Number)
+  @IsInt({ message: CmsVehicalValidationMessage.VEHICAL_ID_INVALID })
+  @Min(1, { message: CmsVehicalValidationMessage.VEHICAL_ID_INVALID })
   id: number;
 
   @ApiProperty({
-    example: 'Xe 1',
+    example: 'Xe giường nằm 34 chỗ',
     description: 'Tên phương tiện',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_NAME_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_NAME_INVALID })
+  @MaxLength(255, {
+    message: CmsVehicalValidationMessage.VEHICAL_NAME_TOO_LONG,
+  })
   vehicalName: string;
 
   @ApiProperty({
-    example: 'Xe 1',
-    description: 'Mã phương tiện',
+    example: 'VEH-29B-12345',
+    description: 'Mã / biển số phương tiện',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_CODE_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_CODE_INVALID })
+  @MaxLength(50, { message: CmsVehicalValidationMessage.VEHICAL_CODE_TOO_LONG })
   vehicalCode: string;
 
   @ApiProperty({
-    example: 'Xe 1',
+    example: 'GIUONG',
     description: 'Loại ghế',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.SEAT_TYPE_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.SEAT_TYPE_INVALID })
+  @MaxLength(50, { message: CmsVehicalValidationMessage.SEAT_TYPE_TOO_LONG })
   seatType: string;
 
   @ApiProperty({
-    example: 10,
+    example: 34,
     description: 'Số lượng ghế',
     required: true,
     type: Number,
   })
+  @Type(() => Number)
+  @IsInt({ message: CmsVehicalValidationMessage.SEAT_COUNT_INVALID })
+  @Min(1, { message: CmsVehicalValidationMessage.SEAT_COUNT_MIN })
+  @Max(100, { message: CmsVehicalValidationMessage.SEAT_COUNT_MAX })
   seatCount: number;
 
   @ApiProperty({
-    example: 'Xe 1',
+    example: 'SLEEPER',
     description: 'Loại phương tiện',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_TYPE_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_TYPE_INVALID })
+  @MaxLength(50, { message: CmsVehicalValidationMessage.VEHICAL_TYPE_TOO_LONG })
   vehicalType: string;
 
   @ApiProperty({
-    example: 'Xe 1',
+    example: EntityStatus.ACTIVE,
     description: 'Trạng thái phương tiện',
     required: true,
+    enum: EntityStatus,
     type: String,
+  })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_STATUS_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_STATUS_INVALID })
+  @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE], {
+    message: CmsVehicalValidationMessage.VEHICAL_STATUS_NOT_IN,
   })
   vehicalStatus: string;
 
@@ -241,36 +269,59 @@ export class UpdateVehicalPayloadDto {
   @IsNotEmpty({ message: CmsVehicalValidationMessage.DRIVER_ID_EMPTY })
   @IsString({ message: CmsVehicalValidationMessage.DRIVER_ID_INVALID })
   driverId: string;
+
   @ApiProperty({
-    example: 'Xe 1',
+    example: 'Hà Nội - Đà Nẵng hàng ngày',
     description: 'Lịch trình',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.SCHEDULE_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.SCHEDULE_INVALID })
+  @MaxLength(255, { message: CmsVehicalValidationMessage.SCHEDULE_TOO_LONG })
   schedule: string;
+
   @ApiProperty({
-    example: 'Xe 1',
+    example: 'Xe mới, có wifi',
     description: 'Mô tả',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.DESCRIPTION_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.DESCRIPTION_INVALID })
   description: string;
+
   @ApiProperty({
-    example: 'Xe 1',
-    description: 'Giờ khởi hành',
+    example: '08:00',
+    description: 'Giờ khởi hành (HH:mm)',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.TIME_START_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.TIME_START_INVALID })
+  @Matches(TIME_PATTERN, {
+    message: CmsVehicalValidationMessage.TIME_START_FORMAT,
+  })
   timeStart: string;
+
   @ApiProperty({
-    example: 'Xe 1',
-    description: 'Giờ đến',
+    example: '14:30',
+    description: 'Giờ đến (HH:mm)',
     required: true,
     type: String,
+  })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.TIME_END_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.TIME_END_INVALID })
+  @Matches(TIME_PATTERN, {
+    message: CmsVehicalValidationMessage.TIME_END_FORMAT,
   })
   timeEnd: string;
 
   @ApiPropertyOptional({ example: 350000 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({}, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
+  @Min(0, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
   pricePerSeat?: number;
 
   @ApiPropertyOptional({
@@ -278,6 +329,10 @@ export class UpdateVehicalPayloadDto {
     description:
       'ID chuyến khai thác (tb_company_trip) — bỏ trống thì cập nhật bản ghi mới nhất của xe',
   })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: CmsVehicalValidationMessage.COMPANY_TRIP_ID_INVALID })
+  @Min(1, { message: CmsVehicalValidationMessage.COMPANY_TRIP_ID_INVALID })
   companyTripId?: number;
 }
 

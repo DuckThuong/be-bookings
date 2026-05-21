@@ -42,6 +42,7 @@ export class CmsVehicalValidationMessage {
 
   static readonly PRICE_PER_SEAT_INVALID = 'Giá mỗi ghế phải là số >= 0';
   static readonly COMPANY_ID_INVALID = 'ID nhà xe phải là số nguyên dương';
+  static readonly VEHICAL_ID_INVALID = 'ID phương tiện phải là số nguyên dương';
   static readonly COMPANY_TRIP_ID_INVALID = 'ID chuyến khai thác không hợp lệ';
 
   static readonly SCHEDULE_EMPTY = 'Lịch trình không được để trống';
