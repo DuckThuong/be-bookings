@@ -37,6 +37,9 @@ export class CmsVehicalValidationMessage {
   static readonly DRIVER_ID_EMPTY = 'ID tài xế không được để trống';
   static readonly DRIVER_ID_INVALID = 'ID tài xế phải là số nguyên dương';
 
+  static readonly TRIP_DRIVER_PAIR_REQUIRED =
+    'Khi tạo xe: truyền cả tripId và driverId, hoặc bỏ cả hai (gắn chuyến ở bước cập nhật)';
+
   static readonly PRICE_PER_SEAT_INVALID = 'Giá mỗi ghế phải là số >= 0';
   static readonly COMPANY_ID_INVALID = 'ID nhà xe phải là số nguyên dương';
   static readonly COMPANY_TRIP_ID_INVALID = 'ID chuyến khai thác không hợp lệ';

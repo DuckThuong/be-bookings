@@ -88,25 +88,25 @@ export class CreateVehicalPayloadDto {
   })
   vehicalStatus: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '1',
-    description: 'ID chuyến (tb_trip)',
-    required: true,
+    description:
+      'ID chuyến mẫu (tb_trip) — tùy chọn khi tạo; bắt buộc kèm driverId nếu truyền',
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.TRIP_ID_EMPTY })
+  @IsOptional()
   @IsString({ message: CmsVehicalValidationMessage.TRIP_ID_INVALID })
-  tripId: string;
+  tripId?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '1',
-    description: 'ID tài xế (tb_driver)',
-    required: true,
+    description:
+      'ID tài xế (tb_driver) — tùy chọn khi tạo; bắt buộc kèm tripId nếu truyền',
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.DRIVER_ID_EMPTY })
+  @IsOptional()
   @IsString({ message: CmsVehicalValidationMessage.DRIVER_ID_INVALID })
-  driverId: string;
+  driverId?: string;
 
   @ApiProperty({
     example: 'Hà Nội - Đà Nẵng hàng ngày',
@@ -223,18 +223,23 @@ export class UpdateVehicalPayloadDto {
   vehicalStatus: string;
 
   @ApiProperty({
-    example: 'Xe 1',
-    description: 'ID chuyến',
-    required: true,
-  })
-  tripId: string;
-
-  @ApiProperty({
-    example: 'Xe 1',
-    description: 'ID tài xế',
+    example: '1',
+    description: 'ID chuyến mẫu (tb_trip) — bắt buộc khi cập nhật',
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.TRIP_ID_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.TRIP_ID_INVALID })
+  tripId: string;
+
+  @ApiProperty({
+    example: '1',
+    description: 'ID tài xế (tb_driver) — bắt buộc khi cập nhật',
+    required: true,
+    type: String,
+  })
+  @IsNotEmpty({ message: CmsVehicalValidationMessage.DRIVER_ID_EMPTY })
+  @IsString({ message: CmsVehicalValidationMessage.DRIVER_ID_INVALID })
   driverId: string;
   @ApiProperty({
     example: 'Xe 1',
@@ -322,8 +327,8 @@ export class VehicalResponseDto {
   seatCount: number;
   vehicalType: string;
   vehicalStatus: string;
-  tripId: string;
-  driverId: string;
+  tripId?: string;
+  driverId?: string;
   companyTripId?: number;
   companyTrip?: CompanyTripResponseDto;
   pricePerSeat?: number;

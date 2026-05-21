@@ -63,7 +63,8 @@ export class CMSVerhicalController {
   @Post()
   @Roles(UserRole.OWNER)
   @ApiOperation({
-    summary: '[Owner] Tạo phương tiện + ghế + chuyến khai thác (tb_company_trip)',
+    summary:
+      '[Owner] Tạo phương tiện + ghế (tripId/driverId tùy chọn; gắn chuyến khai thác ở PATCH)',
   })
   create(
     @User() user: UserDecoratorDtoResponse,

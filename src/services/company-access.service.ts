@@ -46,7 +46,10 @@ export class CompanyAccessService {
       return company;
     }
 
-    if (user.role === UserRole.OWNER && company.userLeadId === user.userCode) {
+    if (
+      user.role === UserRole.OWNER &&
+      company.userLeadId === user.id.toString()
+    ) {
       return company;
     }
 
@@ -65,7 +68,7 @@ export class CompanyAccessService {
     }
 
     const companies = await this.companyRepository.findCompaniesByUserLead(
-      user.userCode,
+      user.id.toString(),
     );
     const active = companies.find((c) => c.status === 'ACTIVE');
     if (!active) {

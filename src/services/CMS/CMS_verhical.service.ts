@@ -110,6 +110,8 @@ export class CMSVerhicalService {
     user: UserDecoratorDtoResponse,
   ): Promise<VehicalResponseDto> {
     try {
+      this.assertTripDriverPairForCreate(payload);
+
       const vehical = await this.vehicalService.create(
         user,
         this.toCreateVehicleDto(payload),
@@ -123,11 +125,13 @@ export class CMSVerhicalService {
         seats: this.buildSeatItems(payload.seatType, payload.seatCount, 0),
       });
 
-      const companyTrip = await this.companyTripService.create(
-        user,
-
-        this.toCreateCompanyTripDto(vehical, payload, seats.length),
-      );
+      let companyTrip: TbCompanyTrip | null = null;
+      if (this.shouldCreateCompanyTripOnCreate(payload)) {
+        companyTrip = await this.companyTripService.create(
+          user,
+          this.toCreateCompanyTripDto(vehical, payload, seats.length),
+        );
+      }
 
       return this.toResponse(payload, vehical, seats, companyTrip);
     } catch (error) {
@@ -431,6 +435,25 @@ export class CMSVerhicalService {
     };
   }
 
+  private assertTripDriverPairForCreate(
+    payload: CreateVehicalPayloadDto,
+  ): void {
+    const hasTrip = validString(payload.tripId);
+    const hasDriver = validString(payload.driverId);
+    if (hasTrip !== hasDriver) {
+      throw new HttpException(
+        CmsVehicalValidationMessage.TRIP_DRIVER_PAIR_REQUIRED,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private shouldCreateCompanyTripOnCreate(
+    payload: CreateVehicalPayloadDto,
+  ): boolean {
+    return validString(payload.tripId) && validString(payload.driverId);
+  }
+
   private toCreateCompanyTripDto(
     vehical: TbVerhical,
 
@@ -442,7 +465,7 @@ export class CMSVerhicalService {
       companyId: vehical.companyId,
 
       tripId: this.parsePositiveInt(
-        payload.tripId,
+        payload.tripId ?? '',
 
         CmsVehicalValidationMessage.TRIP_ID_EMPTY,
 
@@ -452,7 +475,7 @@ export class CMSVerhicalService {
       verhicalId: vehical.id,
 
       driverId: this.parsePositiveInt(
-        payload.driverId,
+        payload.driverId ?? '',
 
         CmsVehicalValidationMessage.DRIVER_ID_EMPTY,
 
@@ -796,7 +819,7 @@ export class CMSVerhicalService {
 
     seats: TbSeat[],
 
-    companyTrip: TbCompanyTrip,
+    companyTrip: TbCompanyTrip | null,
   ): VehicalResponseDto {
     return {
       id: String(vehical.id),
@@ -813,15 +836,23 @@ export class CMSVerhicalService {
 
       vehicalStatus: vehical.status,
 
-      tripId: payload.tripId,
+      tripId: companyTrip
+        ? String(companyTrip.tripId)
+        : payload.tripId ?? '',
 
-      driverId: payload.driverId,
+      driverId: companyTrip
+        ? String(companyTrip.driverId)
+        : payload.driverId ?? '',
 
-      companyTripId: companyTrip.id,
+      companyTripId: companyTrip?.id,
 
-      companyTrip: this.toCompanyTripResponse(companyTrip),
+      companyTrip: companyTrip
+        ? this.toCompanyTripResponse(companyTrip)
+        : undefined,
 
-      pricePerSeat: Number(companyTrip.pricePerSeat),
+      pricePerSeat: companyTrip
+        ? Number(companyTrip.pricePerSeat)
+        : payload.pricePerSeat,
 
       schedule: vehical.schedule ?? payload.schedule,
 
