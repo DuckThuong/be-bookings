@@ -163,7 +163,6 @@ export class CreateVehicalPayloadDto {
   @IsNumber({}, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
   @Min(0, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
   pricePerSeat?: number;
-
 }
 
 export class UpdateVehicalPayloadDto {
@@ -271,7 +270,8 @@ export class UpdateVehicalPayloadDto {
 
   @ApiPropertyOptional({
     example: 1,
-    description: 'ID chuyến khai thác (tb_company_trip) — bỏ trống thì cập nhật bản ghi mới nhất của xe',
+    description:
+      'ID chuyến khai thác (tb_company_trip) — bỏ trống thì cập nhật bản ghi mới nhất của xe',
   })
   companyTripId?: number;
 }
@@ -400,11 +400,11 @@ export class CmsTripResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: 'TRIP-xxx' })
-  code: string;
-
   @ApiProperty({ example: 'Hà Nội - Đà Nẵng' })
   name: string;
+
+  @ApiProperty({ example: 'Hà Nội - Đà Nẵng' })
+  code: string;
 
   @ApiProperty({ example: 1 })
   roadId: number;
