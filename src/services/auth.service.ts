@@ -14,7 +14,7 @@ import {
   equalString,
   generateEntityCode,
   generateOtp,
-  validString
+  validString,
 } from '../common/helpers/common.helper';
 import { isEmail } from '../common/validators/validator';
 import { JwtPayload } from '../dtos/jwt.dto';
