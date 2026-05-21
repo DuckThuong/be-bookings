@@ -135,4 +135,31 @@ export class SeatService {
     await this.seatRepository.update(id, { status: EntityStatus.INACTIVE });
     return { message: 'Đã vô hiệu hóa ghế' };
   }
+
+  /** Vô hiệu hóa toàn bộ ghế thuộc một phương tiện (kể cả đang ACTIVE). */
+  async removeAllByVehicle(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    verhicalId: number,
+  ): Promise<{ message: string; deactivatedCount: number }> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertVehicleBelongsToCompany(
+      companyId,
+      verhicalId,
+    );
+
+    const seats = await this.seatRepository.findByVehicle(verhicalId);
+    const activeCount = seats.filter(
+      (s) => s.status === EntityStatus.ACTIVE,
+    ).length;
+
+    if (seats.length > 0) {
+      await this.seatRepository.deactivateByVehicleId(verhicalId);
+    }
+
+    return {
+      message: 'Đã vô hiệu hóa tất cả ghế của phương tiện',
+      deactivatedCount: activeCount > 0 ? activeCount : seats.length,
+    };
+  }
 }

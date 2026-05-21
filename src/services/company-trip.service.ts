@@ -109,4 +109,43 @@ export class CompanyTripService {
     });
     return { message: 'Đã vô hiệu hóa chuyến nhà xe' };
   }
+
+  async findByVehicle(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    verhicalId: number,
+  ): Promise<TbCompanyTrip[]> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertVehicleBelongsToCompany(
+      companyId,
+      verhicalId,
+    );
+    return this.companyTripRepository.findByVerhicalId(verhicalId);
+  }
+
+  async removeAllByVehicle(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    verhicalId: number,
+  ): Promise<{ message: string; deactivatedCount: number }> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertVehicleBelongsToCompany(
+      companyId,
+      verhicalId,
+    );
+
+    const trips = await this.companyTripRepository.findByVerhicalId(verhicalId);
+    const activeCount = trips.filter(
+      (t) => t.status === EntityStatus.ACTIVE,
+    ).length;
+
+    if (trips.length > 0) {
+      await this.companyTripRepository.deactivateByVerhicalId(verhicalId);
+    }
+
+    return {
+      message: 'Đã vô hiệu hóa tất cả chuyến khai thác của phương tiện',
+      deactivatedCount: activeCount > 0 ? activeCount : trips.length,
+    };
+  }
 }

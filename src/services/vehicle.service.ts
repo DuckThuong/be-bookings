@@ -9,7 +9,10 @@ import { VehicleRepository } from '../repositories/vehicle.repository';
 import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { validString } from '../common/helpers/common.helper';
-import { CreateVehicleDto, UpdateVehicleDto } from '../dtos/company/company.dto';
+import {
+  CreateVehicleDto,
+  UpdateVehicleDto,
+} from '../dtos/company/company.dto';
 import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
 import { CompanyAccessService } from './company-access.service';
 
@@ -23,9 +26,10 @@ export class VehicleService {
   async create(
     user: UserDecoratorDtoResponse,
     payload: CreateVehicleDto,
+    companyId?: number,
   ): Promise<TbVerhical> {
-    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
-
+    const resolvedCompanyId =
+      await this.companyAccess.resolveCompanyIdForUser(user, companyId);
     if (!validString(payload.code)) {
       throw new HttpException(
         CompanyErrorMessage.INVALID_REFERENCE,
@@ -44,7 +48,7 @@ export class VehicleService {
     }
 
     return this.vehicleRepository.save({
-      companyId,
+      companyId: resolvedCompanyId,
       code: payload.code.trim(),
       type: payload.type,
       name: payload.name,
@@ -83,13 +87,12 @@ export class VehicleService {
     id: number,
     payload: UpdateVehicleDto,
   ): Promise<TbVerhical> {
-    const vehicle = await this.findOne(user, id);
+    const existingVehicle = await this.findOne(user, id);
+    const formatted = this.buildVehicleUpdateData(existingVehicle, payload);
 
-    if (payload.code) {
-      const existing = await this.vehicleRepository.findByCode(
-        payload.code.trim(),
-      );
-      if (existing && existing.id !== id) {
+    if (formatted.code && formatted.code !== existingVehicle.code) {
+      const duplicate = await this.vehicleRepository.findByCode(formatted.code);
+      if (duplicate && duplicate.id !== id) {
         throw new HttpException(
           CompanyErrorMessage.CODE_CONFLICT,
           HttpStatus.CONFLICT,
@@ -97,8 +100,52 @@ export class VehicleService {
       }
     }
 
-    await this.vehicleRepository.update(id, payload);
+    await this.vehicleRepository.update(id, formatted);
     return this.findOne(user, id);
+  }
+
+  private buildVehicleUpdateData(
+    existing: TbVerhical,
+    payload: UpdateVehicleDto,
+  ): Partial<TbVerhical> {
+    const cloned: TbVerhical = { ...existing };
+
+    return {
+      code:
+        payload.code !== undefined && validString(payload.code)
+          ? payload.code.trim()
+          : cloned.code,
+      type:
+        payload.type !== undefined && validString(payload.type)
+          ? payload.type.trim()
+          : cloned.type,
+      name:
+        payload.name !== undefined && validString(payload.name)
+          ? payload.name.trim()
+          : cloned.name,
+      status:
+        payload.status !== undefined && validString(payload.status)
+          ? payload.status.trim()
+          : cloned.status,
+      image:
+        payload.image !== undefined
+          ? validString(payload.image)
+            ? payload.image.trim()
+            : cloned.image
+          : cloned.image,
+      schedule:
+        payload.schedule !== undefined
+          ? validString(payload.schedule)
+            ? payload.schedule.trim()
+            : cloned.schedule
+          : cloned.schedule,
+      description:
+        payload.description !== undefined
+          ? validString(payload.description)
+            ? payload.description.trim()
+            : cloned.description
+          : cloned.description,
+    };
   }
 
   async remove(

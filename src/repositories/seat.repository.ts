@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TbSeat } from '../entities/seat.entity';
+import { EntityStatus } from '../assets/constants/company.constants';
 
 @Injectable()
 export class SeatRepository {
@@ -28,6 +29,13 @@ export class SeatRepository {
 
   update(id: number, data: Partial<TbSeat>) {
     return this.repo.update({ id }, data);
+  }
+
+  deactivateByVehicleId(verhicalId: number) {
+    return this.repo.update(
+      { verhicalId },
+      { status: EntityStatus.INACTIVE },
+    );
   }
 
   async countByVehicleIds(vehicleIds: number[]) {

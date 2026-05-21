@@ -19,6 +19,17 @@ export class CompanyTripRepository {
     return this.repo.find({ where: { companyId }, order: { id: 'DESC' } });
   }
 
+  findByVerhicalId(verhicalId: number) {
+    return this.repo.find({ where: { verhicalId }, order: { id: 'DESC' } });
+  }
+
+  deactivateByVerhicalId(verhicalId: number) {
+    return this.repo.update(
+      { verhicalId },
+      { status: EntityStatus.INACTIVE },
+    );
+  }
+
   save(data: Partial<TbCompanyTrip>) {
     return this.repo.save(this.repo.create(data));
   }
