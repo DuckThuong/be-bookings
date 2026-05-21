@@ -192,6 +192,14 @@ export class AuthResponseDto {
     type: String,
   })
   accessToken: string;
+
+  @ApiProperty({
+    example: 'USER',
+    description: 'Vai trò của người dùng',
+    required: true,
+    type: String,
+  })
+  role: UserRole;
 }
 
 /** Gộp `tb_basic_user` + `tb_info_user` (join qua `userCode`). */

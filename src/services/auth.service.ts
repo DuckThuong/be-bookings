@@ -14,11 +14,15 @@ import {
   equalString,
   generateEntityCode,
   generateOtp,
-  randomString,
-  validString,
+  validString
 } from '../common/helpers/common.helper';
 import { isEmail } from '../common/validators/validator';
 import { JwtPayload } from '../dtos/jwt.dto';
+import {
+  UserDecoratorDtoResponse,
+  UserRole,
+  UserStatus,
+} from '../dtos/user/common.dto';
 import {
   AuthResponseDto,
   ChangePasswordPayloadDto,
@@ -29,11 +33,6 @@ import {
   SignUpPayloadDto,
 } from '../dtos/user/user.dto';
 import { AuthRepository } from '../repositories/auth.repository';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-  UserStatus,
-} from '../dtos/user/common.dto';
 import { MailService } from './mail.service';
 import { OtpCacheService } from './otp-cache.service';
 
@@ -89,6 +88,7 @@ export class AuthService {
 
       return {
         accessToken: this.jwtService.sign(payload),
+        role: user.role,
       };
     } catch (error) {
       console.log('error: ', error);
@@ -159,6 +159,7 @@ export class AuthService {
 
       return {
         accessToken: this.jwtService.sign(jwtPayload),
+        role: userRegis.role,
       };
     } catch (error) {
       console.log('error: ', error);
