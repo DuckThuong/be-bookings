@@ -21,7 +21,7 @@ import {
 import { User } from '../user.decorator';
 import { VehicleService } from '../services/vehicle.service';
 import { CreateVehicleDto, UpdateVehicleDto } from '../dtos/company/company.dto';
-import { CompanyIdQueryDto } from '../dtos/transport/common.dto';
+import { OptionalCompanyIdQueryDto } from '../dtos/transport/common.dto';
 
 @ApiTags('Vehicle')
 @Controller('vehicles')
@@ -44,7 +44,7 @@ export class VehicleController {
   @ApiOperation({ summary: 'Danh sách phương tiện theo nhà xe' })
   findAll(
     @User() user: UserDecoratorDtoResponse,
-    @Query() query: CompanyIdQueryDto,
+    @Query() query: OptionalCompanyIdQueryDto,
   ) {
     return this.vehicleService.findAll(user, query.companyId);
   }

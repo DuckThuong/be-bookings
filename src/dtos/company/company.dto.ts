@@ -115,9 +115,6 @@ export class UpdateTripDto {
 }
 
 export class CreateVehicleDto {
-  @ApiProperty({ example: 1, description: 'ID nhà xe' })
-  companyId: number;
-
   @ApiProperty({ example: '51B-12345', description: 'Biển số xe' })
   code: string;
 
