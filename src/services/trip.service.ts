@@ -35,7 +35,7 @@ export class TripService {
     await this.companyAccess.assertCompanyAccess(user, road.companyId);
 
     const trip = await this.tripRepository.save({
-      code: generateEntityCode(CODE_PREFIX.TRIP),
+      code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.TRIP),
       name: payload.name,
       roadId: payload.roadId,
       description: payload.description ?? undefined,
@@ -51,10 +51,14 @@ export class TripService {
 
   async findAll(
     user: UserDecoratorDtoResponse,
-    companyId: number,
+    companyId?: number,
   ): Promise<TbTrip[]> {
-    await this.companyAccess.assertCompanyAccess(user, companyId);
-    const roads = await this.roadRepository.findByCompany(companyId);
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user,
+      companyId,
+    );
+    await this.companyAccess.assertCompanyAccess(user, resolvedCompanyId);
+    const roads = await this.roadRepository.findByCompany(resolvedCompanyId);
     return this.tripRepository.findByRoadIds(roads.map((r) => r.id));
   }
 

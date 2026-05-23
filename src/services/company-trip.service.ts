@@ -123,6 +123,29 @@ export class CompanyTripService {
     return this.companyTripRepository.findByVerhicalId(verhicalId);
   }
 
+  async findByDriver(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    driverId: number,
+  ): Promise<TbCompanyTrip[]> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertDriverBelongsToCompany(
+      companyId,
+      driverId,
+    );
+    return this.companyTripRepository.findByDriverId(driverId);
+  }
+
+  async findByTrip(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    tripId: number,
+  ): Promise<TbCompanyTrip[]> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertTripBelongsToCompany(companyId, tripId);
+    return this.companyTripRepository.findByTripId(tripId);
+  }
+
   async removeAllByVehicle(
     user: UserDecoratorDtoResponse,
     companyId: number,

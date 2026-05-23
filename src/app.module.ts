@@ -11,6 +11,9 @@ import { SalesModule } from './modules/sales.module';
 import { CustomerModule } from './modules/customer.module';
 import { ClientModule } from './modules/client.module';
 import { CMSVerhicalModule } from './modules/CMS/CMS_verhical.module';
+import { CMSDriverModule } from './modules/CMS/CMS_driver.module';
+import { CMSTripModule } from './modules/CMS/CMS_trip.module';
+import { CMSRoadModule } from './modules/CMS/CMS_road.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbCompanyTrip } from './entities/company/company-trip.entity';
 import { TbVerhical } from './entities/verhical.entity';
@@ -73,6 +76,9 @@ import { TbSeat } from './entities/seat.entity';
     CustomerModule,
     ClientModule,
     CMSVerhicalModule,
+    CMSDriverModule,
+    CMSTripModule,
+    CMSRoadModule,
   ],
   controllers: [],
   providers: [],

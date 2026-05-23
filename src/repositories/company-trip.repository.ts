@@ -23,6 +23,14 @@ export class CompanyTripRepository {
     return this.repo.find({ where: { verhicalId }, order: { id: 'DESC' } });
   }
 
+  findByDriverId(driverId: number) {
+    return this.repo.find({ where: { driverId }, order: { id: 'DESC' } });
+  }
+
+  findByTripId(tripId: number) {
+    return this.repo.find({ where: { tripId }, order: { id: 'DESC' } });
+  }
+
   deactivateByVerhicalId(verhicalId: number) {
     return this.repo.update(
       { verhicalId },

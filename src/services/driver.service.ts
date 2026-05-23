@@ -31,7 +31,8 @@ export class DriverService {
     return this.driverRepository.save({
       companyId,
       verhicalId: payload.verhicalId,
-      code: generateEntityCode(CODE_PREFIX.DRIVER),
+      code:
+        payload.code?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
       name: payload.name,
       license: payload.license,
       phone: payload.phone,

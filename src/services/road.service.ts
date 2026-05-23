@@ -25,7 +25,7 @@ export class RoadService {
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
     return this.roadRepository.save({
       companyId: payload.companyId,
-      code: generateEntityCode(CODE_PREFIX.ROAD),
+      code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.ROAD),
       name: payload.name,
       length: payload.length,
       type: payload.type,
@@ -40,10 +40,14 @@ export class RoadService {
 
   async findAll(
     user: UserDecoratorDtoResponse,
-    companyId: number,
+    companyId?: number,
   ): Promise<TbRoad[]> {
-    await this.companyAccess.assertCompanyAccess(user, companyId);
-    return this.roadRepository.findByCompany(companyId);
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user,
+      companyId,
+    );
+    await this.companyAccess.assertCompanyAccess(user, resolvedCompanyId);
+    return this.roadRepository.findByCompany(resolvedCompanyId);
   }
 
   async findOne(
