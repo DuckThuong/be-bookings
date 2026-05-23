@@ -15,6 +15,14 @@ export class RoadRepository {
     return this.repo.findOne({ where: { id } });
   }
 
+  findByCodeAndCompany(code: string, companyId: number) {
+    return this.repo.findOne({ where: { code, companyId } });
+  }
+
+  findByNameAndCompany(name: string, companyId: number) {
+    return this.repo.findOne({ where: { name, companyId } });
+  }
+
   findByCompany(companyId: number) {
     return this.repo.find({ where: { companyId }, order: { id: 'DESC' } });
   }

@@ -19,6 +19,7 @@ import { DriverRepository } from '../repositories/driver.repository';
 import { CompanyTripRepository } from '../repositories/company-trip.repository';
 import { SeatRepository } from '../repositories/seat.repository';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
+import { CmsTripValidationMessage } from '../assets/messages/cms-trip.message';
 import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 
 @Injectable()
@@ -151,5 +152,71 @@ export class CompanyAccessService {
     }
     await this.assertVehicleBelongsToCompany(companyId, seat.verhicalId);
     return seat;
+  }
+
+  /** Resolve tuyến theo mã (road.code) hoặc tên (road.name) trong phạm vi nhà xe */
+  async resolveRoadByRouteKey(
+    companyId: number,
+    routeKey: string,
+  ): Promise<TbRoad> {
+    const key = routeKey?.trim();
+    if (!key) {
+      throw new BadRequestException(CmsTripValidationMessage.ROUTE_EMPTY);
+    }
+    const byCode = await this.roadRepository.findByCodeAndCompany(
+      key,
+      companyId,
+    );
+    if (byCode) {
+      return byCode;
+    }
+    const byName = await this.roadRepository.findByNameAndCompany(
+      key,
+      companyId,
+    );
+    if (byName) {
+      return byName;
+    }
+    throw new BadRequestException(CmsTripValidationMessage.ROUTE_NOT_FOUND);
+  }
+
+  async resolveVehicleByCode(
+    companyId: number,
+    vehicleCode: string,
+  ): Promise<TbVerhical> {
+    const code = vehicleCode?.trim();
+    if (!code) {
+      throw new BadRequestException(CmsTripValidationMessage.VEHICLE_EMPTY);
+    }
+    const vehicle = await this.vehicleRepository.findByCode(code);
+    if (!vehicle) {
+      throw new BadRequestException(CmsTripValidationMessage.VEHICLE_NOT_FOUND);
+    }
+    if (vehicle.companyId !== companyId) {
+      throw new BadRequestException(
+        CmsTripValidationMessage.VEHICLE_NOT_BELONG_COMPANY,
+      );
+    }
+    return vehicle;
+  }
+
+  async resolveDriverByCode(
+    companyId: number,
+    driverCode: string,
+  ): Promise<TbDriver> {
+    const code = driverCode?.trim();
+    if (!code) {
+      throw new BadRequestException(CmsTripValidationMessage.DRIVER_EMPTY);
+    }
+    const driver = await this.driverRepository.findByCode(code);
+    if (!driver) {
+      throw new BadRequestException(CmsTripValidationMessage.DRIVER_NOT_FOUND);
+    }
+    if (driver.companyId !== companyId) {
+      throw new BadRequestException(
+        CmsTripValidationMessage.DRIVER_NOT_BELONG_COMPANY,
+      );
+    }
+    return driver;
   }
 }

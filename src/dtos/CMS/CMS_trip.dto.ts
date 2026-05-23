@@ -4,8 +4,10 @@ import {
   IsIn,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -30,22 +32,11 @@ export class CmsTripListQueryDto extends OptionalCompanyIdQueryDto {
   roadId?: number;
 }
 
-export class CreateTripPayloadDto {
-  @ApiProperty({
-    example: 'Chuyến đêm Hà Nội - Đà Nẵng',
-    description: 'Tên chuyến mẫu',
-    required: true,
-    type: String,
-  })
-  @IsNotEmpty({ message: CmsTripValidationMessage.TRIP_NAME_EMPTY })
-  @IsString({ message: CmsTripValidationMessage.TRIP_NAME_INVALID })
-  @MaxLength(255, { message: CmsTripValidationMessage.TRIP_NAME_TOO_LONG })
-  tripName: string;
-
+/** Payload FE (create / update, không gồm id) */
+export class CmsTripFormPayloadDto {
   @ApiPropertyOptional({
     example: 'TRP-001',
-    description: 'Mã chuyến (tự sinh nếu bỏ trống)',
-    type: String,
+    description: 'Mã chuyến (trip_code / key)',
   })
   @IsOptional()
   @IsString({ message: CmsTripValidationMessage.TRIP_CODE_INVALID })
@@ -53,96 +44,129 @@ export class CreateTripPayloadDto {
   tripCode?: string;
 
   @ApiProperty({
-    example: 1,
-    description: 'ID tuyến đường (tb_road)',
-    required: true,
-    type: Number,
+    example: 'Hà Nội - Đà Nẵng',
+    description: 'Tuyến — mã hoặc tên road (road_code / road_name)',
   })
+  @IsNotEmpty({ message: CmsTripValidationMessage.ROUTE_EMPTY })
+  @IsString({ message: CmsTripValidationMessage.ROUTE_INVALID })
+  @MaxLength(255, { message: CmsTripValidationMessage.ROUTE_TOO_LONG })
+  route: string;
+
+  @ApiProperty({
+    example: '51B-12345',
+    description: 'Mã xe (verhical_code)',
+  })
+  @IsNotEmpty({ message: CmsTripValidationMessage.VEHICLE_EMPTY })
+  @IsString({ message: CmsTripValidationMessage.VEHICLE_INVALID })
+  @MaxLength(50, { message: CmsTripValidationMessage.VEHICLE_TOO_LONG })
+  vehicle: string;
+
+  @ApiProperty({
+    example: 'DRV-001',
+    description: 'Mã tài xế (driver_code)',
+  })
+  @IsNotEmpty({ message: CmsTripValidationMessage.DRIVER_EMPTY })
+  @IsString({ message: CmsTripValidationMessage.DRIVER_INVALID })
+  @MaxLength(24, { message: CmsTripValidationMessage.DRIVER_TOO_LONG })
+  driver: string;
+
+  @ApiProperty({ example: '08:00', description: 'Giờ khởi hành' })
+  @IsNotEmpty({ message: CmsTripValidationMessage.DEPARTURE_EMPTY })
+  @IsString({ message: CmsTripValidationMessage.DEPARTURE_INVALID })
+  @MaxLength(50, { message: CmsTripValidationMessage.DEPARTURE_TOO_LONG })
+  departure: string;
+
+  @ApiProperty({ example: '14:30', description: 'Giờ đến' })
+  @IsNotEmpty({ message: CmsTripValidationMessage.ARRIVAL_EMPTY })
+  @IsString({ message: CmsTripValidationMessage.ARRIVAL_INVALID })
+  @MaxLength(50, { message: CmsTripValidationMessage.ARRIVAL_TOO_LONG })
+  arrival: string;
+
+  @ApiProperty({ example: 12, description: 'Số ghế đã đặt' })
   @Type(() => Number)
-  @IsInt({ message: CmsTripValidationMessage.ROAD_ID_INVALID })
-  @Min(1, { message: CmsTripValidationMessage.ROAD_ID_INVALID })
-  roadId: number;
+  @IsInt({ message: CmsTripValidationMessage.BOOKED_SEATS_INVALID })
+  @Min(0, { message: CmsTripValidationMessage.BOOKED_SEATS_INVALID })
+  bookedSeats: number;
+
+  @ApiProperty({ example: 40, description: 'Sức chứa' })
+  @Type(() => Number)
+  @IsInt({ message: CmsTripValidationMessage.CAPACITY_INVALID })
+  @Min(1, { message: CmsTripValidationMessage.CAPACITY_INVALID })
+  capacity: number;
+
+  @ApiProperty({ example: 30, description: 'Tỉ lệ lấp đầy (%)' })
+  @Type(() => Number)
+  @IsNumber({}, { message: CmsTripValidationMessage.OCCUPANCY_RATE_INVALID })
+  @Min(0, { message: CmsTripValidationMessage.OCCUPANCY_RATE_INVALID })
+  @Max(100, { message: CmsTripValidationMessage.OCCUPANCY_RATE_INVALID })
+  occupancyRate: number;
 
   @ApiProperty({
     example: EntityStatus.ACTIVE,
-    description: 'Trạng thái chuyến',
-    required: true,
     enum: EntityStatus,
-    type: String,
+    description: 'Trạng thái chuyến',
   })
   @IsNotEmpty({ message: CmsTripValidationMessage.TRIP_STATUS_EMPTY })
   @IsString({ message: CmsTripValidationMessage.TRIP_STATUS_INVALID })
   @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE], {
     message: CmsTripValidationMessage.TRIP_STATUS_NOT_IN,
   })
-  tripStatus: string;
+  status: string;
 
-  @ApiPropertyOptional({
-    example: 'Chuyến chạy ban đêm, có wifi',
-    description: 'Mô tả',
-    type: String,
-  })
+  @ApiPropertyOptional({ example: 'Chuyến cao điểm', description: 'Ghi chú' })
   @IsOptional()
-  @IsString({ message: CmsTripValidationMessage.DESCRIPTION_INVALID })
-  description?: string;
+  @IsString({ message: CmsTripValidationMessage.NOTE_INVALID })
+  @MaxLength(500, { message: CmsTripValidationMessage.NOTE_TOO_LONG })
+  note?: string;
 }
 
-export class UpdateTripPayloadDto {
-  @ApiProperty({
-    example: 1,
-    description: 'ID chuyến mẫu',
-    required: true,
-    type: Number,
-  })
+export class CreateTripPayloadDto extends CmsTripFormPayloadDto {}
+
+export class UpdateTripPayloadDto extends CmsTripFormPayloadDto {
+  @ApiProperty({ example: 1, description: 'ID chuyến mẫu' })
   @Type(() => Number)
   @IsInt({ message: CmsTripValidationMessage.TRIP_ID_INVALID })
   @Min(1, { message: CmsTripValidationMessage.TRIP_ID_INVALID })
   id: number;
+}
 
-  @ApiProperty({
-    example: 'Chuyến đêm Hà Nội - Đà Nẵng',
-    description: 'Tên chuyến mẫu',
-    required: true,
-    type: String,
-  })
-  @IsNotEmpty({ message: CmsTripValidationMessage.TRIP_NAME_EMPTY })
-  @IsString({ message: CmsTripValidationMessage.TRIP_NAME_INVALID })
-  @MaxLength(255, { message: CmsTripValidationMessage.TRIP_NAME_TOO_LONG })
-  tripName: string;
+/** Dòng bảng FE — GET join từ trip + road + company_trip + xe + tài xế */
+export class CmsTripRecordDto {
+  @ApiProperty({ example: 'TRP-001', description: 'trip_code / key' })
+  key: string;
 
-  @ApiProperty({
-    example: 1,
-    description: 'ID tuyến đường (tb_road)',
-    required: true,
-    type: Number,
-  })
-  @Type(() => Number)
-  @IsInt({ message: CmsTripValidationMessage.ROAD_ID_INVALID })
-  @Min(1, { message: CmsTripValidationMessage.ROAD_ID_INVALID })
-  roadId: number;
+  @ApiProperty({ example: '1' })
+  id: string;
 
-  @ApiProperty({
-    example: EntityStatus.ACTIVE,
-    description: 'Trạng thái chuyến',
-    required: true,
-    enum: EntityStatus,
-    type: String,
-  })
-  @IsNotEmpty({ message: CmsTripValidationMessage.TRIP_STATUS_EMPTY })
-  @IsString({ message: CmsTripValidationMessage.TRIP_STATUS_INVALID })
-  @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE], {
-    message: CmsTripValidationMessage.TRIP_STATUS_NOT_IN,
-  })
-  tripStatus: string;
+  @ApiProperty({ example: 'Hà Nội - Đà Nẵng' })
+  route: string;
 
-  @ApiPropertyOptional({
-    example: 'Chuyến chạy ban đêm, có wifi',
-    description: 'Mô tả',
-    type: String,
-  })
-  @IsOptional()
-  @IsString({ message: CmsTripValidationMessage.DESCRIPTION_INVALID })
-  description?: string;
+  @ApiProperty({ example: '51B-12345' })
+  vehicle: string;
+
+  @ApiProperty({ example: 'DRV-001' })
+  driver: string;
+
+  @ApiProperty({ example: '08:00' })
+  departure: string;
+
+  @ApiProperty({ example: '14:30' })
+  arrival: string;
+
+  @ApiProperty({ example: 12 })
+  bookedSeats: number;
+
+  @ApiProperty({ example: 40 })
+  capacity: number;
+
+  @ApiProperty({ example: 30 })
+  occupancyRate: number;
+
+  @ApiProperty({ example: EntityStatus.ACTIVE })
+  status: string;
+
+  @ApiProperty({ example: 'Ghi chú' })
+  note: string;
 }
 
 export class CmsTripEntityDto {
@@ -163,6 +187,12 @@ export class CmsTripEntityDto {
 
   @ApiPropertyOptional()
   description?: string;
+
+  @ApiProperty({ example: '08:00' })
+  departure: string;
+
+  @ApiProperty({ example: '14:30' })
+  arrival: string;
 }
 
 export class CmsRoadResponseDto {
@@ -223,38 +253,22 @@ export class CmsRoadResponseDto {
   @ApiPropertyOptional({ example: 'Ghi chú' })
   note?: string | null;
 
-  @ApiProperty({ example: 764.5, description: 'Alias distanceKm cho FE' })
+  @ApiProperty({ example: 764.5 })
   distanceKm: number;
 
-  @ApiProperty({ example: 'Hà Nội - Đà Nẵng', description: 'Alias route cho FE' })
+  @ApiProperty({ example: 'Hà Nội - Đà Nẵng' })
   route: string;
 
-  @ApiProperty({ example: 'ROD-001', description: 'Alias roadCode cho FE' })
+  @ApiProperty({ example: 'ROD-001' })
   roadCode: string;
 }
 
-export class TripResponseDto {
-  @ApiProperty({ example: '1' })
-  id: string;
+export class TripResponseDto extends CmsTripRecordDto {}
 
-  @ApiProperty({ example: 'Chuyến đêm HN-ĐN' })
-  name: string;
-
-  @ApiProperty({ example: 'TRP-001' })
-  code: string;
-
-  @ApiProperty({ example: '1' })
-  roadId: string;
-
-  @ApiProperty({ example: EntityStatus.ACTIVE })
-  tripStatus: string;
-
-  @ApiPropertyOptional()
-  description?: string;
-}
-
-/** Chi tiết CMS: chuyến mẫu + tuyến + xe + tài xế + chuyến khai thác */
 export class CmsTripDetailResponseDto {
+  @ApiProperty({ type: CmsTripRecordDto })
+  record: CmsTripRecordDto;
+
   @ApiProperty({ type: CmsTripEntityDto })
   trip: CmsTripEntityDto;
 

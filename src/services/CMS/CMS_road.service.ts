@@ -317,6 +317,8 @@ export class CMSRoadService {
       roadId: trip.roadId,
       status: trip.status,
       description: trip.description ?? undefined,
+      departure: trip.departure ?? '',
+      arrival: trip.arrival ?? '',
     };
   }
 

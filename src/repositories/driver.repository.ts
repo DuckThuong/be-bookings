@@ -15,6 +15,10 @@ export class DriverRepository {
     return this.repo.findOne({ where: { id } });
   }
 
+  findByCode(code: string) {
+    return this.repo.findOne({ where: { code } });
+  }
+
   findByCompany(companyId: number) {
     return this.repo.find({ where: { companyId }, order: { id: 'DESC' } });
   }

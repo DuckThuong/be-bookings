@@ -39,7 +39,23 @@ export class TbTrip {
   @Column({
     type: 'text',
     nullable: true,
-    comment: 'Mô tả chuyến',
+    comment: 'Mô tả / ghi chú chuyến',
   })
   description: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: '',
+    comment: 'Giờ / thời điểm khởi hành chuyến',
+  })
+  departure: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: '',
+    comment: 'Giờ / thời điểm đến chuyến',
+  })
+  arrival: string;
 }

@@ -146,6 +146,12 @@ export class CreateTripDto {
 
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional({ example: '08:00' })
+  departure?: string;
+
+  @ApiPropertyOptional({ example: '14:30' })
+  arrival?: string;
 }
 
 export class UpdateTripDto {
@@ -160,6 +166,12 @@ export class UpdateTripDto {
 
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional()
+  departure?: string;
+
+  @ApiPropertyOptional()
+  arrival?: string;
 }
 
 export class CreateVehicleDto {
@@ -273,6 +285,9 @@ export class CreateCompanyTripDto {
   @ApiProperty({ example: 40 })
   totalSeat: number;
 
+  @ApiPropertyOptional({ example: 0 })
+  totalSeatBooked?: number;
+
   @ApiProperty({ example: 350000 })
   pricePerSeat: number;
 
@@ -295,6 +310,9 @@ export class UpdateCompanyTripDto {
 
   @ApiPropertyOptional()
   totalSeat?: number;
+
+  @ApiPropertyOptional()
+  totalSeatBooked?: number;
 
   @ApiPropertyOptional()
   pricePerSeat?: number;

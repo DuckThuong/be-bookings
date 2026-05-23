@@ -42,7 +42,7 @@ export class CompanyTripService {
       driverId: payload.driverId,
       description: payload.description ?? '',
       totalSeat: payload.totalSeat,
-      totalSeatBooked: 0,
+      totalSeatBooked: payload.totalSeatBooked ?? 0,
       totalPrice: 0,
       pricePerSeat: payload.pricePerSeat,
       status: payload.status ?? EntityStatus.ACTIVE,

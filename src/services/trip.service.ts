@@ -40,6 +40,8 @@ export class TripService {
       roadId: payload.roadId,
       description: payload.description ?? undefined,
       status: payload.status ?? EntityStatus.ACTIVE,
+      departure: payload.departure ?? '',
+      arrival: payload.arrival ?? '',
     });
 
     await this.roadRepository.update(payload.roadId, {

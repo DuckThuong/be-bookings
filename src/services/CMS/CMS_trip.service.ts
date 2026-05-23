@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -8,13 +9,16 @@ import { RoadService } from '../road.service';
 import { CompanyTripService } from '../company-trip.service';
 import { VehicleService } from '../vehicle.service';
 import { DriverService } from '../driver.service';
+import { CompanyAccessService } from '../company-access.service';
 import {
   CreateTripPayloadDto,
   UpdateTripPayloadDto,
+  CmsTripFormPayloadDto,
   TripResponseDto,
   CmsTripDetailResponseDto,
   CmsTripListResponseDto,
   CmsTripEntityDto,
+  CmsTripRecordDto,
   CmsRoadResponseDto,
 } from '../../dtos/CMS/CMS_trip.dto';
 import {
@@ -24,16 +28,13 @@ import {
 } from '../../dtos/CMS/CMS_verhical.dto';
 import { CommonErrorMessage } from '../../assets/messages/common.message';
 import { CmsTripSuccessMessage } from '../../assets/messages/cms-trip.message';
+import { CmsTripValidationMessage } from '../../assets/messages/cms-trip.message';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
 import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { TbVerhical } from '../../entities/verhical.entity';
 import { TbDriver } from '../../entities/driver.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
-import {
-  CreateTripDto,
-  UpdateTripDto,
-} from '../../dtos/company/company.dto';
 import { EntityStatus } from '../../assets/constants/company.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
@@ -46,6 +47,7 @@ export class CMSTripService {
     private readonly companyTripService: CompanyTripService,
     private readonly vehicalService: VehicleService,
     private readonly driverService: DriverService,
+    private readonly companyAccess: CompanyAccessService,
   ) {}
 
   public async getTripById(
@@ -76,11 +78,30 @@ export class CMSTripService {
     user: UserDecoratorDtoResponse,
   ): Promise<TripResponseDto> {
     try {
-      const trip = await this.tripService.create(
+      const { road, vehicle, driver, companyId } =
+        await this.resolveRelations(user, payload);
+
+      const trip = await this.tripService.create(user, {
+        name: this.buildTripName(road, payload),
+        code: payload.tripCode?.trim() || generateEntityCode(CODE_PREFIX.TRIP),
+        roadId: road.id,
+        description: payload.note?.trim() ?? '',
+        status: payload.status,
+        departure: payload.departure.trim(),
+        arrival: payload.arrival.trim(),
+      });
+
+      await this.syncCompanyTrip(
         user,
-        this.toCreateTripDto(payload),
+        companyId,
+        trip.id,
+        payload,
+        vehicle.id,
+        driver.id,
       );
-      return this.toResponse(trip);
+
+      const detail = await this.buildTripDetail(user, trip);
+      return detail.record;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -98,12 +119,30 @@ export class CMSTripService {
     user: UserDecoratorDtoResponse,
   ): Promise<TripResponseDto> {
     try {
-      const trip = await this.tripService.update(
+      await this.tripService.findOne(user, payload.id);
+      const { road, vehicle, driver, companyId } =
+        await this.resolveRelations(user, payload);
+
+      const trip = await this.tripService.update(user, payload.id, {
+        name: this.buildTripName(road, payload),
+        roadId: road.id,
+        description: payload.note?.trim() ?? '',
+        status: payload.status,
+        departure: payload.departure.trim(),
+        arrival: payload.arrival.trim(),
+      });
+
+      await this.syncCompanyTrip(
         user,
-        payload.id,
-        this.toUpdateTripDto(payload),
+        companyId,
+        trip.id,
+        payload,
+        vehicle.id,
+        driver.id,
       );
-      return this.toResponse(trip);
+
+      const detail = await this.buildTripDetail(user, trip);
+      return detail.record;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -138,23 +177,103 @@ export class CMSTripService {
     }
   }
 
-  private toCreateTripDto(payload: CreateTripPayloadDto): CreateTripDto {
-    return {
-      name: payload.tripName,
-      code: payload.tripCode?.trim() || generateEntityCode(CODE_PREFIX.TRIP),
-      roadId: payload.roadId,
-      description: payload.description,
-      status: payload.tripStatus,
-    };
+  private async resolveRelations(
+    user: UserDecoratorDtoResponse,
+    payload: CmsTripFormPayloadDto,
+  ) {
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
+    this.assertSeatMetrics(
+      payload.bookedSeats,
+      payload.capacity,
+      payload.occupancyRate,
+    );
+
+    const road = await this.companyAccess.resolveRoadByRouteKey(
+      companyId,
+      payload.route,
+    );
+    const vehicle = await this.companyAccess.resolveVehicleByCode(
+      companyId,
+      payload.vehicle,
+    );
+    const driver = await this.companyAccess.resolveDriverByCode(
+      companyId,
+      payload.driver,
+    );
+
+    return { road, vehicle, driver, companyId };
   }
 
-  private toUpdateTripDto(payload: UpdateTripPayloadDto): UpdateTripDto {
-    return {
-      name: payload.tripName,
-      roadId: payload.roadId,
-      description: payload.description,
-      status: payload.tripStatus,
-    };
+  private assertSeatMetrics(
+    bookedSeats: number,
+    capacity: number,
+    occupancyRate: number,
+  ): void {
+    if (bookedSeats > capacity) {
+      throw new BadRequestException(
+        CmsTripValidationMessage.BOOKED_EXCEEDS_CAPACITY,
+      );
+    }
+    const expected = this.calcOccupancyRate(bookedSeats, capacity);
+    if (Math.abs(occupancyRate - expected) > 0.05) {
+      throw new BadRequestException(
+        CmsTripValidationMessage.OCCUPANCY_RATE_MISMATCH,
+      );
+    }
+  }
+
+  private calcOccupancyRate(bookedSeats: number, capacity: number): number {
+    if (capacity <= 0) {
+      return 0;
+    }
+    return Math.round((bookedSeats / capacity) * 10000) / 100;
+  }
+
+  private buildTripName(
+    road: TbRoad,
+    payload: CmsTripFormPayloadDto,
+  ): string {
+    return `${road.name} ${payload.departure}`.trim().slice(0, 255);
+  }
+
+  private async syncCompanyTrip(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    tripId: number,
+    payload: CmsTripFormPayloadDto,
+    verhicalId: number,
+    driverId: number,
+  ): Promise<TbCompanyTrip> {
+    const existing = await this.companyTripService.findByTrip(
+      user,
+      companyId,
+      tripId,
+    );
+    const primary = this.pickPrimaryCompanyTrip(existing);
+    const note = payload.note?.trim() ?? '';
+
+    if (primary) {
+      return this.companyTripService.update(user, primary.id, {
+        verhicalId,
+        driverId,
+        totalSeat: payload.capacity,
+        totalSeatBooked: payload.bookedSeats,
+        description: note,
+        status: payload.status,
+      });
+    }
+
+    return this.companyTripService.create(user, {
+      companyId,
+      tripId,
+      verhicalId,
+      driverId,
+      totalSeat: payload.capacity,
+      totalSeatBooked: payload.bookedSeats,
+      pricePerSeat: 0,
+      description: note,
+      status: payload.status,
+    });
   }
 
   private async buildTripDetail(
@@ -173,7 +292,16 @@ export class CMSTripService {
       this.loadDriverForDetail(user, primaryCompanyTrip),
     ]);
 
+    const record = this.toTripRecord(
+      trip,
+      road,
+      verhical,
+      driver,
+      primaryCompanyTrip,
+    );
+
     return {
+      record,
       trip: this.toCmsTripEntity(trip),
       road,
       verhical,
@@ -190,6 +318,32 @@ export class CMSTripService {
         ? String(primaryCompanyTrip.driverId)
         : '',
       companyTripId: primaryCompanyTrip?.id,
+    };
+  }
+
+  private toTripRecord(
+    trip: TbTrip,
+    road: CmsRoadResponseDto | null,
+    verhical: CmsVerhicalEntityDto | null,
+    driver: CmsDriverResponseDto | null,
+    companyTrip: TbCompanyTrip | null,
+  ): CmsTripRecordDto {
+    const capacity = companyTrip?.totalSeat ?? 0;
+    const bookedSeats = companyTrip?.totalSeatBooked ?? 0;
+
+    return {
+      key: trip.code,
+      id: String(trip.id),
+      route: road?.name ?? road?.route ?? '',
+      vehicle: verhical?.code ?? '',
+      driver: driver?.code ?? '',
+      departure: trip.departure ?? '',
+      arrival: trip.arrival ?? '',
+      bookedSeats,
+      capacity,
+      occupancyRate: this.calcOccupancyRate(bookedSeats, capacity),
+      status: trip.status,
+      note: trip.description ?? '',
     };
   }
 
@@ -258,6 +412,8 @@ export class CMSTripService {
       roadId: trip.roadId,
       status: trip.status,
       description: trip.description ?? undefined,
+      departure: trip.departure ?? '',
+      arrival: trip.arrival ?? '',
     };
   }
 
@@ -333,17 +489,6 @@ export class CMSTripService {
       description: trip.description,
       createdAt: trip.createdAt?.toISOString?.() ?? String(trip.createdAt),
       updatedAt: trip.updatedAt?.toISOString?.() ?? String(trip.updatedAt),
-    };
-  }
-
-  private toResponse(trip: TbTrip): TripResponseDto {
-    return {
-      id: String(trip.id),
-      name: trip.name,
-      code: trip.code,
-      roadId: String(trip.roadId),
-      tripStatus: trip.status,
-      description: trip.description ?? undefined,
     };
   }
 }
