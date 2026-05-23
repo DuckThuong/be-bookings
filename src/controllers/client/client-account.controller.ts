@@ -10,17 +10,14 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import { ClientAccountService } from '../../services/client-account.service';
 import {
   ClientMyBookingQueryDto,
   ClientMyInvoiceQueryDto,
   ClientMyTicketQueryDto,
-} from '../../dtos/client/client.dto';
+} from '../../dtos/CLIENT/client.dto';
 
 /** Flow tài khoản: xem vé / hóa đơn / đặt chỗ (chỉ đọc) */
 @ApiTags('Client - Account')

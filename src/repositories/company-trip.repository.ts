@@ -31,6 +31,13 @@ export class CompanyTripRepository {
     return this.repo.find({ where: { tripId }, order: { id: 'DESC' } });
   }
 
+  findActiveByTripId(tripId: number) {
+    return this.repo.find({
+      where: { tripId, status: EntityStatus.ACTIVE },
+      order: { id: 'DESC' },
+    });
+  }
+
   deactivateByVerhicalId(verhicalId: number) {
     return this.repo.update(
       { verhicalId },
