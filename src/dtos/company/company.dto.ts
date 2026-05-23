@@ -61,6 +61,27 @@ export class CreateRoadDto {
 
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional({ example: '6h30m' })
+  standardDuration?: string;
+
+  @ApiPropertyOptional({ example: 4 })
+  tripsPerDay?: number;
+
+  @ApiPropertyOptional({ example: 75.5 })
+  averageOccupancy?: number;
+
+  @ApiPropertyOptional({ example: 15000000 })
+  estimatedRevenue?: number;
+
+  @ApiPropertyOptional({ example: 'Xe giường 34 chỗ' })
+  leadVehicle?: string | null;
+
+  @ApiPropertyOptional({ example: 'HIGH' })
+  demandLevel?: string | null;
+
+  @ApiPropertyOptional({ example: 'Tuyến cao điểm cuối tuần' })
+  note?: string | null;
 }
 
 export class UpdateRoadDto {
@@ -87,6 +108,27 @@ export class UpdateRoadDto {
 
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional()
+  standardDuration?: string;
+
+  @ApiPropertyOptional()
+  tripsPerDay?: number;
+
+  @ApiPropertyOptional()
+  averageOccupancy?: number;
+
+  @ApiPropertyOptional()
+  estimatedRevenue?: number;
+
+  @ApiPropertyOptional()
+  leadVehicle?: string | null;
+
+  @ApiPropertyOptional()
+  demandLevel?: string | null;
+
+  @ApiPropertyOptional()
+  note?: string | null;
 }
 
 export class CreateTripDto {

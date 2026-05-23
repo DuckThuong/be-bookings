@@ -201,6 +201,36 @@ export class CmsRoadResponseDto {
 
   @ApiProperty({ example: 5 })
   totalTurn: number;
+
+  @ApiProperty({ example: '6h30m' })
+  standardDuration: string;
+
+  @ApiProperty({ example: 4 })
+  tripsPerDay: number;
+
+  @ApiProperty({ example: 75.5 })
+  averageOccupancy: number;
+
+  @ApiProperty({ example: 15000000 })
+  estimatedRevenue: number;
+
+  @ApiPropertyOptional({ example: 'Xe giường 34 chỗ' })
+  leadVehicle?: string | null;
+
+  @ApiPropertyOptional({ example: 'HIGH' })
+  demandLevel?: string | null;
+
+  @ApiPropertyOptional({ example: 'Ghi chú' })
+  note?: string | null;
+
+  @ApiProperty({ example: 764.5, description: 'Alias distanceKm cho FE' })
+  distanceKm: number;
+
+  @ApiProperty({ example: 'Hà Nội - Đà Nẵng', description: 'Alias route cho FE' })
+  route: string;
+
+  @ApiProperty({ example: 'ROD-001', description: 'Alias roadCode cho FE' })
+  roadCode: string;
 }
 
 export class TripResponseDto {

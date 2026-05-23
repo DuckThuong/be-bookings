@@ -298,7 +298,9 @@ export class CMSVerhicalService {
 
       totalSeat,
 
-      pricePerSeat: payload.pricePerSeat ?? 0,
+      pricePerSeat:
+        payload.pricePerSeat ??
+        (target ? Number(target.pricePerSeat) : 0),
 
       description: this.buildCompanyTripDescription(payload),
 

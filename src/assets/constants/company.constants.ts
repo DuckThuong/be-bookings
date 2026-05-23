@@ -1,6 +1,7 @@
 export enum EntityStatus {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
+  MAINTENANCE = 'MAINTENANCE',
 }
 
 export const CODE_PREFIX = {

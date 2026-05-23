@@ -82,7 +82,64 @@ export class TbRoad {
   @Column({
     type: 'int',
     default: 0,
-    comment: 'Tổng số chuyến',
+    comment: 'Tổng số chuyến (counter hệ thống)',
   })
   totalTurn: number;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: '',
+    comment: 'Thời gian di chuyển chuẩn (vd: 6h30m)',
+  })
+  standardDuration: string;
+
+  @Column({
+    type: 'int',
+    default: 0,
+    comment: 'Số chuyến mỗi ngày (kế hoạch)',
+  })
+  tripsPerDay: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 0,
+    comment: 'Tỉ lệ lấp đầy trung bình (%)',
+  })
+  averageOccupancy: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    comment: 'Doanh thu ước tính',
+  })
+  estimatedRevenue: number;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    comment: 'Xe chủ lực (tên hoặc mã hiển thị)',
+  })
+  leadVehicle: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Mức nhu cầu',
+  })
+  demandLevel: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    comment: 'Ghi chú',
+  })
+  note: string | null;
 }

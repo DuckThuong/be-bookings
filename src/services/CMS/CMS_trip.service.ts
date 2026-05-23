@@ -275,6 +275,16 @@ export class CMSTripService {
       startTime: road.startTime,
       endTime: road.endTime,
       totalTurn: road.totalTurn,
+      standardDuration: road.standardDuration ?? '',
+      tripsPerDay: road.tripsPerDay ?? 0,
+      averageOccupancy: Number(road.averageOccupancy ?? 0),
+      estimatedRevenue: Number(road.estimatedRevenue ?? 0),
+      leadVehicle: road.leadVehicle,
+      demandLevel: road.demandLevel,
+      note: road.note,
+      distanceKm: Number(road.length),
+      route: road.name,
+      roadCode: road.code,
     };
   }
 
