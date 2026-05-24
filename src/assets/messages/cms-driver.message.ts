@@ -9,18 +9,16 @@ export class CmsDriverValidationMessage {
   static readonly DRIVER_CODE_TOO_LONG =
     'Mã tài xế không được vượt quá 24 ký tự';
 
-  static readonly VERHICAL_ID_EMPTY = 'ID phương tiện không được để trống';
-  static readonly VERHICAL_ID_INVALID = 'ID phương tiện phải là số nguyên dương';
+  static readonly VEHICLE_ID_EMPTY = 'ID phương tiện không được để trống';
+  static readonly VEHICLE_ID_INVALID = 'ID phương tiện phải là số nguyên dương';
 
   static readonly LICENSE_EMPTY = 'Số bằng lái không được để trống';
   static readonly LICENSE_INVALID = 'Số bằng lái không hợp lệ';
-  static readonly LICENSE_TOO_LONG =
-    'Số bằng lái không được vượt quá 50 ký tự';
+  static readonly LICENSE_TOO_LONG = 'Số bằng lái không được vượt quá 50 ký tự';
 
   static readonly PHONE_EMPTY = 'Số điện thoại không được để trống';
   static readonly PHONE_INVALID = 'Số điện thoại không hợp lệ';
-  static readonly PHONE_TOO_LONG =
-    'Số điện thoại không được vượt quá 50 ký tự';
+  static readonly PHONE_TOO_LONG = 'Số điện thoại không được vượt quá 50 ký tự';
 
   static readonly EMAIL_EMPTY = 'Email không được để trống';
   static readonly EMAIL_INVALID = 'Email không hợp lệ';

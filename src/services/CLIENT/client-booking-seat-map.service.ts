@@ -28,9 +28,11 @@ export class ClientBookingSeatMapService {
     );
     const occupiedSet = new Set(occupiedIds);
     const allSeats = await this.seatRepository.findByVehicle(
-      ctx.companyTrip.verhicalId,
+      ctx.companyTrip.vehicleId,
     );
-    const activeSeats = allSeats.filter((s) => s.status === EntityStatus.ACTIVE);
+    const activeSeats = allSeats.filter(
+      (s) => s.status === EntityStatus.ACTIVE,
+    );
     const floorSeats = this.filterByFloor(activeSeats, vehicleType, floor);
 
     const rows = this.buildRows(floorSeats, occupiedSet);
@@ -141,10 +143,7 @@ export class ClientBookingSeatMapService {
     return rows;
   }
 
-  private mapSeatStatus(
-    seat: TbSeat,
-    occupiedSet: Set<number>,
-  ): FeSeatStatus {
+  private mapSeatStatus(seat: TbSeat, occupiedSet: Set<number>): FeSeatStatus {
     const type = (seat.type ?? '').toUpperCase();
     if (type.includes('VIP')) return 'vip';
     if (occupiedSet.has(seat.id)) return 'booked';

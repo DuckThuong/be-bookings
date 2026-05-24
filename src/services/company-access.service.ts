@@ -7,7 +7,7 @@ import {
 import { TbCompany } from '../entities/company/company.entity';
 import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbSeat } from '../entities/seat.entity';
@@ -107,7 +107,7 @@ export class CompanyAccessService {
   async assertVehicleBelongsToCompany(
     companyId: number,
     vehicleId: number,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const vehicle = await this.vehicleRepository.findById(vehicleId);
     if (!vehicle || vehicle.companyId !== companyId) {
       throw new NotFoundException(
@@ -150,7 +150,7 @@ export class CompanyAccessService {
     if (!seat) {
       throw new NotFoundException(CompanyErrorMessage.SEAT_NOT_FOUND);
     }
-    await this.assertVehicleBelongsToCompany(companyId, seat.verhicalId);
+    await this.assertVehicleBelongsToCompany(companyId, seat.vehicleId);
     return seat;
   }
 
@@ -183,7 +183,7 @@ export class CompanyAccessService {
   async resolveVehicleByCode(
     companyId: number,
     vehicleCode: string,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const code = vehicleCode?.trim();
     if (!code) {
       throw new BadRequestException(CmsTripValidationMessage.VEHICLE_EMPTY);

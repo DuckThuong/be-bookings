@@ -27,7 +27,7 @@ export class VehicleIdQueryDto extends CompanyIdQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  verhicalId: number;
+  vehicleId: number;
 }
 
 export class TicketFilterQueryDto {

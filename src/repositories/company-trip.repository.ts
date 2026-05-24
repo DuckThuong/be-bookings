@@ -19,8 +19,8 @@ export class CompanyTripRepository {
     return this.repo.find({ where: { companyId }, order: { id: 'DESC' } });
   }
 
-  findByVerhicalId(verhicalId: number) {
-    return this.repo.find({ where: { verhicalId }, order: { id: 'DESC' } });
+  findByVehicleId(vehicleId: number) {
+    return this.repo.find({ where: { vehicleId }, order: { id: 'DESC' } });
   }
 
   findByDriverId(driverId: number) {
@@ -38,11 +38,8 @@ export class CompanyTripRepository {
     });
   }
 
-  deactivateByVerhicalId(verhicalId: number) {
-    return this.repo.update(
-      { verhicalId },
-      { status: EntityStatus.INACTIVE },
-    );
+  deactivateByVehicleId(vehicleId: number) {
+    return this.repo.update({ vehicleId }, { status: EntityStatus.INACTIVE });
   }
 
   save(data: Partial<TbCompanyTrip>) {

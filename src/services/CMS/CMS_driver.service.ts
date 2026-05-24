@@ -1,8 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DriverService } from '../driver.service';
 import { VehicleService } from '../vehicle.service';
 import { CompanyTripService } from '../company-trip.service';
@@ -18,12 +14,12 @@ import {
 import {
   CompanyTripResponseDto,
   CmsTripResponseDto,
-  CmsVerhicalEntityDto,
-} from '../../dtos/CMS/CMS_verhical.dto';
+  CmsVehicleEntityDto,
+} from '../../dtos/CMS/CMS_vehicle.dto';
 import { CommonErrorMessage } from '../../assets/messages/common.message';
 import { CmsDriverSuccessMessage } from '../../assets/messages/cms-driver.message';
 import { TbDriver } from '../../entities/driver.entity';
-import { TbVerhical } from '../../entities/verhical.entity';
+import { TbVehicle } from '../../entities/vehicle.entity';
 import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
@@ -135,7 +131,7 @@ export class CMSDriverService {
       name: payload.driverName,
       code:
         payload.driverCode?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
-      verhicalId: payload.verhicalId,
+      vehicleId: payload.vehicleId,
       license: payload.license,
       phone: payload.phone,
       email: payload.email,
@@ -147,7 +143,7 @@ export class CMSDriverService {
   private toUpdateDriverDto(payload: UpdateDriverPayloadDto): UpdateDriverDto {
     return {
       name: payload.driverName,
-      verhicalId: payload.verhicalId,
+      vehicleId: payload.vehicleId,
       license: payload.license,
       phone: payload.phone,
       email: payload.email,
@@ -160,13 +156,9 @@ export class CMSDriverService {
     user: UserDecoratorDtoResponse,
     driver: TbDriver,
   ): Promise<CmsDriverDetailResponseDto> {
-    const [verhical, companyTrips] = await Promise.all([
-      this.loadVerhicalForDetail(user, driver.verhicalId),
-      this.companyTripService.findByDriver(
-        user,
-        driver.companyId,
-        driver.id,
-      ),
+    const [vehicle, companyTrips] = await Promise.all([
+      this.loadVehicleForDetail(user, driver.vehicleId),
+      this.companyTripService.findByDriver(user, driver.companyId, driver.id),
     ]);
 
     const primaryCompanyTrip = this.pickPrimaryCompanyTrip(companyTrips);
@@ -174,13 +166,13 @@ export class CMSDriverService {
 
     return {
       driver: this.toCmsDriverEntity(driver),
-      verhical,
+      vehicle,
       trip,
       companyTrip: primaryCompanyTrip
         ? this.toCompanyTripResponse(primaryCompanyTrip)
         : null,
       companyTrips: companyTrips.map((t) => this.toCompanyTripResponse(t)),
-      verhicalId: String(driver.verhicalId),
+      vehicleId: String(driver.vehicleId),
       tripId: primaryCompanyTrip ? String(primaryCompanyTrip.tripId) : '',
       companyTripId: primaryCompanyTrip?.id,
     };
@@ -195,13 +187,13 @@ export class CMSDriverService {
     return [...pool].sort((a, b) => b.id - a.id)[0];
   }
 
-  private async loadVerhicalForDetail(
+  private async loadVehicleForDetail(
     user: UserDecoratorDtoResponse,
-    verhicalId: number,
-  ): Promise<CmsVerhicalEntityDto | null> {
+    vehicleId: number,
+  ): Promise<CmsVehicleEntityDto | null> {
     try {
-      const entity = await this.vehicalService.findOne(user, verhicalId);
-      return this.toCmsVerhicalEntity(entity);
+      const entity = await this.vehicalService.findOne(user, vehicleId);
+      return this.toCmsVehicleEntity(entity);
     } catch {
       return null;
     }
@@ -227,7 +219,7 @@ export class CMSDriverService {
       id: driver.id,
       code: driver.code,
       companyId: driver.companyId,
-      verhicalId: driver.verhicalId,
+      vehicleId: driver.vehicleId,
       name: driver.name,
       license: driver.license,
       phone: driver.phone,
@@ -241,7 +233,7 @@ export class CMSDriverService {
     };
   }
 
-  private toCmsVerhicalEntity(vehical: TbVerhical): CmsVerhicalEntityDto {
+  private toCmsVehicleEntity(vehical: TbVehicle): CmsVehicleEntityDto {
     return {
       id: vehical.id,
       companyId: vehical.companyId,
@@ -271,7 +263,7 @@ export class CMSDriverService {
       id: trip.id,
       companyId: trip.companyId,
       tripId: trip.tripId,
-      verhicalId: trip.verhicalId,
+      vehicleId: trip.vehicleId,
       driverId: trip.driverId,
       totalSeat: trip.totalSeat,
       totalSeatBooked: trip.totalSeatBooked,
@@ -288,7 +280,7 @@ export class CMSDriverService {
       id: String(driver.id),
       name: driver.name,
       code: driver.code,
-      verhicalId: String(driver.verhicalId),
+      vehicleId: String(driver.vehicleId),
       license: driver.license,
       phone: driver.phone,
       email: driver.email,

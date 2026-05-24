@@ -17,9 +17,9 @@ export class TbSeat {
 
   @Column({
     type: 'int',
-    comment: 'ID phương tiện (tb_verhical)',
+    comment: 'ID phương tiện (tb_vehicle)',
   })
-  verhicalId: number;
+  vehicleId: number;
 
   @Column('varchar', {
     length: 24,

@@ -5,7 +5,7 @@ import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
 import { TbCompany } from '../../entities/company/company.entity';
-import { TbVerhical } from '../../entities/verhical.entity';
+import { TbVehicle } from '../../entities/vehicle.entity';
 import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { TripRepository } from '../../repositories/trip.repository';
 import { ClientErrorMessage } from '../../assets/messages/client.message';
@@ -20,7 +20,7 @@ export interface ResolvedTripContext {
   trip: TbTrip;
   road: TbRoad;
   company: TbCompany;
-  vehicle: TbVerhical;
+  vehicle: TbVehicle;
   tripIdFe: string;
   unitPrice: number;
 }
@@ -34,8 +34,8 @@ export class ClientBookingTripResolverService {
     private readonly roadRepo: Repository<TbRoad>,
     @InjectRepository(TbCompany)
     private readonly companyRepo: Repository<TbCompany>,
-    @InjectRepository(TbVerhical)
-    private readonly vehicleRepo: Repository<TbVerhical>,
+    @InjectRepository(TbVehicle)
+    private readonly vehicleRepo: Repository<TbVehicle>,
   ) {}
 
   async resolve(tripId: string): Promise<ResolvedTripContext> {
@@ -77,9 +77,7 @@ export class ClientBookingTripResolverService {
       arriveTime: trip.arrival || road.endTime,
       arriveNote: this.buildArriveNote(trip.departure, trip.arrival),
       date: new Date().toISOString().slice(0, 10),
-      durationLabel: road.standardDuration
-        ? `~${road.standardDuration}`
-        : '',
+      durationLabel: road.standardDuration ? `~${road.standardDuration}` : '',
       unitPrice: ctx.unitPrice,
       companyTripId: companyTrip.id,
       companyId: companyTrip.companyId,
@@ -127,7 +125,7 @@ export class ClientBookingTripResolverService {
     const [road, company, vehicle] = await Promise.all([
       this.roadRepo.findOne({ where: { id: trip.roadId } }),
       this.companyRepo.findOne({ where: { id: companyTrip.companyId } }),
-      this.vehicleRepo.findOne({ where: { id: companyTrip.verhicalId } }),
+      this.vehicleRepo.findOne({ where: { id: companyTrip.vehicleId } }),
     ]);
 
     if (!road || !company) {
@@ -145,7 +143,10 @@ export class ClientBookingTripResolverService {
     };
   }
 
-  private buildArriveNote(departure?: string, arrival?: string): string | undefined {
+  private buildArriveNote(
+    departure?: string,
+    arrival?: string,
+  ): string | undefined {
     if (!departure || !arrival) return undefined;
     const depH = parseInt(departure.split(':')[0] ?? '0', 10);
     const arrH = parseInt(arrival.split(':')[0] ?? '0', 10);

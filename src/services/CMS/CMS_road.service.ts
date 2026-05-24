@@ -1,8 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { RoadService } from '../road.service';
 import { TripService } from '../trip.service';
 import { CompanyTripService } from '../company-trip.service';
@@ -23,20 +19,17 @@ import {
 import {
   CompanyTripResponseDto,
   CmsDriverResponseDto,
-  CmsVerhicalEntityDto,
-} from '../../dtos/CMS/CMS_verhical.dto';
+  CmsVehicleEntityDto,
+} from '../../dtos/CMS/CMS_vehicle.dto';
 import { CommonErrorMessage } from '../../assets/messages/common.message';
 import { CmsRoadSuccessMessage } from '../../assets/messages/cms-road.message';
 import { TbRoad } from '../../entities/road.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
-import { TbVerhical } from '../../entities/verhical.entity';
+import { TbVehicle } from '../../entities/vehicle.entity';
 import { TbDriver } from '../../entities/driver.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
-import {
-  CreateRoadDto,
-  UpdateRoadDto,
-} from '../../dtos/company/company.dto';
+import { CreateRoadDto, UpdateRoadDto } from '../../dtos/company/company.dto';
 import { EntityStatus } from '../../assets/constants/company.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
@@ -201,8 +194,8 @@ export class CMSRoadService {
       : [];
 
     const primaryCompanyTrip = this.pickPrimaryCompanyTrip(companyTrips);
-    const [verhical, driver] = await Promise.all([
-      this.loadVerhicalForDetail(user, primaryCompanyTrip),
+    const [vehicle, driver] = await Promise.all([
+      this.loadVehicleForDetail(user, primaryCompanyTrip),
       this.loadDriverForDetail(user, primaryCompanyTrip),
     ]);
 
@@ -210,7 +203,7 @@ export class CMSRoadService {
       road: this.toCmsRoadResponse(road),
       trips: trips.map((t) => this.toCmsTripEntity(t)),
       trip: primaryTrip ? this.toCmsTripEntity(primaryTrip) : null,
-      verhical,
+      vehicle,
       driver,
       companyTrip: primaryCompanyTrip
         ? this.toCompanyTripResponse(primaryCompanyTrip)
@@ -218,12 +211,8 @@ export class CMSRoadService {
       companyTrips: companyTrips.map((t) => this.toCompanyTripResponse(t)),
       tripCount: activeTrips.length,
       tripId: primaryTrip ? String(primaryTrip.id) : '',
-      verhicalId: primaryCompanyTrip
-        ? String(primaryCompanyTrip.verhicalId)
-        : '',
-      driverId: primaryCompanyTrip
-        ? String(primaryCompanyTrip.driverId)
-        : '',
+      vehicleId: primaryCompanyTrip ? String(primaryCompanyTrip.vehicleId) : '',
+      driverId: primaryCompanyTrip ? String(primaryCompanyTrip.driverId) : '',
       companyTripId: primaryCompanyTrip?.id,
     };
   }
@@ -246,19 +235,19 @@ export class CMSRoadService {
     return [...pool].sort((a, b) => b.id - a.id)[0];
   }
 
-  private async loadVerhicalForDetail(
+  private async loadVehicleForDetail(
     user: UserDecoratorDtoResponse,
     companyTrip: TbCompanyTrip | null,
-  ): Promise<CmsVerhicalEntityDto | null> {
+  ): Promise<CmsVehicleEntityDto | null> {
     if (!companyTrip) {
       return null;
     }
     try {
       const entity = await this.vehicalService.findOne(
         user,
-        companyTrip.verhicalId,
+        companyTrip.vehicleId,
       );
-      return this.toCmsVerhicalEntity(entity);
+      return this.toCmsVehicleEntity(entity);
     } catch {
       return null;
     }
@@ -322,7 +311,7 @@ export class CMSRoadService {
     };
   }
 
-  private toCmsVerhicalEntity(vehical: TbVerhical): CmsVerhicalEntityDto {
+  private toCmsVehicleEntity(vehical: TbVehicle): CmsVehicleEntityDto {
     return {
       id: vehical.id,
       companyId: vehical.companyId,
@@ -341,7 +330,7 @@ export class CMSRoadService {
       id: driver.id,
       code: driver.code,
       companyId: driver.companyId,
-      verhicalId: driver.verhicalId,
+      vehicleId: driver.vehicleId,
       name: driver.name,
       license: driver.license,
       phone: driver.phone,
@@ -358,7 +347,7 @@ export class CMSRoadService {
       id: trip.id,
       companyId: trip.companyId,
       tripId: trip.tripId,
-      verhicalId: trip.verhicalId,
+      vehicleId: trip.vehicleId,
       driverId: trip.driverId,
       totalSeat: trip.totalSeat,
       totalSeatBooked: trip.totalSeatBooked,

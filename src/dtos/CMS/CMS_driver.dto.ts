@@ -15,8 +15,8 @@ import { CmsDriverValidationMessage } from '../../assets/messages/cms-driver.mes
 import {
   CompanyTripResponseDto,
   CmsTripResponseDto,
-  CmsVerhicalEntityDto,
-} from './CMS_verhical.dto';
+  CmsVehicleEntityDto,
+} from './CMS_vehicle.dto';
 
 export class CreateDriverPayloadDto {
   @ApiProperty({
@@ -44,14 +44,14 @@ export class CreateDriverPayloadDto {
 
   @ApiProperty({
     example: 1,
-    description: 'ID phương tiện mặc định (tb_verhical)',
+    description: 'ID phương tiện mặc định (tb_vehicle)',
     required: true,
     type: Number,
   })
   @Type(() => Number)
-  @IsInt({ message: CmsDriverValidationMessage.VERHICAL_ID_INVALID })
-  @Min(1, { message: CmsDriverValidationMessage.VERHICAL_ID_INVALID })
-  verhicalId: number;
+  @IsInt({ message: CmsDriverValidationMessage.VEHICLE_ID_INVALID })
+  @Min(1, { message: CmsDriverValidationMessage.VEHICLE_ID_INVALID })
+  vehicleId: number;
 
   @ApiProperty({
     example: 'B2-123456',
@@ -137,14 +137,14 @@ export class UpdateDriverPayloadDto {
 
   @ApiProperty({
     example: 1,
-    description: 'ID phương tiện mặc định (tb_verhical)',
+    description: 'ID phương tiện mặc định (tb_vehicle)',
     required: true,
     type: Number,
   })
   @Type(() => Number)
-  @IsInt({ message: CmsDriverValidationMessage.VERHICAL_ID_INVALID })
-  @Min(1, { message: CmsDriverValidationMessage.VERHICAL_ID_INVALID })
-  verhicalId: number;
+  @IsInt({ message: CmsDriverValidationMessage.VEHICLE_ID_INVALID })
+  @Min(1, { message: CmsDriverValidationMessage.VEHICLE_ID_INVALID })
+  vehicleId: number;
 
   @ApiProperty({
     example: 'B2-123456',
@@ -214,7 +214,7 @@ export class CmsDriverEntityDto {
   companyId: number;
 
   @ApiProperty({ example: 1 })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 'Nguyễn Văn A' })
   name: string;
@@ -258,7 +258,7 @@ export class DriverResponseDto {
   code: string;
 
   @ApiProperty({ example: '1' })
-  verhicalId: string;
+  vehicleId: string;
 
   @ApiProperty({ example: 'B2-123456' })
   license: string;
@@ -292,8 +292,8 @@ export class CmsDriverDetailResponseDto {
   @ApiProperty({ type: CmsDriverEntityDto })
   driver: CmsDriverEntityDto;
 
-  @ApiPropertyOptional({ type: CmsVerhicalEntityDto })
-  verhical: CmsVerhicalEntityDto | null;
+  @ApiPropertyOptional({ type: CmsVehicleEntityDto })
+  vehicle: CmsVehicleEntityDto | null;
 
   @ApiPropertyOptional({ type: CmsTripResponseDto })
   trip: CmsTripResponseDto | null;
@@ -305,7 +305,7 @@ export class CmsDriverDetailResponseDto {
   companyTrips?: CompanyTripResponseDto[];
 
   @ApiProperty({ example: '1' })
-  verhicalId: string;
+  vehicleId: string;
 
   @ApiProperty({ example: '1' })
   tripId: string;

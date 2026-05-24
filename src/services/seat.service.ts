@@ -36,11 +36,11 @@ export class SeatService {
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
     await this.companyAccess.assertVehicleBelongsToCompany(
       payload.companyId,
-      payload.verhicalId,
+      payload.vehicleId,
     );
 
     return this.seatRepository.save({
-      verhicalId: payload.verhicalId,
+      vehicleId: payload.vehicleId,
       code: generateEntityCode(CODE_PREFIX.SEAT),
       name: payload.name,
       index: payload.index,
@@ -57,7 +57,7 @@ export class SeatService {
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
     await this.companyAccess.assertVehicleBelongsToCompany(
       payload.companyId,
-      payload.verhicalId,
+      payload.vehicleId,
     );
 
     if (!payload.seats?.length) {
@@ -69,7 +69,7 @@ export class SeatService {
 
     return this.seatRepository.saveMany(
       payload.seats.map((seat) => ({
-        verhicalId: payload.verhicalId,
+        vehicleId: payload.vehicleId,
         code: generateEntityCode(CODE_PREFIX.SEAT),
         name: seat.name,
         index: seat.index,
@@ -83,25 +83,22 @@ export class SeatService {
   async findByVehicle(
     user: UserDecoratorDtoResponse,
     companyId: number,
-    verhicalId: number,
+    vehicleId: number,
   ): Promise<TbSeat[]> {
     await this.companyAccess.assertCompanyAccess(user, companyId);
     await this.companyAccess.assertVehicleBelongsToCompany(
       companyId,
-      verhicalId,
+      vehicleId,
     );
-    return this.seatRepository.findByVehicle(verhicalId);
+    return this.seatRepository.findByVehicle(vehicleId);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbSeat> {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbSeat> {
     const seat = await this.seatRepository.findById(id);
     if (!seat) {
       throw new NotFoundException(CompanyErrorMessage.SEAT_NOT_FOUND);
     }
-    const vehicle = await this.vehicleRepository.findById(seat.verhicalId);
+    const vehicle = await this.vehicleRepository.findById(seat.vehicleId);
     if (!vehicle) {
       throw new NotFoundException(CompanyErrorMessage.VEHICLE_NOT_FOUND);
     }
@@ -140,21 +137,21 @@ export class SeatService {
   async removeAllByVehicle(
     user: UserDecoratorDtoResponse,
     companyId: number,
-    verhicalId: number,
+    vehicleId: number,
   ): Promise<{ message: string; deactivatedCount: number }> {
     await this.companyAccess.assertCompanyAccess(user, companyId);
     await this.companyAccess.assertVehicleBelongsToCompany(
       companyId,
-      verhicalId,
+      vehicleId,
     );
 
-    const seats = await this.seatRepository.findByVehicle(verhicalId);
+    const seats = await this.seatRepository.findByVehicle(vehicleId);
     const activeCount = seats.filter(
       (s) => s.status === EntityStatus.ACTIVE,
     ).length;
 
     if (seats.length > 0) {
-      await this.seatRepository.deactivateByVehicleId(verhicalId);
+      await this.seatRepository.deactivateByVehicleId(vehicleId);
     }
 
     return {

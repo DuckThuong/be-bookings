@@ -35,7 +35,10 @@ export class CreateRoadDto {
   @ApiProperty({ example: 1, description: 'ID nhà xe' })
   companyId: number;
 
-  @ApiPropertyOptional({ example: 'ROD-xxx', description: 'Mã tuyến (tự sinh nếu bỏ trống)' })
+  @ApiPropertyOptional({
+    example: 'ROD-xxx',
+    description: 'Mã tuyến (tự sinh nếu bỏ trống)',
+  })
   code?: string;
 
   @ApiProperty({ example: 'Hà Nội - Đà Nẵng' })
@@ -135,7 +138,10 @@ export class CreateTripDto {
   @ApiProperty({ example: 'Chuyến đêm HN-ĐN' })
   name: string;
 
-  @ApiPropertyOptional({ example: 'TRP-xxx', description: 'Mã chuyến (tự sinh nếu bỏ trống)' })
+  @ApiPropertyOptional({
+    example: 'TRP-xxx',
+    description: 'Mã chuyến (tự sinh nếu bỏ trống)',
+  })
   code?: string;
 
   @ApiProperty({ example: 1, description: 'ID tuyến thuộc nhà xe' })
@@ -224,11 +230,14 @@ export class CreateDriverDto {
   @ApiProperty({ example: 'Nguyễn Văn A' })
   name: string;
 
-  @ApiPropertyOptional({ example: 'DRV-xxx', description: 'Mã tài xế (tự sinh nếu bỏ trống)' })
+  @ApiPropertyOptional({
+    example: 'DRV-xxx',
+    description: 'Mã tài xế (tự sinh nếu bỏ trống)',
+  })
   code?: string;
 
   @ApiProperty({ example: 1, description: 'ID phương tiện mặc định' })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 'B2-123456' })
   license: string;
@@ -251,7 +260,7 @@ export class UpdateDriverDto {
   name?: string;
 
   @ApiPropertyOptional()
-  verhicalId?: number;
+  vehicleId?: number;
 
   @ApiPropertyOptional()
   license?: string;
@@ -277,7 +286,7 @@ export class CreateCompanyTripDto {
   tripId: number;
 
   @ApiProperty({ example: 1, description: 'ID phương tiện' })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 1, description: 'ID tài xế' })
   driverId: number;
@@ -303,7 +312,7 @@ export class UpdateCompanyTripDto {
   tripId?: number;
 
   @ApiPropertyOptional()
-  verhicalId?: number;
+  vehicleId?: number;
 
   @ApiPropertyOptional()
   driverId?: number;
@@ -329,7 +338,7 @@ export class CreateSeatDto {
   companyId: number;
 
   @ApiProperty({ example: 1, description: 'ID phương tiện' })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 'A1' })
   name: string;
@@ -369,7 +378,7 @@ export class CreateSeatsBatchDto {
   companyId: number;
 
   @ApiProperty({ example: 1 })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ type: [CreateSeatItemDto] })
   seats: CreateSeatItemDto[];

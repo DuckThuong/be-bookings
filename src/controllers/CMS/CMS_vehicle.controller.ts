@@ -10,54 +10,57 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
-import { CMSVerhicalService } from '../../services/CMS/CMS_verhical.service';
+import { CMSVehicleService } from '../../services/CMS/CMS_vehicle.service';
 import {
-  CreateVehicalPayloadDto,
-  UpdateVehicalPayloadDto,
-  CmsVehicalDetailResponseDto,
-  CmsVehicalListResponseDto,
-} from '../../dtos/CMS/CMS_verhical.dto';
+  CreateVehiclePayloadDto,
+  UpdateVehiclePayloadDto,
+  CmsVehicleDetailResponseDto,
+  CmsVehicleListResponseDto,
+} from '../../dtos/CMS/CMS_vehicle.dto';
 import { OptionalCompanyIdQueryDto } from '../../dtos/transport/common.dto';
 
-@ApiTags('CMS - Verhical')
-@Controller('cms/verhical')
+@ApiTags('CMS - Vehicle')
+@Controller('cms/vehicle')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.OWNER)
 @ApiBearerAuth('JWT-auth')
-export class CMSVerhicalController {
-  constructor(private readonly cmsVerhicalService: CMSVerhicalService) {}
+export class CMSVehicleController {
+  constructor(private readonly cmsVehicleService: CMSVehicleService) {}
 
   @Get()
   @ApiOperation({
-    summary: 'Danh sách phương tiện CMS (xe + ghế + trip + driver + company_trip)',
+    summary:
+      'Danh sách phương tiện CMS (xe + ghế + trip + driver + company_trip)',
   })
-  @ApiResponse({ status: 200, type: CmsVehicalListResponseDto })
+  @ApiResponse({ status: 200, type: CmsVehicleListResponseDto })
   findAll(
     @User() user: UserDecoratorDtoResponse,
     @Query() query: OptionalCompanyIdQueryDto,
   ) {
-    return this.cmsVerhicalService.getAllVehicals(user, query.companyId);
+    return this.cmsVehicleService.getAllVehicles(user, query.companyId);
   }
 
   @Get(':id')
   @ApiOperation({
     summary: 'Chi tiết phương tiện CMS theo ID (xe + ghế + trip + driver)',
   })
-  @ApiResponse({ status: 200, type: CmsVehicalDetailResponseDto })
+  @ApiResponse({ status: 200, type: CmsVehicleDetailResponseDto })
   findOne(
     @User() user: UserDecoratorDtoResponse,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.cmsVerhicalService.getVehicalById(user, id);
+    return this.cmsVehicleService.getVehicleById(user, id);
   }
 
   @Post()
@@ -68,9 +71,9 @@ export class CMSVerhicalController {
   })
   create(
     @User() user: UserDecoratorDtoResponse,
-    @Body() payload: CreateVehicalPayloadDto,
+    @Body() payload: CreateVehiclePayloadDto,
   ) {
-    return this.cmsVerhicalService.createVehical(payload, user);
+    return this.cmsVehicleService.createVehicle(payload, user);
   }
 
   @Patch()
@@ -80,9 +83,9 @@ export class CMSVerhicalController {
   })
   update(
     @User() user: UserDecoratorDtoResponse,
-    @Body() payload: UpdateVehicalPayloadDto,
+    @Body() payload: UpdateVehiclePayloadDto,
   ) {
-    return this.cmsVerhicalService.updateVehical(payload, user);
+    return this.cmsVehicleService.updateVehicle(payload, user);
   }
 
   @Delete(':id')
@@ -95,6 +98,6 @@ export class CMSVerhicalController {
     @User() user: UserDecoratorDtoResponse,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.cmsVerhicalService.deleteVehical(user, id);
+    return this.cmsVehicleService.deleteVehicle(user, id);
   }
 }

@@ -1,5 +1,5 @@
 /** Thông báo validate cho CMS tạo / cập nhật phương tiện */
-export class CmsVehicalValidationMessage {
+export class CmsVehicleValidationMessage {
   static readonly VEHICAL_NAME_EMPTY = 'Tên phương tiện không được để trống';
   static readonly VEHICAL_NAME_INVALID = 'Tên phương tiện không hợp lệ';
   static readonly VEHICAL_NAME_TOO_LONG =
@@ -12,8 +12,7 @@ export class CmsVehicalValidationMessage {
 
   static readonly SEAT_TYPE_EMPTY = 'Loại ghế không được để trống';
   static readonly SEAT_TYPE_INVALID = 'Loại ghế không hợp lệ';
-  static readonly SEAT_TYPE_TOO_LONG =
-    'Loại ghế không được vượt quá 50 ký tự';
+  static readonly SEAT_TYPE_TOO_LONG = 'Loại ghế không được vượt quá 50 ký tự';
 
   static readonly SEAT_COUNT_EMPTY = 'Số lượng ghế không được để trống';
   static readonly SEAT_COUNT_INVALID = 'Số lượng ghế phải là số nguyên';
@@ -27,12 +26,14 @@ export class CmsVehicalValidationMessage {
 
   static readonly VEHICAL_STATUS_EMPTY =
     'Trạng thái phương tiện không được để trống';
-  static readonly VEHICAL_STATUS_INVALID = 'Trạng thái phương tiện không hợp lệ';
+  static readonly VEHICAL_STATUS_INVALID =
+    'Trạng thái phương tiện không hợp lệ';
   static readonly VEHICAL_STATUS_NOT_IN =
     'Trạng thái phương tiện phải là ACTIVE hoặc INACTIVE';
 
   static readonly TRIP_ID_EMPTY = 'ID chuyến mẫu (tripId) không được để trống';
-  static readonly TRIP_ID_INVALID = 'ID chuyến mẫu (tripId) phải là số nguyên dương';
+  static readonly TRIP_ID_INVALID =
+    'ID chuyến mẫu (tripId) phải là số nguyên dương';
 
   static readonly DRIVER_ID_EMPTY = 'ID tài xế không được để trống';
   static readonly DRIVER_ID_INVALID = 'ID tài xế phải là số nguyên dương';
@@ -64,7 +65,7 @@ export class CmsVehicalValidationMessage {
     'Giờ đến phải theo định dạng HH:mm (ví dụ: 14:00)';
 }
 
-export class CmsVehicalErrorMessage {
+export class CmsVehicleErrorMessage {
   static readonly CREATE_FAILED = 'Tạo phương tiện thất bại';
   static readonly UPDATE_FAILED = 'Cập nhật phương tiện thất bại';
   static readonly NOT_FOUND = 'Không tìm thấy phương tiện';
@@ -74,7 +75,7 @@ export class CmsVehicalErrorMessage {
     'Không thể giảm số ghế: đã có vé đặt vượt quá số ghế mới';
 }
 
-export class CmsVehicalSuccessMessage {
+export class CmsVehicleSuccessMessage {
   static readonly CREATE_SUCCESS = 'Tạo phương tiện thành công';
   static readonly UPDATE_SUCCESS = 'Cập nhật phương tiện thành công';
   static readonly DELETE_SUCCESS =

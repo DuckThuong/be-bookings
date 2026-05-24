@@ -14,10 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/jwt/jwt.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { User } from '../user.decorator';
 import { SeatService } from '../services/seat.service';
 import {
@@ -46,7 +43,10 @@ export class SeatController {
 
   @Post()
   @ApiOperation({ summary: 'Tạo một ghế' })
-  create(@User() user: UserDecoratorDtoResponse, @Body() payload: CreateSeatDto) {
+  create(
+    @User() user: UserDecoratorDtoResponse,
+    @Body() payload: CreateSeatDto,
+  ) {
     return this.seatService.create(user, payload);
   }
 
@@ -59,7 +59,7 @@ export class SeatController {
     return this.seatService.findByVehicle(
       user,
       query.companyId,
-      query.verhicalId,
+      query.vehicleId,
     );
   }
 

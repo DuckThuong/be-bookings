@@ -1,8 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 import { VehicleService } from '../vehicle.service';
 
@@ -15,27 +11,27 @@ import { TripService } from '../trip.service';
 import { DriverService } from '../driver.service';
 
 import {
-  CreateVehicalPayloadDto,
-  UpdateVehicalPayloadDto,
-  VehicalResponseDto,
+  CreateVehiclePayloadDto,
+  UpdateVehiclePayloadDto,
+  VehicleResponseDto,
   CompanyTripResponseDto,
-  CmsVehicalDetailResponseDto,
-  CmsVehicalListResponseDto,
-  CmsVerhicalEntityDto,
+  CmsVehicleDetailResponseDto,
+  CmsVehicleListResponseDto,
+  CmsVehicleEntityDto,
   CmsSeatResponseDto,
   CmsTripResponseDto,
   CmsDriverResponseDto,
-} from '../../dtos/CMS/CMS_verhical.dto';
+} from '../../dtos/CMS/CMS_vehicle.dto';
 
 import { CommonErrorMessage } from '../../assets/messages/common.message';
 
 import {
-  CmsVehicalErrorMessage,
-  CmsVehicalSuccessMessage,
-  CmsVehicalValidationMessage,
+  CmsVehicleErrorMessage,
+  CmsVehicleSuccessMessage,
+  CmsVehicleValidationMessage,
 } from '../../assets/messages/cms-vehical.message';
 
-import { TbVerhical } from '../../entities/verhical.entity';
+import { TbVehicle } from '../../entities/vehicle.entity';
 
 import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 
@@ -65,10 +61,10 @@ import { TbTrip } from '../../entities/trip.entity';
 
 import { TbDriver } from '../../entities/driver.entity';
 
-type CmsVehicalPayload = CreateVehicalPayloadDto | UpdateVehicalPayloadDto;
+type CmsVehiclePayload = CreateVehiclePayloadDto | UpdateVehiclePayloadDto;
 
 @Injectable()
-export class CMSVerhicalService {
+export class CMSVehicleService {
   constructor(
     private readonly vehicalService: VehicleService,
 
@@ -81,34 +77,34 @@ export class CMSVerhicalService {
     private readonly driverService: DriverService,
   ) {}
 
-  public async getVehicalById(
+  public async getVehicleById(
     user: UserDecoratorDtoResponse,
 
     id: number,
-  ): Promise<CmsVehicalDetailResponseDto> {
+  ): Promise<CmsVehicleDetailResponseDto> {
     const vehical = await this.vehicalService.findOne(user, id);
 
-    return this.buildVehicalDetail(user, vehical);
+    return this.buildVehicleDetail(user, vehical);
   }
 
-  public async getAllVehicals(
+  public async getAllVehicles(
     user: UserDecoratorDtoResponse,
 
     companyId?: number,
-  ): Promise<CmsVehicalListResponseDto> {
+  ): Promise<CmsVehicleListResponseDto> {
     const vehicals = await this.vehicalService.findAll(user, companyId);
 
     const items = await Promise.all(
-      vehicals.map((v) => this.buildVehicalDetail(user, v)),
+      vehicals.map((v) => this.buildVehicleDetail(user, v)),
     );
 
     return { items, total: items.length };
   }
 
-  public async createVehical(
-    payload: CreateVehicalPayloadDto,
+  public async createVehicle(
+    payload: CreateVehiclePayloadDto,
     user: UserDecoratorDtoResponse,
-  ): Promise<VehicalResponseDto> {
+  ): Promise<VehicleResponseDto> {
     try {
       this.assertTripDriverPairForCreate(payload);
 
@@ -120,7 +116,7 @@ export class CMSVerhicalService {
       const seats = await this.seatService.createBatch(user, {
         companyId: vehical.companyId,
 
-        verhicalId: vehical.id,
+        vehicleId: vehical.id,
 
         seats: this.buildSeatItems(payload.seatType, payload.seatCount, 0),
       });
@@ -146,10 +142,10 @@ export class CMSVerhicalService {
     }
   }
 
-  public async updateVehical(
-    payload: UpdateVehicalPayloadDto,
+  public async updateVehicle(
+    payload: UpdateVehiclePayloadDto,
     user: UserDecoratorDtoResponse,
-  ): Promise<VehicalResponseDto> {
+  ): Promise<VehicleResponseDto> {
     try {
       const vehical = await this.vehicalService.update(
         user,
@@ -184,7 +180,7 @@ export class CMSVerhicalService {
     }
   }
 
-  public async deleteVehical(
+  public async deleteVehicle(
     user: UserDecoratorDtoResponse,
 
     id: number,
@@ -219,7 +215,7 @@ export class CMSVerhicalService {
       await this.vehicalService.remove(user, id);
 
       return {
-        message: CmsVehicalSuccessMessage.DELETE_SUCCESS,
+        message: CmsVehicleSuccessMessage.DELETE_SUCCESS,
 
         vehicalId: id,
 
@@ -242,26 +238,26 @@ export class CMSVerhicalService {
   private async syncCompanyTripForVehicle(
     user: UserDecoratorDtoResponse,
 
-    vehical: TbVerhical,
+    vehical: TbVehicle,
 
-    payload: UpdateVehicalPayloadDto,
+    payload: UpdateVehiclePayloadDto,
 
     totalSeat: number,
   ): Promise<TbCompanyTrip> {
     const tripId = this.parsePositiveInt(
       payload.tripId,
 
-      CmsVehicalValidationMessage.TRIP_ID_EMPTY,
+      CmsVehicleValidationMessage.TRIP_ID_EMPTY,
 
-      CmsVehicalValidationMessage.TRIP_ID_INVALID,
+      CmsVehicleValidationMessage.TRIP_ID_INVALID,
     );
 
     const driverId = this.parsePositiveInt(
       payload.driverId,
 
-      CmsVehicalValidationMessage.DRIVER_ID_EMPTY,
+      CmsVehicleValidationMessage.DRIVER_ID_EMPTY,
 
-      CmsVehicalValidationMessage.DRIVER_ID_INVALID,
+      CmsVehicleValidationMessage.DRIVER_ID_INVALID,
     );
 
     const companyTripStatus =
@@ -283,7 +279,7 @@ export class CMSVerhicalService {
 
     if (payload.companyTripId && !target) {
       throw new HttpException(
-        CmsVehicalErrorMessage.COMPANY_TRIP_NOT_FOUND,
+        CmsVehicleErrorMessage.COMPANY_TRIP_NOT_FOUND,
 
         HttpStatus.NOT_FOUND,
       );
@@ -294,13 +290,12 @@ export class CMSVerhicalService {
 
       driverId,
 
-      verhicalId: vehical.id,
+      vehicleId: vehical.id,
 
       totalSeat,
 
       pricePerSeat:
-        payload.pricePerSeat ??
-        (target ? Number(target.pricePerSeat) : 0),
+        payload.pricePerSeat ?? (target ? Number(target.pricePerSeat) : 0),
 
       description: this.buildCompanyTripDescription(payload),
 
@@ -310,7 +305,7 @@ export class CMSVerhicalService {
     if (target) {
       if (target.totalSeatBooked > totalSeat) {
         throw new HttpException(
-          CmsVehicalErrorMessage.SEAT_BOOKED_EXCEEDS_TOTAL,
+          CmsVehicleErrorMessage.SEAT_BOOKED_EXCEEDS_TOTAL,
 
           HttpStatus.BAD_REQUEST,
         );
@@ -329,9 +324,9 @@ export class CMSVerhicalService {
   private async syncSeatsForVehicle(
     user: UserDecoratorDtoResponse,
 
-    vehical: TbVerhical,
+    vehical: TbVehicle,
 
-    payload: UpdateVehicalPayloadDto,
+    payload: UpdateVehiclePayloadDto,
   ): Promise<TbSeat[]> {
     const targetCount = payload.seatCount;
 
@@ -351,7 +346,7 @@ export class CMSVerhicalService {
       return this.seatService.createBatch(user, {
         companyId: vehical.companyId,
 
-        verhicalId: vehical.id,
+        vehicleId: vehical.id,
 
         seats: this.buildSeatItems(payload.seatType, targetCount, 0),
       });
@@ -363,7 +358,7 @@ export class CMSVerhicalService {
       const newSeats = await this.seatService.createBatch(user, {
         companyId: vehical.companyId,
 
-        verhicalId: vehical.id,
+        vehicleId: vehical.id,
 
         seats: this.buildSeatItems(
           payload.seatType,
@@ -401,7 +396,7 @@ export class CMSVerhicalService {
   }
 
   private toCreateVehicleDto(
-    payload: CreateVehicalPayloadDto,
+    payload: CreateVehiclePayloadDto,
   ): CreateVehicleDto {
     return {
       name: payload.vehicalName,
@@ -420,7 +415,7 @@ export class CMSVerhicalService {
   }
 
   private toUpdateVehicleDto(
-    payload: UpdateVehicalPayloadDto,
+    payload: UpdateVehiclePayloadDto,
   ): UpdateVehicleDto {
     return {
       name: payload.vehicalName,
@@ -438,28 +433,28 @@ export class CMSVerhicalService {
   }
 
   private assertTripDriverPairForCreate(
-    payload: CreateVehicalPayloadDto,
+    payload: CreateVehiclePayloadDto,
   ): void {
     const hasTrip = validString(payload.tripId);
     const hasDriver = validString(payload.driverId);
     if (hasTrip !== hasDriver) {
       throw new HttpException(
-        CmsVehicalValidationMessage.TRIP_DRIVER_PAIR_REQUIRED,
+        CmsVehicleValidationMessage.TRIP_DRIVER_PAIR_REQUIRED,
         HttpStatus.BAD_REQUEST,
       );
     }
   }
 
   private shouldCreateCompanyTripOnCreate(
-    payload: CreateVehicalPayloadDto,
+    payload: CreateVehiclePayloadDto,
   ): boolean {
     return validString(payload.tripId) && validString(payload.driverId);
   }
 
   private toCreateCompanyTripDto(
-    vehical: TbVerhical,
+    vehical: TbVehicle,
 
-    payload: CmsVehicalPayload,
+    payload: CmsVehiclePayload,
 
     totalSeat: number,
   ): CreateCompanyTripDto {
@@ -469,19 +464,19 @@ export class CMSVerhicalService {
       tripId: this.parsePositiveInt(
         payload.tripId ?? '',
 
-        CmsVehicalValidationMessage.TRIP_ID_EMPTY,
+        CmsVehicleValidationMessage.TRIP_ID_EMPTY,
 
-        CmsVehicalValidationMessage.TRIP_ID_INVALID,
+        CmsVehicleValidationMessage.TRIP_ID_INVALID,
       ),
 
-      verhicalId: vehical.id,
+      vehicleId: vehical.id,
 
       driverId: this.parsePositiveInt(
         payload.driverId ?? '',
 
-        CmsVehicalValidationMessage.DRIVER_ID_EMPTY,
+        CmsVehicleValidationMessage.DRIVER_ID_EMPTY,
 
-        CmsVehicalValidationMessage.DRIVER_ID_INVALID,
+        CmsVehicleValidationMessage.DRIVER_ID_INVALID,
       ),
 
       totalSeat,
@@ -497,11 +492,11 @@ export class CMSVerhicalService {
     };
   }
 
-  private buildVehicleDescription(payload: CmsVehicalPayload): string {
+  private buildVehicleDescription(payload: CmsVehiclePayload): string {
     return `${payload.description} - ${payload.timeStart} - ${payload.timeEnd}`;
   }
 
-  private buildCompanyTripDescription(payload: CmsVehicalPayload): string {
+  private buildCompanyTripDescription(payload: CmsVehiclePayload): string {
     return `${payload.description} | ${payload.schedule} | ${payload.timeStart}-${payload.timeEnd}`;
   }
 
@@ -588,7 +583,7 @@ export class CMSVerhicalService {
 
     seats: TbSeat[],
 
-    payload: UpdateVehicalPayloadDto,
+    payload: UpdateVehiclePayloadDto,
   ): Promise<void> {
     await Promise.all(
       seats.map((seat, i) => {
@@ -607,10 +602,10 @@ export class CMSVerhicalService {
     );
   }
 
-  private async buildVehicalDetail(
+  private async buildVehicleDetail(
     user: UserDecoratorDtoResponse,
-    vehical: TbVerhical,
-  ): Promise<CmsVehicalDetailResponseDto> {
+    vehical: TbVehicle,
+  ): Promise<CmsVehicleDetailResponseDto> {
     const [allSeats, companyTrips] = await Promise.all([
       this.seatService.findByVehicle(user, vehical.companyId, vehical.id),
       this.companyTripService.findByVehicle(
@@ -635,7 +630,7 @@ export class CMSVerhicalService {
     const meta = this.parseVehicleDescriptionMeta(vehical.description);
 
     return {
-      verhical: this.toCmsVerhicalEntity(vehical, meta.description),
+      vehicle: this.toCmsVehicleEntity(vehical, meta.description),
       seats: sortedSeats.map((s) => this.toCmsSeatResponse(s)),
       trip,
       driver,
@@ -726,10 +721,10 @@ export class CMSVerhicalService {
     return { description: text, timeStart: '', timeEnd: '' };
   }
 
-  private toCmsVerhicalEntity(
-    vehical: TbVerhical,
+  private toCmsVehicleEntity(
+    vehical: TbVehicle,
     plainDescription?: string,
-  ): CmsVerhicalEntityDto {
+  ): CmsVehicleEntityDto {
     return {
       id: vehical.id,
       companyId: vehical.companyId,
@@ -746,7 +741,7 @@ export class CMSVerhicalService {
   private toCmsSeatResponse(seat: TbSeat): CmsSeatResponseDto {
     return {
       id: seat.id,
-      verhicalId: seat.verhicalId,
+      vehicleId: seat.vehicleId,
       code: seat.code,
       name: seat.name,
       index: seat.index,
@@ -774,7 +769,7 @@ export class CMSVerhicalService {
       id: driver.id,
       code: driver.code,
       companyId: driver.companyId,
-      verhicalId: driver.verhicalId,
+      vehicleId: driver.vehicleId,
       name: driver.name,
       license: driver.license,
       phone: driver.phone,
@@ -794,7 +789,7 @@ export class CMSVerhicalService {
 
       tripId: trip.tripId,
 
-      verhicalId: trip.verhicalId,
+      vehicleId: trip.vehicleId,
 
       driverId: trip.driverId,
 
@@ -815,14 +810,14 @@ export class CMSVerhicalService {
   }
 
   private toResponse(
-    payload: CmsVehicalPayload,
+    payload: CmsVehiclePayload,
 
-    vehical: TbVerhical,
+    vehical: TbVehicle,
 
     seats: TbSeat[],
 
     companyTrip: TbCompanyTrip | null,
-  ): VehicalResponseDto {
+  ): VehicleResponseDto {
     return {
       id: String(vehical.id),
 
@@ -838,13 +833,11 @@ export class CMSVerhicalService {
 
       vehicalStatus: vehical.status,
 
-      tripId: companyTrip
-        ? String(companyTrip.tripId)
-        : payload.tripId ?? '',
+      tripId: companyTrip ? String(companyTrip.tripId) : (payload.tripId ?? ''),
 
       driverId: companyTrip
         ? String(companyTrip.driverId)
-        : payload.driverId ?? '',
+        : (payload.driverId ?? ''),
 
       companyTripId: companyTrip?.id,
 

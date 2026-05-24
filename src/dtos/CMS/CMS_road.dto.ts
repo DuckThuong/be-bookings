@@ -17,8 +17,8 @@ import { CmsRoadValidationMessage } from '../../assets/messages/cms-road.message
 import {
   CompanyTripResponseDto,
   CmsDriverResponseDto,
-  CmsVerhicalEntityDto,
-} from './CMS_verhical.dto';
+  CmsVehicleEntityDto,
+} from './CMS_vehicle.dto';
 import { CmsRoadResponseDto, CmsTripEntityDto } from './CMS_trip.dto';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -224,8 +224,8 @@ export class CmsRoadDetailResponseDto {
   @ApiPropertyOptional({ type: CmsTripEntityDto })
   trip: CmsTripEntityDto | null;
 
-  @ApiPropertyOptional({ type: CmsVerhicalEntityDto })
-  verhical: CmsVerhicalEntityDto | null;
+  @ApiPropertyOptional({ type: CmsVehicleEntityDto })
+  vehicle: CmsVehicleEntityDto | null;
 
   @ApiPropertyOptional({ type: CmsDriverResponseDto })
   driver: CmsDriverResponseDto | null;
@@ -243,7 +243,7 @@ export class CmsRoadDetailResponseDto {
   tripId: string;
 
   @ApiProperty({ example: '1' })
-  verhicalId: string;
+  vehicleId: string;
 
   @ApiProperty({ example: '1' })
   driverId: string;

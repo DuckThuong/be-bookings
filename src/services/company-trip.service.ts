@@ -28,7 +28,7 @@ export class CompanyTripService {
     );
     await this.companyAccess.assertVehicleBelongsToCompany(
       payload.companyId,
-      payload.verhicalId,
+      payload.vehicleId,
     );
     await this.companyAccess.assertDriverBelongsToCompany(
       payload.companyId,
@@ -38,7 +38,7 @@ export class CompanyTripService {
     return this.companyTripRepository.save({
       companyId: payload.companyId,
       tripId: payload.tripId,
-      verhicalId: payload.verhicalId,
+      vehicleId: payload.vehicleId,
       driverId: payload.driverId,
       description: payload.description ?? '',
       totalSeat: payload.totalSeat,
@@ -82,10 +82,10 @@ export class CompanyTripService {
         payload.tripId,
       );
     }
-    if (payload.verhicalId !== undefined) {
+    if (payload.vehicleId !== undefined) {
       await this.companyAccess.assertVehicleBelongsToCompany(
         current.companyId,
-        payload.verhicalId,
+        payload.vehicleId,
       );
     }
     if (payload.driverId !== undefined) {
@@ -113,14 +113,14 @@ export class CompanyTripService {
   async findByVehicle(
     user: UserDecoratorDtoResponse,
     companyId: number,
-    verhicalId: number,
+    vehicleId: number,
   ): Promise<TbCompanyTrip[]> {
     await this.companyAccess.assertCompanyAccess(user, companyId);
     await this.companyAccess.assertVehicleBelongsToCompany(
       companyId,
-      verhicalId,
+      vehicleId,
     );
-    return this.companyTripRepository.findByVerhicalId(verhicalId);
+    return this.companyTripRepository.findByVehicleId(vehicleId);
   }
 
   async findByDriver(
@@ -129,10 +129,7 @@ export class CompanyTripService {
     driverId: number,
   ): Promise<TbCompanyTrip[]> {
     await this.companyAccess.assertCompanyAccess(user, companyId);
-    await this.companyAccess.assertDriverBelongsToCompany(
-      companyId,
-      driverId,
-    );
+    await this.companyAccess.assertDriverBelongsToCompany(companyId, driverId);
     return this.companyTripRepository.findByDriverId(driverId);
   }
 
@@ -149,21 +146,21 @@ export class CompanyTripService {
   async removeAllByVehicle(
     user: UserDecoratorDtoResponse,
     companyId: number,
-    verhicalId: number,
+    vehicleId: number,
   ): Promise<{ message: string; deactivatedCount: number }> {
     await this.companyAccess.assertCompanyAccess(user, companyId);
     await this.companyAccess.assertVehicleBelongsToCompany(
       companyId,
-      verhicalId,
+      vehicleId,
     );
 
-    const trips = await this.companyTripRepository.findByVerhicalId(verhicalId);
+    const trips = await this.companyTripRepository.findByVehicleId(vehicleId);
     const activeCount = trips.filter(
       (t) => t.status === EntityStatus.ACTIVE,
     ).length;
 
     if (trips.length > 0) {
-      await this.companyTripRepository.deactivateByVerhicalId(verhicalId);
+      await this.companyTripRepository.deactivateByVehicleId(vehicleId);
     }
 
     return {

@@ -4,7 +4,7 @@ import { TbCompany } from '../entities/company/company.entity';
 import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbSeat } from '../entities/seat.entity';
 import { TbTicket } from '../entities/ticket.entity';
@@ -39,7 +39,7 @@ import { SalesModule } from './sales.module';
       TbRoad,
       TbTrip,
       TbCompanyTrip,
-      TbVerhical,
+      TbVehicle,
       TbDriver,
       TbSeat,
       TbTicket,
@@ -72,10 +72,6 @@ import { SalesModule } from './sales.module';
     TripRepository,
     RolesGuard,
   ],
-  exports: [
-    ClientCatalogService,
-    ClientAccountService,
-    ClientBookingsService,
-  ],
+  exports: [ClientCatalogService, ClientAccountService, ClientBookingsService],
 })
 export class ClientModule {}

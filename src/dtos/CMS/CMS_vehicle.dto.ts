@@ -13,21 +13,21 @@ import {
   Min,
 } from 'class-validator';
 import { EntityStatus } from '../../assets/constants/company.constants';
-import { CmsVehicalValidationMessage } from '../../assets/messages/cms-vehical.message';
+import { CmsVehicleValidationMessage } from '../../assets/messages/cms-vehical.message';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
-export class CreateVehicalPayloadDto {
+export class CreateVehiclePayloadDto {
   @ApiProperty({
     example: 'Xe giường nằm 34 chỗ',
     description: 'Tên phương tiện',
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_NAME_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_NAME_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_NAME_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_NAME_INVALID })
   @MaxLength(255, {
-    message: CmsVehicalValidationMessage.VEHICAL_NAME_TOO_LONG,
+    message: CmsVehicleValidationMessage.VEHICAL_NAME_TOO_LONG,
   })
   vehicalName: string;
 
@@ -37,9 +37,9 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_CODE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_CODE_INVALID })
-  @MaxLength(50, { message: CmsVehicalValidationMessage.VEHICAL_CODE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_CODE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_CODE_INVALID })
+  @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_CODE_TOO_LONG })
   vehicalCode: string;
 
   @ApiProperty({
@@ -48,9 +48,9 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.SEAT_TYPE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.SEAT_TYPE_INVALID })
-  @MaxLength(50, { message: CmsVehicalValidationMessage.SEAT_TYPE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.SEAT_TYPE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.SEAT_TYPE_INVALID })
+  @MaxLength(50, { message: CmsVehicleValidationMessage.SEAT_TYPE_TOO_LONG })
   seatType: string;
 
   @ApiProperty({
@@ -59,9 +59,9 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: Number,
   })
-  @IsInt({ message: CmsVehicalValidationMessage.SEAT_COUNT_INVALID })
-  @Min(1, { message: CmsVehicalValidationMessage.SEAT_COUNT_MIN })
-  @Max(100, { message: CmsVehicalValidationMessage.SEAT_COUNT_MAX })
+  @IsInt({ message: CmsVehicleValidationMessage.SEAT_COUNT_INVALID })
+  @Min(1, { message: CmsVehicleValidationMessage.SEAT_COUNT_MIN })
+  @Max(100, { message: CmsVehicleValidationMessage.SEAT_COUNT_MAX })
   seatCount: number;
 
   @ApiProperty({
@@ -70,9 +70,9 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_TYPE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_TYPE_INVALID })
-  @MaxLength(50, { message: CmsVehicalValidationMessage.VEHICAL_TYPE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_TYPE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_TYPE_INVALID })
+  @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_TYPE_TOO_LONG })
   vehicalType: string;
 
   @ApiProperty({
@@ -82,10 +82,10 @@ export class CreateVehicalPayloadDto {
     enum: EntityStatus,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_STATUS_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_STATUS_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_STATUS_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_STATUS_INVALID })
   @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE], {
-    message: CmsVehicalValidationMessage.VEHICAL_STATUS_NOT_IN,
+    message: CmsVehicleValidationMessage.VEHICAL_STATUS_NOT_IN,
   })
   vehicalStatus: string;
 
@@ -96,7 +96,7 @@ export class CreateVehicalPayloadDto {
     type: String,
   })
   @IsOptional()
-  @IsString({ message: CmsVehicalValidationMessage.TRIP_ID_INVALID })
+  @IsString({ message: CmsVehicleValidationMessage.TRIP_ID_INVALID })
   tripId?: string;
 
   @ApiPropertyOptional({
@@ -106,7 +106,7 @@ export class CreateVehicalPayloadDto {
     type: String,
   })
   @IsOptional()
-  @IsString({ message: CmsVehicalValidationMessage.DRIVER_ID_INVALID })
+  @IsString({ message: CmsVehicleValidationMessage.DRIVER_ID_INVALID })
   driverId?: string;
 
   @ApiProperty({
@@ -115,9 +115,9 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.SCHEDULE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.SCHEDULE_INVALID })
-  @MaxLength(255, { message: CmsVehicalValidationMessage.SCHEDULE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.SCHEDULE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.SCHEDULE_INVALID })
+  @MaxLength(255, { message: CmsVehicleValidationMessage.SCHEDULE_TOO_LONG })
   schedule: string;
 
   @ApiProperty({
@@ -126,8 +126,8 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.DESCRIPTION_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.DESCRIPTION_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.DESCRIPTION_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.DESCRIPTION_INVALID })
   description: string;
 
   @ApiProperty({
@@ -136,10 +136,10 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.TIME_START_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.TIME_START_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.TIME_START_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.TIME_START_INVALID })
   @Matches(TIME_PATTERN, {
-    message: CmsVehicalValidationMessage.TIME_START_FORMAT,
+    message: CmsVehicleValidationMessage.TIME_START_FORMAT,
   })
   timeStart: string;
 
@@ -149,10 +149,10 @@ export class CreateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.TIME_END_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.TIME_END_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.TIME_END_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.TIME_END_INVALID })
   @Matches(TIME_PATTERN, {
-    message: CmsVehicalValidationMessage.TIME_END_FORMAT,
+    message: CmsVehicleValidationMessage.TIME_END_FORMAT,
   })
   timeEnd: string;
 
@@ -161,12 +161,12 @@ export class CreateVehicalPayloadDto {
     description: 'Giá mỗi ghế (tb_company_trip.pricePerSeat)',
   })
   @IsOptional()
-  @IsNumber({}, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
-  @Min(0, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
+  @IsNumber({}, { message: CmsVehicleValidationMessage.PRICE_PER_SEAT_INVALID })
+  @Min(0, { message: CmsVehicleValidationMessage.PRICE_PER_SEAT_INVALID })
   pricePerSeat?: number;
 }
 
-export class UpdateVehicalPayloadDto {
+export class UpdateVehiclePayloadDto {
   @ApiProperty({
     example: 1,
     description: 'ID phương tiện',
@@ -174,8 +174,8 @@ export class UpdateVehicalPayloadDto {
     type: Number,
   })
   @Type(() => Number)
-  @IsInt({ message: CmsVehicalValidationMessage.VEHICAL_ID_INVALID })
-  @Min(1, { message: CmsVehicalValidationMessage.VEHICAL_ID_INVALID })
+  @IsInt({ message: CmsVehicleValidationMessage.VEHICAL_ID_INVALID })
+  @Min(1, { message: CmsVehicleValidationMessage.VEHICAL_ID_INVALID })
   id: number;
 
   @ApiProperty({
@@ -184,10 +184,10 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_NAME_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_NAME_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_NAME_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_NAME_INVALID })
   @MaxLength(255, {
-    message: CmsVehicalValidationMessage.VEHICAL_NAME_TOO_LONG,
+    message: CmsVehicleValidationMessage.VEHICAL_NAME_TOO_LONG,
   })
   vehicalName: string;
 
@@ -197,9 +197,9 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_CODE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_CODE_INVALID })
-  @MaxLength(50, { message: CmsVehicalValidationMessage.VEHICAL_CODE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_CODE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_CODE_INVALID })
+  @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_CODE_TOO_LONG })
   vehicalCode: string;
 
   @ApiProperty({
@@ -208,9 +208,9 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.SEAT_TYPE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.SEAT_TYPE_INVALID })
-  @MaxLength(50, { message: CmsVehicalValidationMessage.SEAT_TYPE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.SEAT_TYPE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.SEAT_TYPE_INVALID })
+  @MaxLength(50, { message: CmsVehicleValidationMessage.SEAT_TYPE_TOO_LONG })
   seatType: string;
 
   @ApiProperty({
@@ -220,9 +220,9 @@ export class UpdateVehicalPayloadDto {
     type: Number,
   })
   @Type(() => Number)
-  @IsInt({ message: CmsVehicalValidationMessage.SEAT_COUNT_INVALID })
-  @Min(1, { message: CmsVehicalValidationMessage.SEAT_COUNT_MIN })
-  @Max(100, { message: CmsVehicalValidationMessage.SEAT_COUNT_MAX })
+  @IsInt({ message: CmsVehicleValidationMessage.SEAT_COUNT_INVALID })
+  @Min(1, { message: CmsVehicleValidationMessage.SEAT_COUNT_MIN })
+  @Max(100, { message: CmsVehicleValidationMessage.SEAT_COUNT_MAX })
   seatCount: number;
 
   @ApiProperty({
@@ -231,9 +231,9 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_TYPE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_TYPE_INVALID })
-  @MaxLength(50, { message: CmsVehicalValidationMessage.VEHICAL_TYPE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_TYPE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_TYPE_INVALID })
+  @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_TYPE_TOO_LONG })
   vehicalType: string;
 
   @ApiProperty({
@@ -243,10 +243,10 @@ export class UpdateVehicalPayloadDto {
     enum: EntityStatus,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.VEHICAL_STATUS_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.VEHICAL_STATUS_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.VEHICAL_STATUS_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_STATUS_INVALID })
   @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE], {
-    message: CmsVehicalValidationMessage.VEHICAL_STATUS_NOT_IN,
+    message: CmsVehicleValidationMessage.VEHICAL_STATUS_NOT_IN,
   })
   vehicalStatus: string;
 
@@ -256,8 +256,8 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.TRIP_ID_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.TRIP_ID_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.TRIP_ID_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.TRIP_ID_INVALID })
   tripId: string;
 
   @ApiProperty({
@@ -266,8 +266,8 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.DRIVER_ID_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.DRIVER_ID_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.DRIVER_ID_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.DRIVER_ID_INVALID })
   driverId: string;
 
   @ApiProperty({
@@ -276,9 +276,9 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.SCHEDULE_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.SCHEDULE_INVALID })
-  @MaxLength(255, { message: CmsVehicalValidationMessage.SCHEDULE_TOO_LONG })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.SCHEDULE_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.SCHEDULE_INVALID })
+  @MaxLength(255, { message: CmsVehicleValidationMessage.SCHEDULE_TOO_LONG })
   schedule: string;
 
   @ApiProperty({
@@ -287,8 +287,8 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.DESCRIPTION_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.DESCRIPTION_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.DESCRIPTION_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.DESCRIPTION_INVALID })
   description: string;
 
   @ApiProperty({
@@ -297,10 +297,10 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.TIME_START_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.TIME_START_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.TIME_START_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.TIME_START_INVALID })
   @Matches(TIME_PATTERN, {
-    message: CmsVehicalValidationMessage.TIME_START_FORMAT,
+    message: CmsVehicleValidationMessage.TIME_START_FORMAT,
   })
   timeStart: string;
 
@@ -310,18 +310,18 @@ export class UpdateVehicalPayloadDto {
     required: true,
     type: String,
   })
-  @IsNotEmpty({ message: CmsVehicalValidationMessage.TIME_END_EMPTY })
-  @IsString({ message: CmsVehicalValidationMessage.TIME_END_INVALID })
+  @IsNotEmpty({ message: CmsVehicleValidationMessage.TIME_END_EMPTY })
+  @IsString({ message: CmsVehicleValidationMessage.TIME_END_INVALID })
   @Matches(TIME_PATTERN, {
-    message: CmsVehicalValidationMessage.TIME_END_FORMAT,
+    message: CmsVehicleValidationMessage.TIME_END_FORMAT,
   })
   timeEnd: string;
 
   @ApiPropertyOptional({ example: 350000 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber({}, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
-  @Min(0, { message: CmsVehicalValidationMessage.PRICE_PER_SEAT_INVALID })
+  @IsNumber({}, { message: CmsVehicleValidationMessage.PRICE_PER_SEAT_INVALID })
+  @Min(0, { message: CmsVehicleValidationMessage.PRICE_PER_SEAT_INVALID })
   pricePerSeat?: number;
 
   @ApiPropertyOptional({
@@ -331,8 +331,8 @@ export class UpdateVehicalPayloadDto {
   })
   @IsOptional()
   @Type(() => Number)
-  @IsInt({ message: CmsVehicalValidationMessage.COMPANY_TRIP_ID_INVALID })
-  @Min(1, { message: CmsVehicalValidationMessage.COMPANY_TRIP_ID_INVALID })
+  @IsInt({ message: CmsVehicleValidationMessage.COMPANY_TRIP_ID_INVALID })
+  @Min(1, { message: CmsVehicleValidationMessage.COMPANY_TRIP_ID_INVALID })
   companyTripId?: number;
 }
 
@@ -347,7 +347,7 @@ export class CompanyTripResponseDto {
   tripId: number;
 
   @ApiProperty({ example: 1 })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 1 })
   driverId: number;
@@ -374,7 +374,7 @@ export class CompanyTripResponseDto {
   updatedAt: string;
 }
 
-export class VehicalResponseDto {
+export class VehicleResponseDto {
   id: string;
   name: string;
   code: string;
@@ -395,7 +395,7 @@ export class VehicalResponseDto {
   updatedAt: string;
 }
 
-export class CmsVerhicalEntityDto {
+export class CmsVehicleEntityDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -429,7 +429,7 @@ export class CmsSeatResponseDto {
   id: number;
 
   @ApiProperty({ example: 1 })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 'SEAT-xxx' })
   code: string;
@@ -487,7 +487,7 @@ export class CmsDriverResponseDto {
   companyId: number;
 
   @ApiProperty({ example: 1 })
-  verhicalId: number;
+  vehicleId: number;
 
   @ApiProperty({ example: 'Nguyễn Văn A' })
   name: string;
@@ -515,9 +515,9 @@ export class CmsDriverResponseDto {
 }
 
 /** Chi tiết CMS: xe + ghế + chuyến mẫu + tài xế + chuyến khai thác */
-export class CmsVehicalDetailResponseDto {
-  @ApiProperty({ type: CmsVerhicalEntityDto })
-  verhical: CmsVerhicalEntityDto;
+export class CmsVehicleDetailResponseDto {
+  @ApiProperty({ type: CmsVehicleEntityDto })
+  vehicle: CmsVehicleEntityDto;
 
   @ApiProperty({ type: [CmsSeatResponseDto] })
   seats: CmsSeatResponseDto[];
@@ -559,9 +559,9 @@ export class CmsVehicalDetailResponseDto {
   timeEnd: string;
 }
 
-export class CmsVehicalListResponseDto {
-  @ApiProperty({ type: [CmsVehicalDetailResponseDto] })
-  items: CmsVehicalDetailResponseDto[];
+export class CmsVehicleListResponseDto {
+  @ApiProperty({ type: [CmsVehicleDetailResponseDto] })
+  items: CmsVehicleDetailResponseDto[];
 
   @ApiProperty({ example: 10 })
   total: number;

@@ -16,8 +16,8 @@ import { CmsTripValidationMessage } from '../../assets/messages/cms-trip.message
 import {
   CompanyTripResponseDto,
   CmsDriverResponseDto,
-  CmsVerhicalEntityDto,
-} from './CMS_verhical.dto';
+  CmsVehicleEntityDto,
+} from './CMS_vehicle.dto';
 import { OptionalCompanyIdQueryDto } from '../transport/common.dto';
 
 export class CmsTripListQueryDto extends OptionalCompanyIdQueryDto {
@@ -54,7 +54,7 @@ export class CmsTripFormPayloadDto {
 
   @ApiProperty({
     example: '51B-12345',
-    description: 'Mã xe (verhical_code)',
+    description: 'Mã xe (vehicle_code)',
   })
   @IsNotEmpty({ message: CmsTripValidationMessage.VEHICLE_EMPTY })
   @IsString({ message: CmsTripValidationMessage.VEHICLE_INVALID })
@@ -275,8 +275,8 @@ export class CmsTripDetailResponseDto {
   @ApiPropertyOptional({ type: CmsRoadResponseDto })
   road: CmsRoadResponseDto | null;
 
-  @ApiPropertyOptional({ type: CmsVerhicalEntityDto })
-  verhical: CmsVerhicalEntityDto | null;
+  @ApiPropertyOptional({ type: CmsVehicleEntityDto })
+  vehicle: CmsVehicleEntityDto | null;
 
   @ApiPropertyOptional({ type: CmsDriverResponseDto })
   driver: CmsDriverResponseDto | null;
@@ -291,7 +291,7 @@ export class CmsTripDetailResponseDto {
   roadId: string;
 
   @ApiProperty({ example: '1' })
-  verhicalId: string;
+  vehicleId: string;
 
   @ApiProperty({ example: '1' })
   driverId: string;

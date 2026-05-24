@@ -25,14 +25,13 @@ export class DriverService {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
     await this.companyAccess.assertVehicleBelongsToCompany(
       companyId,
-      payload.verhicalId,
+      payload.vehicleId,
     );
 
     return this.driverRepository.save({
       companyId,
-      verhicalId: payload.verhicalId,
-      code:
-        payload.code?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
+      vehicleId: payload.vehicleId,
+      code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
       name: payload.name,
       license: payload.license,
       phone: payload.phone,
@@ -71,10 +70,10 @@ export class DriverService {
   ): Promise<TbDriver> {
     const driver = await this.findOne(user, id);
 
-    if (payload.verhicalId !== undefined) {
+    if (payload.vehicleId !== undefined) {
       await this.companyAccess.assertVehicleBelongsToCompany(
         driver.companyId,
-        payload.verhicalId,
+        payload.vehicleId,
       );
     }
 

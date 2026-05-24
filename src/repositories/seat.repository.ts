@@ -15,8 +15,8 @@ export class SeatRepository {
     return this.repo.findOne({ where: { id } });
   }
 
-  findByVehicle(verhicalId: number) {
-    return this.repo.find({ where: { verhicalId }, order: { id: 'ASC' } });
+  findByVehicle(vehicleId: number) {
+    return this.repo.find({ where: { vehicleId }, order: { id: 'ASC' } });
   }
 
   save(data: Partial<TbSeat>) {
@@ -31,11 +31,8 @@ export class SeatRepository {
     return this.repo.update({ id }, data);
   }
 
-  deactivateByVehicleId(verhicalId: number) {
-    return this.repo.update(
-      { verhicalId },
-      { status: EntityStatus.INACTIVE },
-    );
+  deactivateByVehicleId(vehicleId: number) {
+    return this.repo.update({ vehicleId }, { status: EntityStatus.INACTIVE });
   }
 
   async countByVehicleIds(vehicleIds: number[]) {
@@ -44,7 +41,7 @@ export class SeatRepository {
     }
     return this.repo
       .createQueryBuilder('seat')
-      .where('seat.verhicalId IN (:...ids)', { ids: vehicleIds })
+      .where('seat.vehicleId IN (:...ids)', { ids: vehicleIds })
       .getCount();
   }
 }

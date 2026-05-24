@@ -30,9 +30,9 @@ export class TbDriver {
 
   @Column({
     type: 'int',
-    comment: 'ID phương tiện mặc định (tb_verhical)',
+    comment: 'ID phương tiện mặc định (tb_vehicle)',
   })
-  verhicalId: number;
+  vehicleId: number;
 
   @Column({
     type: 'varchar',

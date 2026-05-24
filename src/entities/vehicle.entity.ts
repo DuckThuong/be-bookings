@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('tb_verhical')
-export class TbVerhical {
+@Entity('tb_vehicle')
+export class TbVehicle {
   @PrimaryGeneratedColumn('increment', {
     comment: 'Primary key',
     type: 'int',

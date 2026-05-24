@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
@@ -27,9 +27,11 @@ export class VehicleService {
     user: UserDecoratorDtoResponse,
     payload: CreateVehicleDto,
     companyId?: number,
-  ): Promise<TbVerhical> {
-    const resolvedCompanyId =
-      await this.companyAccess.resolveCompanyIdForUser(user, companyId);
+  ): Promise<TbVehicle> {
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user,
+      companyId,
+    );
     if (!validString(payload.code)) {
       throw new HttpException(
         CompanyErrorMessage.INVALID_REFERENCE,
@@ -62,7 +64,7 @@ export class VehicleService {
   async findAll(
     user: UserDecoratorDtoResponse,
     companyId?: number,
-  ): Promise<TbVerhical[]> {
+  ): Promise<TbVehicle[]> {
     const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
       user,
       companyId,
@@ -73,7 +75,7 @@ export class VehicleService {
   async findOne(
     user: UserDecoratorDtoResponse,
     id: number,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const vehicle = await this.vehicleRepository.findById(id);
     if (!vehicle) {
       throw new NotFoundException(CompanyErrorMessage.VEHICLE_NOT_FOUND);
@@ -86,7 +88,7 @@ export class VehicleService {
     user: UserDecoratorDtoResponse,
     id: number,
     payload: UpdateVehicleDto,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const existingVehicle = await this.findOne(user, id);
     const formatted = this.buildVehicleUpdateData(existingVehicle, payload);
 
@@ -105,10 +107,10 @@ export class VehicleService {
   }
 
   private buildVehicleUpdateData(
-    existing: TbVerhical,
+    existing: TbVehicle,
     payload: UpdateVehicleDto,
-  ): Partial<TbVerhical> {
-    const cloned: TbVerhical = { ...existing };
+  ): Partial<TbVehicle> {
+    const cloned: TbVehicle = { ...existing };
 
     return {
       code:
