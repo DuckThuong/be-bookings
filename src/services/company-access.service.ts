@@ -72,7 +72,7 @@ export class CompanyAccessService {
     const companies = await this.companyRepository.findCompaniesByUserLead(
       user.id.toString(),
     );
-    const active = companies.find((c) => c.status == '1');
+    const active = companies.find((c) => c.status == EntityStatus.ACTIVE);
     if (!active) {
       throw new NotFoundException(CompanyErrorMessage.COMPANY_NOT_FOUND);
     }

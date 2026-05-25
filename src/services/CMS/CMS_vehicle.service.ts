@@ -72,7 +72,7 @@ export class CMSVehicleService {
         normalized as CreateVehicleDto,
         payload.companyId,
       );
-      await this.syncSeatsForVehicle(user, vehicle, payload);
+      // await this.syncSeatsForVehicle(user, vehicle, payload);
       return this.toResponse(
         user,
         await this.vehicleService.findOne(user, vehicle.id),
@@ -92,9 +92,9 @@ export class CMSVehicleService {
         payload.id,
         this.normalizePayload(payload, false),
       );
-      if (payload.seatCount !== undefined || payload.seatType !== undefined) {
-        await this.syncSeatsForVehicle(user, vehicle, payload);
-      }
+      // if (payload.seatCount !== undefined || payload.seatType !== undefined) {
+      //   await this.syncSeatsForVehicle(user, vehicle, payload);
+      // }
       return this.toResponse(
         user,
         await this.vehicleService.findOne(user, vehicle.id),
