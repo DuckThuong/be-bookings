@@ -30,6 +30,25 @@ export class TbTrip {
   roadId: number;
 
   @Column({
+    type: 'int',
+    comment: 'ID công ty (tb_company)',
+  }
+  )
+  companyId: number;
+
+  @Column({
+    type: 'int',
+    comment: 'ID tài xế (tb_driver)',
+  })
+  driverId: number;
+
+  @Column({
+    type: 'int',
+    comment: 'ID xe (tb_vehicle)',
+  })
+  vehicleId: number;
+
+  @Column({
     type: 'varchar',
     length: 50,
     comment: 'Trạng thái chuyến',
@@ -58,4 +77,18 @@ export class TbTrip {
     comment: 'Giờ / thời điểm đến chuyến',
   })
   arrival: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    comment: 'Giá vé/chỗ ngồi(vnđ)',
+  })
+  seatPrice: string;
+
+  @Column({
+    type: 'int',
+    default: 0,
+    comment: 'Tổng số ghế đã đặt',
+  })
+  bookedSeats: number;
 }

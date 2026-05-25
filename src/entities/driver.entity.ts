@@ -29,12 +29,6 @@ export class TbDriver {
   companyId: number;
 
   @Column({
-    type: 'int',
-    comment: 'ID phương tiện mặc định (tb_vehicle)',
-  })
-  vehicleId: number;
-
-  @Column({
     type: 'varchar',
     length: 255,
     comment: 'Tên tài xế',
@@ -44,9 +38,16 @@ export class TbDriver {
   @Column({
     type: 'varchar',
     length: 50,
-    comment: 'Số bằng lái',
+    comment: 'Loại bằng lái',
   })
   license: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    comment: 'Số bằng lái',
+  })
+  licenseNum: string;
 
   @Column({
     type: 'varchar',

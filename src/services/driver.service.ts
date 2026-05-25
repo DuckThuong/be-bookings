@@ -7,7 +7,7 @@ import {
   EntityStatus,
 } from '../assets/constants/company.constants';
 import { generateEntityCode } from '../common/helpers/common.helper';
-import { CreateDriverDto, UpdateDriverDto } from '../dtos/company/company.dto';
+import { CreateDriverDto } from '../dtos/company/company.dto';
 import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
 import { CompanyAccessService } from './company-access.service';
 
@@ -22,18 +22,17 @@ export class DriverService {
     user: UserDecoratorDtoResponse,
     payload: CreateDriverDto,
   ): Promise<TbDriver> {
-    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
-    await this.companyAccess.assertVehicleBelongsToCompany(
-      companyId,
-      payload.vehicleId,
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(
+      user,
+      payload.companyId,
     );
 
     return this.driverRepository.save({
       companyId,
-      vehicleId: payload.vehicleId,
       code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
       name: payload.name,
       license: payload.license,
+      licenseNum: payload.licenseNum,
       phone: payload.phone,
       email: payload.email,
       description: payload.description ?? undefined,
@@ -66,16 +65,9 @@ export class DriverService {
   async update(
     user: UserDecoratorDtoResponse,
     id: number,
-    payload: UpdateDriverDto,
+    payload: Partial<TbDriver>,
   ): Promise<TbDriver> {
-    const driver = await this.findOne(user, id);
-
-    if (payload.vehicleId !== undefined) {
-      await this.companyAccess.assertVehicleBelongsToCompany(
-        driver.companyId,
-        payload.vehicleId,
-      );
-    }
+    await this.findOne(user, id);
 
     await this.driverRepository.update(id, payload);
     return this.findOne(user, id);

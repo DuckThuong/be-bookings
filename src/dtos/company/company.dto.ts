@@ -26,7 +26,7 @@ export class UpdateCompanyDto {
   status?: string;
 
   @ApiPropertyOptional({
-    description: 'Chỉ Admin — mã userCode người đại diện',
+    description: 'Chỉ Admin — ID người đại diện (user.id)',
   })
   userLeadId?: string;
 }
@@ -47,23 +47,17 @@ export class CreateRoadDto {
   @ApiProperty({ example: 764.5 })
   length: number;
 
-  @ApiProperty({ example: 'EXPRESS' })
-  type: string;
-
   @ApiProperty({ example: 'Hà Nội' })
   startPoint: string;
 
   @ApiProperty({ example: 'Đà Nẵng' })
   endPoint: string;
 
-  @ApiProperty({ example: '20:00' })
-  startTime: string;
-
-  @ApiProperty({ example: '10:00' })
-  endTime: string;
-
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional()
+  totalTurn?: number;
 
   @ApiPropertyOptional({ example: '6h30m' })
   standardDuration?: string;
@@ -95,22 +89,16 @@ export class UpdateRoadDto {
   length?: number;
 
   @ApiPropertyOptional()
-  type?: string;
-
-  @ApiPropertyOptional()
   startPoint?: string;
 
   @ApiPropertyOptional()
   endPoint?: string;
 
-  @ApiPropertyOptional()
-  startTime?: string;
-
-  @ApiPropertyOptional()
-  endTime?: string;
-
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional()
+  totalTurn?: number;
 
   @ApiPropertyOptional()
   standardDuration?: string;
@@ -147,6 +135,12 @@ export class CreateTripDto {
   @ApiProperty({ example: 1, description: 'ID tuyến thuộc nhà xe' })
   roadId: number;
 
+  @ApiProperty({ example: 1, description: 'ID tài xế' })
+  driverId: number;
+
+  @ApiProperty({ example: 1, description: 'ID phương tiện' })
+  vehicleId: number;
+
   @ApiPropertyOptional()
   description?: string;
 
@@ -158,6 +152,12 @@ export class CreateTripDto {
 
   @ApiPropertyOptional({ example: '14:30' })
   arrival?: string;
+
+  @ApiProperty({ example: '350000' })
+  seatPrice: string;
+
+  @ApiPropertyOptional({ example: 0 })
+  bookedSeats?: number;
 }
 
 export class UpdateTripDto {
@@ -166,6 +166,12 @@ export class UpdateTripDto {
 
   @ApiPropertyOptional()
   roadId?: number;
+
+  @ApiPropertyOptional()
+  driverId?: number;
+
+  @ApiPropertyOptional()
+  vehicleId?: number;
 
   @ApiPropertyOptional()
   description?: string;
@@ -178,6 +184,12 @@ export class UpdateTripDto {
 
   @ApiPropertyOptional()
   arrival?: string;
+
+  @ApiPropertyOptional()
+  seatPrice?: string;
+
+  @ApiPropertyOptional()
+  bookedSeats?: number;
 }
 
 export class CreateVehicleDto {
@@ -227,6 +239,9 @@ export class UpdateVehicleDto {
 }
 
 export class CreateDriverDto {
+  @ApiPropertyOptional({ example: 1, description: 'ID nhà xe' })
+  companyId?: number;
+
   @ApiProperty({ example: 'Nguyễn Văn A' })
   name: string;
 
@@ -236,11 +251,11 @@ export class CreateDriverDto {
   })
   code?: string;
 
-  @ApiProperty({ example: 1, description: 'ID phương tiện mặc định' })
-  vehicleId: number;
-
-  @ApiProperty({ example: 'B2-123456' })
+  @ApiProperty({ example: 'B2' })
   license: string;
+
+  @ApiProperty({ example: '123456' })
+  licenseNum: string;
 
   @ApiProperty({ example: '0912345678' })
   phone: string;
@@ -258,9 +273,6 @@ export class CreateDriverDto {
 export class UpdateDriverDto {
   @ApiPropertyOptional()
   name?: string;
-
-  @ApiPropertyOptional()
-  vehicleId?: number;
 
   @ApiPropertyOptional()
   license?: string;

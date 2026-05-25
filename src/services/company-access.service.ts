@@ -18,6 +18,7 @@ import { VehicleRepository } from '../repositories/vehicle.repository';
 import { DriverRepository } from '../repositories/driver.repository';
 import { CompanyTripRepository } from '../repositories/company-trip.repository';
 import { SeatRepository } from '../repositories/seat.repository';
+import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { CmsTripValidationMessage } from '../assets/messages/cms-trip.message';
 import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
@@ -71,7 +72,7 @@ export class CompanyAccessService {
     const companies = await this.companyRepository.findCompaniesByUserLead(
       user.id.toString(),
     );
-    const active = companies.find((c) => c.status === 'ACTIVE');
+    const active = companies.find((c) => c.status == '1');
     if (!active) {
       throw new NotFoundException(CompanyErrorMessage.COMPANY_NOT_FOUND);
     }

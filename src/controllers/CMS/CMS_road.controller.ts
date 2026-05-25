@@ -82,6 +82,19 @@ export class CMSRoadController {
     return this.cmsRoadService.updateRoad(payload, user);
   }
 
+  @Patch(':id')
+  @Roles(UserRole.OWNER)
+  @ApiOperation({
+    summary: '[Owner] Cập nhật tuyến đường theo ID trên URL',
+  })
+  updateById(
+    @User() user: UserDecoratorDtoResponse,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() payload: UpdateRoadPayloadDto,
+  ) {
+    return this.cmsRoadService.updateRoad({ ...payload, id }, user);
+  }
+
   @Delete(':id')
   @Roles(UserRole.OWNER)
   @ApiOperation({ summary: '[Owner] Vô hiệu hóa tuyến đường' })

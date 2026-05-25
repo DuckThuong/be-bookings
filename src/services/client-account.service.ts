@@ -163,7 +163,7 @@ export class ClientAccountService {
 
     if (user.role === UserRole.OWNER) {
       const companies = await this.companyRepository.findCompaniesByUserLead(
-        user.userCode,
+        user.id.toString(),
       );
       const companyIds = companies.map((c) => c.id);
       if (companyIdQuery !== undefined) {

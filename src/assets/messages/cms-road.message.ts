@@ -10,11 +10,6 @@ export class CmsRoadValidationMessage {
     'Mã tuyến không được vượt quá 24 ký tự';
 
   static readonly LENGTH_INVALID = 'Chiều dài tuyến phải là số >= 0';
-  static readonly ROAD_TYPE_EMPTY = 'Loại tuyến không được để trống';
-  static readonly ROAD_TYPE_INVALID = 'Loại tuyến không hợp lệ';
-  static readonly ROAD_TYPE_TOO_LONG =
-    'Loại tuyến không được vượt quá 50 ký tự';
-
   static readonly START_POINT_EMPTY = 'Điểm xuất phát không được để trống';
   static readonly START_POINT_INVALID = 'Điểm xuất phát không hợp lệ';
   static readonly START_POINT_TOO_LONG =

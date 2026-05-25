@@ -23,6 +23,22 @@ export class RoadRepository {
     return this.repo.findOne({ where: { name, companyId } });
   }
 
+  findByRouteIdentity(
+    companyId: number,
+    name: string,
+    startPoint: string,
+    endPoint: string,
+  ) {
+    return this.repo.findOne({
+      where: {
+        companyId,
+        name,
+        startPoint,
+        endPoint,
+      },
+    });
+  }
+
   findByCompany(companyId: number) {
     return this.repo.find({ where: { companyId }, order: { id: 'DESC' } });
   }

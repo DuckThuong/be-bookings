@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { TbRoad } from '../entities/road.entity';
 import { RoadRepository } from '../repositories/road.repository';
@@ -23,26 +27,42 @@ export class RoadService {
     payload: CreateRoadDto,
   ): Promise<TbRoad> {
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
-    return this.roadRepository.save({
-      companyId: payload.companyId,
-      code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.ROAD),
-      name: payload.name,
-      length: payload.length,
-      type: payload.type,
-      startPoint: payload.startPoint,
-      endPoint: payload.endPoint,
-      startTime: payload.startTime,
-      endTime: payload.endTime,
-      status: payload.status ?? EntityStatus.ACTIVE,
-      totalTurn: 0,
-      standardDuration: payload.standardDuration ?? '',
-      tripsPerDay: payload.tripsPerDay ?? 0,
-      averageOccupancy: payload.averageOccupancy ?? 0,
-      estimatedRevenue: payload.estimatedRevenue ?? 0,
-      leadVehicle: payload.leadVehicle ?? null,
-      demandLevel: payload.demandLevel ?? null,
-      note: payload.note ?? null,
-    });
+
+    const existing = await this.roadRepository.findByRouteIdentity(
+      payload.companyId,
+      payload.name,
+      payload.startPoint,
+      payload.endPoint,
+    );
+
+    if (existing) {
+      return existing;
+    }
+
+    try {
+      return await this.roadRepository.save({
+        companyId: payload.companyId,
+        code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.ROAD),
+        name: payload.name,
+        length: payload.length,
+        startPoint: payload.startPoint,
+        endPoint: payload.endPoint,
+        status: payload.status ?? EntityStatus.ACTIVE,
+        totalTurn: payload.totalTurn ?? 0,
+        standardDuration: payload.standardDuration ?? '',
+        tripsPerDay: payload.tripsPerDay ?? 0,
+        averageOccupancy: payload.averageOccupancy ?? 0,
+        estimatedRevenue: payload.estimatedRevenue ?? 0,
+        leadVehicle: payload.leadVehicle ?? null,
+        demandLevel: payload.demandLevel ?? null,
+        note: payload.note ?? null,
+      });
+    } catch (error) {
+      if (this.isDuplicateKeyError(error)) {
+        throw new ConflictException(CompanyErrorMessage.CODE_CONFLICT);
+      }
+      throw error;
+    }
   }
 
   async findAll(
@@ -75,7 +95,41 @@ export class RoadService {
     payload: UpdateRoadDto,
   ): Promise<TbRoad> {
     await this.findOne(user, id);
-    await this.roadRepository.update(id, payload);
+    const updatePayload: Partial<TbRoad> = {
+      ...(payload.name !== undefined ? { name: payload.name } : {}),
+      ...(payload.length !== undefined ? { length: payload.length } : {}),
+      ...(payload.startPoint !== undefined
+        ? { startPoint: payload.startPoint }
+        : {}),
+      ...(payload.endPoint !== undefined ? { endPoint: payload.endPoint } : {}),
+      ...(payload.status !== undefined ? { status: payload.status } : {}),
+      ...(payload.totalTurn !== undefined
+        ? { totalTurn: payload.totalTurn }
+        : {}),
+      ...(payload.standardDuration !== undefined
+        ? { standardDuration: payload.standardDuration }
+        : {}),
+      ...(payload.tripsPerDay !== undefined
+        ? { tripsPerDay: payload.tripsPerDay }
+        : {}),
+      ...(payload.averageOccupancy !== undefined
+        ? { averageOccupancy: payload.averageOccupancy }
+        : {}),
+      ...(payload.estimatedRevenue !== undefined
+        ? { estimatedRevenue: payload.estimatedRevenue }
+        : {}),
+      ...(payload.leadVehicle !== undefined
+        ? { leadVehicle: payload.leadVehicle }
+        : {}),
+      ...(payload.demandLevel !== undefined
+        ? { demandLevel: payload.demandLevel }
+        : {}),
+      ...(payload.note !== undefined ? { note: payload.note } : {}),
+    };
+
+    if (Object.keys(updatePayload).length > 0) {
+      await this.roadRepository.update(id, updatePayload);
+    }
     return this.findOne(user, id);
   }
 
@@ -86,5 +140,10 @@ export class RoadService {
     await this.findOne(user, id);
     await this.roadRepository.update(id, { status: EntityStatus.INACTIVE });
     return { message: 'Đã vô hiệu hóa tuyến đường' };
+  }
+
+  private isDuplicateKeyError(error: unknown): boolean {
+    const maybeError = error as { code?: string; errno?: number };
+    return maybeError.code === 'ER_DUP_ENTRY' || maybeError.errno === 1062;
   }
 }

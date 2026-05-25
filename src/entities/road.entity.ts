@@ -40,13 +40,6 @@ export class TbRoad {
   @Column({
     type: 'varchar',
     length: 50,
-    comment: 'Loại tuyến đường',
-  })
-  type: string;
-
-  @Column({
-    type: 'varchar',
-    length: 50,
     comment: 'Trạng thái tuyến đường',
   })
   status: string;
@@ -66,23 +59,9 @@ export class TbRoad {
   endPoint: string;
 
   @Column({
-    type: 'varchar',
-    length: 20,
-    comment: 'Giờ khởi hành',
-  })
-  startTime: string;
-
-  @Column({
-    type: 'varchar',
-    length: 20,
-    comment: 'Giờ kết thúc',
-  })
-  endTime: string;
-
-  @Column({
     type: 'int',
     default: 0,
-    comment: 'Tổng số chuyến (counter hệ thống)',
+    comment: 'Tổng số chuyến',
   })
   totalTurn: number;
 
