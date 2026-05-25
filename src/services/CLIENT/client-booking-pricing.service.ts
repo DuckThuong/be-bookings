@@ -5,7 +5,7 @@ import {
   ClientCatalogAddon,
   ClientCatalogPromo,
 } from '../../assets/config/client-booking.config';
-import { AddonLineDto } from '../../dtos/CLIENT/bookings.dto';
+import { AddonLineDto } from '../../dtos/client/bookings.dto';
 import { ClientErrorMessage } from '../../assets/messages/client.message';
 
 export interface ClientPricingResult {
@@ -52,10 +52,7 @@ export class ClientBookingPricingService {
     const promoDiscount = promoCode
       ? this.calcPromoDiscount(promoCode, subTotal, addonsTotal)
       : 0;
-    const total = Math.max(
-      0,
-      subTotal + fee + addonsTotal - promoDiscount,
-    );
+    const total = Math.max(0, subTotal + fee + addonsTotal - promoDiscount);
 
     return {
       subTotal,

@@ -17,7 +17,7 @@ import {
   ClientMyBookingQueryDto,
   ClientMyInvoiceQueryDto,
   ClientMyTicketQueryDto,
-} from '../../dtos/CLIENT/client.dto';
+} from '../../dtos/client/client.dto';
 
 /** Flow tài khoản: xem vé / hóa đơn / đặt chỗ (chỉ đọc) */
 @ApiTags('Client - Account')

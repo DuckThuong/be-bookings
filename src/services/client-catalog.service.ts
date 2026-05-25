@@ -7,7 +7,7 @@ import {
   ClientCompanyTripQueryDto,
   ClientRoadQueryDto,
   ClientTripQueryDto,
-} from '../dtos/CLIENT/client.dto';
+} from '../dtos/client/client.dto';
 import { parsePageLimit } from '../common/helpers/pagination.helper';
 
 @Injectable()

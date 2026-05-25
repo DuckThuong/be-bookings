@@ -30,7 +30,7 @@ import {
   CreateHoldDto,
   PassengerDto,
   ValidatePromoDto,
-} from '../../dtos/CLIENT/bookings.dto';
+} from '../../dtos/client/bookings.dto';
 import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { CompanyAccessService } from '../company-access.service';
 import { CompanyTripRepository } from '../../repositories/company-trip.repository';
@@ -131,7 +131,10 @@ export class ClientBookingsService {
     }
 
     if (user.role !== UserRole.USER) {
-      await this.companyAccess.assertCompanyAccess(user, ctx.companyTrip.companyId);
+      await this.companyAccess.assertCompanyAccess(
+        user,
+        ctx.companyTrip.companyId,
+      );
     }
 
     const floor = payload.floor ?? 1;
@@ -157,19 +160,13 @@ export class ClientBookingsService {
     for (const row of seatMap.rows) {
       for (const seat of row.seats) {
         if (!seat) continue;
-        if (
-          payload.seatIds.includes(seat.id) &&
-          seat.status === 'vip'
-        ) {
+        if (payload.seatIds.includes(seat.id) && seat.status === 'vip') {
           throw new HttpException(
             ClientErrorMessage.VIP_SEAT_NOT_SELECTABLE,
             HttpStatus.BAD_REQUEST,
           );
         }
-        if (
-          payload.seatIds.includes(seat.id) &&
-          seat.status === 'booked'
-        ) {
+        if (payload.seatIds.includes(seat.id) && seat.status === 'booked') {
           throw new HttpException(
             ClientErrorMessage.SEAT_NOT_AVAILABLE,
             HttpStatus.BAD_REQUEST,
@@ -197,7 +194,8 @@ export class ClientBookingsService {
       promoCode: payload.promoCode,
     });
 
-    const holdSeconds = payload.holdSeconds ?? CLIENT_BOOKING_META.holdSecondsDefault;
+    const holdSeconds =
+      payload.holdSeconds ?? CLIENT_BOOKING_META.holdSecondsDefault;
     const holdExpiresAt = new Date(Date.now() + holdSeconds * 1000);
 
     const booking = await this.bookingRepository.save({
@@ -250,7 +248,11 @@ export class ClientBookingsService {
     holdId: string,
     payload: ConfirmPaymentDto,
   ) {
-    if (!CLIENT_BOOKING_ENUMS.paymentMethodId.includes(payload.paymentMethodId as never)) {
+    if (
+      !CLIENT_BOOKING_ENUMS.paymentMethodId.includes(
+        payload.paymentMethodId as never,
+      )
+    ) {
       throw new HttpException(
         ClientErrorMessage.PAYMENT_METHOD_INVALID,
         HttpStatus.BAD_REQUEST,
@@ -299,9 +301,9 @@ export class ClientBookingsService {
       throw new NotFoundException(CompanyErrorMessage.TICKET_NOT_FOUND);
     }
 
-    let payment = (
-      await this.paymentRepository.findByTicketId(ticket.id)
-    ).find((p) => p.status === PaymentStatus.PENDING);
+    let payment = (await this.paymentRepository.findByTicketId(ticket.id)).find(
+      (p) => p.status === PaymentStatus.PENDING,
+    );
 
     if (!payment) {
       payment = await this.paymentRepository.save({
@@ -341,8 +343,7 @@ export class ClientBookingsService {
     if (freshTrip) {
       await this.companyTripRepository.update(freshTrip.id, {
         totalSeatBooked: freshTrip.totalSeatBooked + ticket.totalSeat,
-        totalPrice:
-          Number(freshTrip.totalPrice) + Number(ticket.totalPrice),
+        totalPrice: Number(freshTrip.totalPrice) + Number(ticket.totalPrice),
       });
     }
 
@@ -358,10 +359,7 @@ export class ClientBookingsService {
     );
   }
 
-  async getBookingResult(
-    user: UserDecoratorDtoResponse,
-    bookingId: string,
-  ) {
+  async getBookingResult(user: UserDecoratorDtoResponse, bookingId: string) {
     const booking =
       (await this.bookingRepository.findByCode(bookingId)) ??
       (await this.findBookingByNumericId(bookingId));
@@ -446,7 +444,9 @@ export class ClientBookingsService {
     const vehicle = CLIENT_BOOKING_CATALOG.vehicles.find(
       (v) => v.type === booking.vehicleType,
     );
-    const hasInsurance = (booking.addons ?? []).some((a) => a.id === 'insurance');
+    const hasInsurance = (booking.addons ?? []).some(
+      (a) => a.id === 'insurance',
+    );
 
     const status =
       booking.status === BookingStatus.CONFIRMED ||
