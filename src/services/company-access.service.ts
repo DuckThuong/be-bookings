@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
   BadRequestException,
   ForbiddenException,
@@ -84,7 +85,10 @@ export class CompanyAccessService {
     roadId: number,
   ): Promise<TbRoad> {
     const road = await this.roadRepository.findById(roadId);
-    if (!road || road.companyId !== companyId) {
+    if (!road) {
+      throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
+    }
+    if (road.companyId !== companyId) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_BELONG_COMPANY);
     }
     return road;
@@ -110,7 +114,10 @@ export class CompanyAccessService {
     vehicleId: number,
   ): Promise<TbVehicle> {
     const vehicle = await this.vehicleRepository.findById(vehicleId);
-    if (!vehicle || vehicle.companyId !== companyId) {
+    if (!vehicle) {
+      throw new NotFoundException(CompanyErrorMessage.VEHICLE_NOT_FOUND);
+    }
+    if (vehicle.companyId !== companyId) {
       throw new NotFoundException(
         CompanyErrorMessage.VEHICLE_NOT_BELONG_COMPANY,
       );
@@ -123,7 +130,10 @@ export class CompanyAccessService {
     driverId: number,
   ): Promise<TbDriver> {
     const driver = await this.driverRepository.findById(driverId);
-    if (!driver || driver.companyId !== companyId) {
+    if (!driver) {
+      throw new NotFoundException(CompanyErrorMessage.DRIVER_NOT_FOUND);
+    }
+    if (driver.companyId !== companyId) {
       throw new NotFoundException(
         CompanyErrorMessage.DRIVER_NOT_BELONG_COMPANY,
       );

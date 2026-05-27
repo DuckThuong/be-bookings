@@ -32,8 +32,7 @@ export class TbTrip {
   @Column({
     type: 'int',
     comment: 'ID công ty (tb_company)',
-  }
-  )
+  })
   companyId: number;
 
   @Column({
