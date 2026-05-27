@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
   ForbiddenException,
   HttpException,
@@ -7,17 +8,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TbBooking } from '../../entities/sales/booking.entity';
-import { TbTicket } from '../../entities/ticket.entity';
-import { TbPayment } from '../../entities/sales/payment.entity';
-import { TbBasicUser } from '../../entities/user/basic-user.entity';
-import { TbInfoUser } from '../../entities/user/info-user.entity';
-import { BookingRepository } from '../../repositories/sales/booking.repository';
-import { TicketRepository } from '../../repositories/ticket.repository';
-import { PaymentRepository } from '../../repositories/sales/payment.repository';
-import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
-import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
-import { ClientBookingPricingService } from './client-booking-pricing.service';
 import {
   CLIENT_BOOKING_CATALOG,
   CLIENT_BOOKING_ENUMS,
@@ -25,29 +15,37 @@ import {
   CLIENT_BOOKING_META,
   PAYMENT_METHOD_LABELS,
 } from '../../assets/config/client-booking.config';
-import {
-  ConfirmPaymentDto,
-  CreateHoldDto,
-  PassengerDto,
-  ValidatePromoDto,
-} from '../../dtos/client/bookings.dto';
-import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
-import { CompanyAccessService } from '../company-access.service';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
-import { ClientErrorMessage } from '../../assets/messages/client.message';
+import { CODE_PREFIX } from '../../assets/constants/company.constants';
 import {
   BookingStatus,
   PaymentStatus,
   SALES_CODE_PREFIX,
 } from '../../assets/constants/sales.constants';
-import { SalesErrorMessage } from '../../assets/messages/sales.message';
 import { TicketStatus } from '../../assets/constants/ticket.constants';
-import {
-  CODE_PREFIX,
-  EntityStatus,
-} from '../../assets/constants/company.constants';
-import { generateEntityCode } from '../../common/helpers/common.helper';
+import { ClientErrorMessage } from '../../assets/messages/client.message';
 import { CompanyErrorMessage } from '../../assets/messages/company.message';
+import { SalesErrorMessage } from '../../assets/messages/sales.message';
+import { generateEntityCode } from '../../common/helpers/common.helper';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
+import { TbBooking } from '../../entities/sales/booking.entity';
+import { TbPayment } from '../../entities/sales/payment.entity';
+import { TbTicket } from '../../entities/ticket.entity';
+import { TbBasicUser } from '../../entities/user/basic-user.entity';
+import { TbInfoUser } from '../../entities/user/info-user.entity';
+import { CompanyTripRepository } from '../../repositories/company-trip.repository';
+import { BookingRepository } from '../../repositories/sales/booking.repository';
+import { PaymentRepository } from '../../repositories/sales/payment.repository';
+import { TicketRepository } from '../../repositories/ticket.repository';
+import { CompanyAccessService } from '../company-access.service';
+import { ClientBookingPricingService } from './client-booking-pricing.service';
+import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
+import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
+import {
+  CreateHoldDto,
+  PassengerDto,
+  ValidatePromoDto,
+} from '../../dtos/CLIENT/bookings.dto';
+import { ConfirmPaymentDto } from '../../dtos/sales/sales.dto';
 
 @Injectable()
 export class ClientBookingsService {
@@ -249,9 +247,7 @@ export class ClientBookingsService {
     payload: ConfirmPaymentDto,
   ) {
     if (
-      !CLIENT_BOOKING_ENUMS.paymentMethodId.includes(
-        payload.paymentMethodId as never,
-      )
+      !CLIENT_BOOKING_ENUMS.paymentMethodId.includes(payload.paymentMethodId)
     ) {
       throw new HttpException(
         ClientErrorMessage.PAYMENT_METHOD_INVALID,
@@ -306,6 +302,12 @@ export class ClientBookingsService {
     );
 
     if (!payment) {
+      const rawMethod = payload.paymentMethodId ?? '';
+      const methodStr = String(rawMethod);
+      const method = methodStr
+        ? methodStr.charAt(0).toUpperCase() + methodStr.slice(1)
+        : methodStr;
+
       payment = await this.paymentRepository.save({
         code: generateEntityCode(SALES_CODE_PREFIX.PAYMENT),
         ticketId: ticket.id,
@@ -313,7 +315,7 @@ export class ClientBookingsService {
         companyId: booking.companyId,
         customerId: booking.customerId,
         amount: booking.totalPrice,
-        method: payload.paymentMethodId.toUpperCase(),
+        method,
         status: PaymentStatus.PENDING,
         transactionRef: payload.transactionRef,
       });
@@ -330,7 +332,6 @@ export class ClientBookingsService {
       status: TicketStatus.PAID,
     });
 
-    const companyTrip = ctx.companyTrip;
     await this.bookingRepository.update(booking.id, {
       status: BookingStatus.CONFIRMED,
       paymentMethodId: payload.paymentMethodId,

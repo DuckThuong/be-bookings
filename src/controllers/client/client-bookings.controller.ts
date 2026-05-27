@@ -14,16 +14,15 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
-import { ClientBookingsService } from '../../services/client/client-bookings.service';
+import { ClientBookingsService } from '../../services/CLIENT/client-bookings.service';
 import {
-  ConfirmPaymentDto,
   CreateHoldDto,
   PassengerDto,
   SeatMapQueryDto,
   TripContextQueryDto,
   ValidatePromoDto,
-} from '../../dtos/client/bookings.dto';
-
+} from '../../dtos/CLIENT/bookings.dto';
+import { ConfirmPaymentDto } from '../../dtos/sales/sales.dto';
 @ApiTags('Client - Bookings')
 @Controller('api/bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)

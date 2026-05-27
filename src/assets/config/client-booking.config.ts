@@ -10,7 +10,12 @@ export const CLIENT_BOOKING_META = {
 
 export const CLIENT_BOOKING_FLOW = [
   { step: 1, code: 'SEAT_SELECTION', path: '/booking', name: 'Đặt ghế' },
-  { step: 2, code: 'PASSENGER_INFO', path: '/booking-info', name: 'Thông tin hành khách' },
+  {
+    step: 2,
+    code: 'PASSENGER_INFO',
+    path: '/booking-info',
+    name: 'Thông tin hành khách',
+  },
   {
     step: 3,
     code: 'CONFIRM_PAYMENT',
@@ -84,7 +89,12 @@ export const CLIENT_BOOKING_CATALOG = {
     },
   ] as ClientCatalogVehicle[],
   addonServices: [
-    { id: 'insurance', name: 'Bảo hiểm chuyến đi', price: 30000, hasQty: false },
+    {
+      id: 'insurance',
+      name: 'Bảo hiểm chuyến đi',
+      price: 30000,
+      hasQty: false,
+    },
     { id: 'meal', name: 'Suất ăn cao cấp', price: 45000, hasQty: false },
     { id: 'baggage', name: 'Hành lý thêm', price: 0, hasQty: false },
     { id: 'pillow', name: 'Gối + chăn cao cấp', price: 15000, hasQty: false },

@@ -1,8 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  BookingStatus,
   PaymentStatus,
-  RefundStatus,
   SettlementStatus,
 } from '../../assets/constants/sales.constants';
 
@@ -59,8 +57,12 @@ export class ConfirmPaymentDto {
   @ApiPropertyOptional()
   transactionRef?: string;
 
-  @ApiPropertyOptional({ example: 5, description: 'Tỷ lệ hoa hồng % (tạo commission)' })
+  @ApiPropertyOptional({
+    example: 5,
+    description: 'Tỷ lệ hoa hồng % (tạo commission)',
+  })
   commissionRate?: number;
+  paymentMethodId: never;
 }
 
 export class CreateRefundDto {

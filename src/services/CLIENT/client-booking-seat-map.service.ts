@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { Injectable } from '@nestjs/common';
-import { TbSeat } from '../../entities/seat.entity';
 import { EntityStatus } from '../../assets/constants/company.constants';
-import { TicketStatus } from '../../assets/constants/ticket.constants';
+import { TbSeat } from '../../entities/seat.entity';
 import { ClientCatalogRepository } from '../../repositories/client-catalog.repository';
 import { SeatRepository } from '../../repositories/seat.repository';
 import { ResolvedTripContext } from './client-booking-trip-resolver.service';

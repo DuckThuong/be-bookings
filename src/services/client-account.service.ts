@@ -10,7 +10,7 @@ import {
   ClientMyBookingQueryDto,
   ClientMyInvoiceQueryDto,
   ClientMyTicketQueryDto,
-} from '../dtos/client/client.dto';
+} from '../dtos/CLIENT/client.dto';
 import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { parsePageLimit } from '../common/helpers/pagination.helper';
 import { CompanyRepository } from '../repositories/company.repository';

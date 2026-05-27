@@ -17,7 +17,7 @@ import {
   ClientCompanyTripQueryDto,
   ClientRoadQueryDto,
   ClientTripQueryDto,
-} from '../../dtos/client/client.dto';
+} from '../../dtos/CLIENT/client.dto';
 
 /** Flow tra cứu: nhà xe, tuyến, chuyến (chỉ đọc) */
 @ApiTags('Client - Catalog')

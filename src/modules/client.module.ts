@@ -14,23 +14,23 @@ import { TbRefund } from '../entities/sales/refund.entity';
 import { TbCommission } from '../entities/sales/commission.entity';
 import { TbBasicUser } from '../entities/user/basic-user.entity';
 import { TbInfoUser } from '../entities/user/info-user.entity';
-import { ClientCatalogController } from '../controllers/client/client-catalog.controller';
-import { ClientAccountController } from '../controllers/client/client-account.controller';
-import { ClientBookingsController } from '../controllers/client/client-bookings.controller';
 import { ClientCatalogService } from '../services/client-catalog.service';
 import { ClientAccountService } from '../services/client-account.service';
 import { ClientEnrichmentService } from '../services/client-enrichment.service';
 import { ClientCatalogRepository } from '../repositories/client-catalog.repository';
 import { ClientAccountRepository } from '../repositories/client-account.repository';
-import { ClientBookingsService } from '../services/client/client-bookings.service';
-import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
-import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
-import { ClientBookingPricingService } from '../services/client/client-booking-pricing.service';
 import { TripRepository } from '../repositories/trip.repository';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { AuthModule } from './auth.module';
 import { CompanyModule } from './company.module';
 import { SalesModule } from './sales.module';
+import { ClientCatalogController } from '../controllers/CLIENT/client-catalog.controller';
+import { ClientAccountController } from '../controllers/CLIENT/client-account.controller';
+import { ClientBookingsController } from '../controllers/CLIENT/client-bookings.controller';
+import { ClientBookingTripResolverService } from '../services/CLIENT/client-booking-trip-resolver.service';
+import { ClientBookingsService } from '../services/CLIENT/client-bookings.service';
+import { ClientBookingSeatMapService } from '../services/CLIENT/client-booking-seat-map.service';
+import { ClientBookingPricingService } from '../services/CLIENT/client-booking-pricing.service';
 
 @Module({
   imports: [
