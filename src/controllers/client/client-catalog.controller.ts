@@ -17,7 +17,7 @@ import {
   ClientCompanyTripQueryDto,
   ClientRoadQueryDto,
   ClientTripQueryDto,
-} from '../../dtos/CLIENT/client.dto';
+} from '../../dtos/client/client.dto';
 
 /** Flow tra cứu: nhà xe, tuyến, chuyến (chỉ đọc) */
 @ApiTags('Client - Catalog')
@@ -57,14 +57,14 @@ export class ClientCatalogController {
 
   @Get('trips')
   @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
-  @ApiOperation({ summary: 'Danh sách chuyến mẫu' })
+  @ApiOperation({ summary: 'Danh sách chuyến' })
   listTrips(@Query() query: ClientTripQueryDto) {
     return this.catalogService.listTrips(query);
   }
 
   @Get('trips/:id')
   @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
-  @ApiOperation({ summary: 'Chi tiết chuyến mẫu' })
+  @ApiOperation({ summary: 'Chi tiết chuyến' })
   getTrip(@Param('id', ParseIntPipe) id: number) {
     return this.catalogService.getTrip(id);
   }

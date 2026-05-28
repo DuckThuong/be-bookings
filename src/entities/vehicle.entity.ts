@@ -66,4 +66,7 @@ export class TbVehicle {
     comment: 'Mô tả phương tiện',
   })
   description: string;
+
+  @Column()
+  seatCount: number;
 }

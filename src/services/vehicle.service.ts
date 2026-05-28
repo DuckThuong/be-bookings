@@ -26,11 +26,9 @@ export class VehicleService {
   async create(
     user: UserDecoratorDtoResponse,
     payload: CreateVehicleDto,
-    companyId?: number,
   ): Promise<TbVehicle> {
     const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      companyId,
+      user
     );
     if (!validString(payload.code)) {
       throw new HttpException(
@@ -54,6 +52,7 @@ export class VehicleService {
       code: payload.code.trim(),
       type: payload.type,
       name: payload.name,
+      seatCount: payload.seatCount,
       image: payload.image ?? undefined,
       schedule: payload.schedule ?? undefined,
       description: payload.description ?? undefined,

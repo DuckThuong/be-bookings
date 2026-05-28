@@ -44,7 +44,7 @@ import {
   CreateHoldDto,
   PassengerDto,
   ValidatePromoDto,
-} from '../../dtos/CLIENT/bookings.dto';
+} from '../../dtos/client/bookings.dto';
 import { ConfirmPaymentDto } from '../../dtos/sales/sales.dto';
 
 @Injectable()

@@ -7,7 +7,7 @@ import {
   ClientCompanyTripQueryDto,
   ClientRoadQueryDto,
   ClientTripQueryDto,
-} from '../dtos/CLIENT/client.dto';
+} from '../dtos/client/client.dto';
 import { parsePageLimit } from '../common/helpers/pagination.helper';
 
 @Injectable()
@@ -63,10 +63,8 @@ export class ClientCatalogService {
   async listTrips(query: ClientTripQueryDto) {
     const { page, limit } = parsePageLimit(query.page, query.limit);
     const { items, total } = await this.catalogRepository.findTrips({
-      companyId: query.companyId,
-      roadId: query.roadId,
-      search: query.search,
-      status: query.status,
+      startPoint: query.startPoint,
+      endPoint: query.endPoint,
       page,
       limit,
     });

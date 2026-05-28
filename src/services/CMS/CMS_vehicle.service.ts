@@ -69,8 +69,7 @@ export class CMSVehicleService {
       const normalized = this.normalizePayload(payload, true);
       const vehicle = await this.vehicleService.create(
         user,
-        normalized as CreateVehicleDto,
-        payload.companyId,
+        normalized as CreateVehicleDto
       );
       // await this.syncSeatsForVehicle(user, vehicle, payload);
       return this.toResponse(
@@ -153,10 +152,11 @@ export class CMSVehicleService {
     payload: CreateVehiclePayloadDto | UpdateVehiclePayloadDto,
     requireRequiredFields: boolean,
   ): NormalizedVehiclePayload {
-    const code = this.trimOptional(payload.vehicleCode ?? payload.code);
-    const type = this.trimOptional(payload.vehicleType ?? payload.type);
-    const name = this.trimOptional(payload.vehicleName ?? payload.name);
-    const status = this.trimOptional(payload.vehicleStatus ?? payload.status);
+    const code = payload.code?.trim() || '';
+    const type = payload.type?.trim() || '';
+    const name = payload.name?.trim() || '';
+    const status =payload.status?.trim() || '';
+    const seatCount = payload.seatCount;
 
     if (requireRequiredFields) {
       if (!code) {
@@ -186,6 +186,7 @@ export class CMSVehicleService {
       ...(type !== undefined ? { type } : {}),
       ...(name !== undefined ? { name } : {}),
       ...(status !== undefined ? { status } : {}),
+      ...(seatCount !== undefined ? { seatCount } : {}),
       ...(payload.image !== undefined
         ? { image: this.trimOptional(payload.image) }
         : {}),

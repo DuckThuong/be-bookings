@@ -127,10 +127,13 @@ export class ClientEnrichmentService {
     const roadMap = await this.loadRoads(trips.map((t) => t.roadId));
     const companyIds = [...roadMap.values()].map((r) => r.companyId);
     const companyMap = await this.loadCompanies(companyIds);
+    const vehicleIds = trips.map((t) => t.vehicleId);
+    const vehicleMap = await this.loadVehicles(vehicleIds);
     return trips.map((trip) => {
       const road = roadMap.get(trip.roadId) ?? null;
       const company = road ? (companyMap.get(road.companyId) ?? null) : null;
-      return { ...trip, road, company };
+      const vehicle = vehicleMap.get(trip.vehicleId) ?? null;
+      return { ...trip, road, company, vehicle };
     });
   }
 

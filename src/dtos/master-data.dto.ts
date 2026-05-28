@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class MasterDataDtoPayload {
   @ApiProperty({
@@ -7,6 +8,8 @@ export class MasterDataDtoPayload {
     required: true,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   type?: string;
 
   @ApiProperty({
@@ -15,6 +18,8 @@ export class MasterDataDtoPayload {
     required: true,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   code?: string;
 }
 

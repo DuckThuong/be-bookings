@@ -33,6 +33,8 @@ export interface CatalogTripFilter {
   roadId?: number;
   search?: string;
   status?: string;
+  startPoint?: string;
+  endPoint?: string;
   page: number;
   limit: number;
 }
@@ -42,6 +44,8 @@ export interface CatalogCompanyTripFilter {
   tripId?: number;
   roadId?: number;
   status?: string;
+  startPoint?: string;
+  endPoint?: string;
   minAvailableSeats?: number;
   page: number;
   limit: number;
@@ -128,19 +132,15 @@ export class ClientCatalogRepository {
 
   async findTrips(filter: CatalogTripFilter) {
     const qb = this.tripRepo.createQueryBuilder('t').orderBy('t.id', 'DESC');
-    if (filter.roadId !== undefined) {
-      qb.andWhere('t.roadId = :roadId', { roadId: filter.roadId });
-    }
-    if (filter.companyId !== undefined) {
-      const roads = await this.roadRepo.find({
-        where: { companyId: filter.companyId },
-        select: ['id'],
-      });
-      const roadIds = roads.map((r) => r.id);
-      if (roadIds.length === 0) {
+    if (filter.startPoint?.trim() && filter.endPoint?.trim()) {
+      const roadId = await this.findRoadId(
+        filter.startPoint,
+        filter.endPoint
+      );
+      if (!roadId) {
         return { items: [], total: 0 };
       }
-      qb.andWhere('t.roadId IN (:...roadIds)', { roadIds });
+      qb.andWhere('t.roadId = :roadId', { roadId });
     }
     if (filter.status) {
       qb.andWhere('t.status = :status', { status: filter.status });
@@ -202,6 +202,13 @@ export class ClientCatalogRepository {
       return available >= filter.minAvailableSeats!;
     });
     return { items: filtered, total: filtered.length };
+  }
+
+  async findRoadId(startPoint: string, endPoint: string, companyId?: number) {
+    const road = await this.roadRepo.findOne({
+      where: { startPoint, endPoint, companyId },
+    });
+    return road?.id;
   }
 
   findCompanyTripById(id: number) {
