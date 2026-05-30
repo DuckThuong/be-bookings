@@ -4,6 +4,8 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
 import { VehicleService } from '../vehicle.service';
 import { SeatService } from '../seat.service';
 import { CommonErrorMessage } from '../../assets/messages/common.message';
@@ -20,6 +22,8 @@ import {
   CmsVehicleListResponseDto,
 } from '../../dtos/CMS/CMS_vehicle.dto';
 import { TbVehicle } from '../../entities/vehicle.entity';
+import { TbTrip } from '../../entities/trip.entity';
+import { TbRoad } from '../../entities/road.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
 import {
   CreateVehicleDto,
@@ -36,18 +40,31 @@ type NormalizedVehiclePayload = UpdateVehicleDto & {
   status?: string;
 };
 
+type VehicleResponseOptions = {
+  seatType?: string;
+  seatCount?: number;
+  trips?: TbTrip[];
+  roadMap?: Map<number, TbRoad>;
+};
+
 @Injectable()
 export class CMSVehicleService {
   constructor(
     private readonly vehicleService: VehicleService,
     private readonly seatService: SeatService,
+    @InjectRepository(TbTrip)
+    private readonly tripRepo: Repository<TbTrip>,
+    @InjectRepository(TbRoad)
+    private readonly roadRepo: Repository<TbRoad>,
   ) {}
 
   async getVehicleById(
     user: UserDecoratorDtoResponse,
     id: number,
   ): Promise<CmsVehicleDetailResponseDto> {
-    return this.toResponse(user, await this.vehicleService.findOne(user, id));
+    const vehicle = await this.vehicleService.findOne(user, id);
+    const [item] = await this.enrichVehicles(user, [vehicle]);
+    return item;
   }
 
   async getAllVehicles(
@@ -55,9 +72,7 @@ export class CMSVehicleService {
     companyId?: number,
   ): Promise<CmsVehicleListResponseDto> {
     const vehicles = await this.vehicleService.findAll(user, companyId);
-    const items = await Promise.all(
-      vehicles.map((vehicle) => this.toResponse(user, vehicle)),
-    );
+    const items = await this.enrichVehicles(user, vehicles);
     return { items, total: items.length };
   }
 
@@ -73,14 +88,15 @@ export class CMSVehicleService {
         normalized as CreateVehicleDto,
       );
       await this.syncSeatsForVehicle(user, vehicle, payload);
-      return this.toResponse(
+      const [item] = await this.enrichVehicles(
         user,
-        await this.vehicleService.findOne(user, vehicle.id),
+        [await this.vehicleService.findOne(user, vehicle.id)],
         {
           seatType: this.trimOptional(payload.seatType),
           seatCount: parsePositiveInt(payload.seatCount),
         },
       );
+      return item;
     } catch (error) {
       this.rethrow(error);
     }
@@ -115,14 +131,15 @@ export class CMSVehicleService {
         }
       }
 
-      return this.toResponse(
+      const [item] = await this.enrichVehicles(
         user,
-        await this.vehicleService.findOne(user, vehicle.id),
+        [await this.vehicleService.findOne(user, vehicle.id)],
         {
           seatType: this.trimOptional(payload.seatType),
           seatCount: parsedSeatCount,
         },
       );
+      return item;
     } catch (error) {
       this.rethrow(error);
     }
@@ -145,10 +162,49 @@ export class CMSVehicleService {
     }
   }
 
+  private async enrichVehicles(
+    user: UserDecoratorDtoResponse,
+    vehicles: TbVehicle[],
+    responseOptions?: Pick<VehicleResponseOptions, 'seatType' | 'seatCount'>,
+  ): Promise<CmsVehicleEntityDto[]> {
+    if (vehicles.length === 0) {
+      return [];
+    }
+
+    const vehicleIds = vehicles.map((vehicle) => vehicle.id);
+    const trips = await this.tripRepo.find({
+      where: { vehicleId: In(vehicleIds) },
+      order: { id: 'DESC' },
+    });
+    const roadIds = [...new Set(trips.map((trip) => trip.roadId))];
+    const roads =
+      roadIds.length > 0
+        ? await this.roadRepo.find({ where: { id: In(roadIds) } })
+        : [];
+    const roadMap = new Map(roads.map((road) => [road.id, road]));
+    const tripsByVehicle = new Map<number, TbTrip[]>();
+
+    for (const trip of trips) {
+      const vehicleTrips = tripsByVehicle.get(trip.vehicleId) ?? [];
+      vehicleTrips.push(trip);
+      tripsByVehicle.set(trip.vehicleId, vehicleTrips);
+    }
+
+    return Promise.all(
+      vehicles.map((vehicle) =>
+        this.toResponse(user, vehicle, {
+          trips: tripsByVehicle.get(vehicle.id) ?? [],
+          roadMap,
+          ...responseOptions,
+        }),
+      ),
+    );
+  }
+
   private async toResponse(
     user: UserDecoratorDtoResponse,
     vehicle: TbVehicle,
-    options?: { seatType?: string; seatCount?: number },
+    options?: VehicleResponseOptions,
   ): Promise<CmsVehicleEntityDto> {
     const seats = await this.seatService.findByVehicle(
       user,
@@ -166,7 +222,11 @@ export class CMSVehicleService {
       image: vehicle.image ?? undefined,
       code: vehicle.code,
       type: vehicle.type,
-      schedule: vehicle.schedule ?? undefined,
+      schedule: this.resolveSchedule(
+        vehicle,
+        options?.trips ?? [],
+        options?.roadMap ?? new Map(),
+      ),
       status: vehicle.status,
       name: vehicle.name,
       description: vehicle.description ?? undefined,
@@ -181,6 +241,83 @@ export class CMSVehicleService {
         options?.seatCount ?? 0,
       ),
     };
+  }
+
+  private resolveSchedule(
+    vehicle: TbVehicle,
+    trips: TbTrip[],
+    roadMap: Map<number, TbRoad>,
+  ): string | undefined {
+    const storedSchedule = vehicle.schedule?.trim();
+    if (storedSchedule) {
+      return storedSchedule;
+    }
+
+    const activeTrips = trips.filter(
+      (trip) => trip.status?.toUpperCase() === EntityStatus.ACTIVE,
+    );
+
+    if (activeTrips.length === 0) {
+      return undefined;
+    }
+
+    const labels = activeTrips
+      .map((trip) => this.buildTripScheduleLabel(trip, roadMap.get(trip.roadId)))
+      .filter(Boolean) as string[];
+
+    if (labels.length === 0) {
+      return undefined;
+    }
+
+    return [...new Set(labels)].join(', ');
+  }
+
+  private buildTripScheduleLabel(
+    trip: TbTrip,
+    road?: TbRoad,
+  ): string | undefined {
+    const departureTime = this.extractDepartureTime(trip.departure);
+    const tripsPerDay = road?.tripsPerDay ?? 0;
+
+    if (tripsPerDay > 0 && departureTime) {
+      return `${tripsPerDay} chuyến/ngày — ${departureTime}`;
+    }
+
+    if (tripsPerDay > 0) {
+      return `${tripsPerDay} chuyến/ngày`;
+    }
+
+    if (departureTime) {
+      return `Hàng ngày ${departureTime}`;
+    }
+
+    return road?.name ?? trip.name;
+  }
+
+  private extractDepartureTime(departure?: string | null): string | undefined {
+    const value = departure?.trim();
+    if (!value) {
+      return undefined;
+    }
+
+    const dailyMatch = value.match(/Hàng ngày\s+(\d{1,2}:\d{2})/i);
+    if (dailyMatch) {
+      return dailyMatch[1];
+    }
+
+    const dateTimeMatch = value.match(
+      /\d{1,2}\/\d{1,2}\/\d{2,4}\s+(\d{1,2}:\d{2})/,
+    );
+    if (dateTimeMatch) {
+      return dateTimeMatch[1];
+    }
+
+    const timeMatch = value.match(/^(\d{1,2}:\d{2})(?::\d{2})?$/);
+    if (timeMatch) {
+      return timeMatch[1];
+    }
+
+    return undefined;
   }
 
   private normalizePayload(
