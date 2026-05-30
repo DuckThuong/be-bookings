@@ -57,17 +57,17 @@ export class CmsRoadFormPayloadDto {
   })
   status: string;
 
-  @ApiProperty({ example: 'Ha Noi' })
+  @ApiProperty({ example: 'BigC Thăng Long' })
   @IsNotEmpty({ message: CmsRoadValidationMessage.START_POINT_EMPTY })
   @IsString({ message: CmsRoadValidationMessage.START_POINT_INVALID })
   @MaxLength(255, { message: CmsRoadValidationMessage.START_POINT_TOO_LONG })
-  startPoint: string;
+  pickUpPoint: string;
 
-  @ApiProperty({ example: 'Da Nang' })
+  @ApiProperty({ example: 'BigC Đà Nẵng' })
   @IsNotEmpty({ message: CmsRoadValidationMessage.END_POINT_EMPTY })
   @IsString({ message: CmsRoadValidationMessage.END_POINT_INVALID })
   @MaxLength(255, { message: CmsRoadValidationMessage.END_POINT_TOO_LONG })
-  endPoint: string;
+  dropOffPoint: string;
 
   @ApiPropertyOptional({ example: '6h30m' })
   @IsOptional()
@@ -155,11 +155,17 @@ export class CmsRoadEntityDto {
   @ApiProperty({ example: EntityStatus.ACTIVE })
   status: string;
 
-  @ApiProperty({ example: 'Ha Noi' })
+  @ApiProperty({ example: 'Hà Nội' })
   startPoint: string;
 
-  @ApiProperty({ example: 'Da Nang' })
+  @ApiProperty({ example: 'Đà Nẵng' })
   endPoint: string;
+
+  @ApiProperty({ example: 'BigC Thăng Long' })
+  pickUpPoint: string;
+
+  @ApiProperty({ example: 'BigC Đà Nẵng' })
+  dropOffPoint: string;
 
   @ApiProperty({ example: '6h30m' })
   standardDuration: string;

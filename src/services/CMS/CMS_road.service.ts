@@ -54,13 +54,16 @@ export class CMSRoadService {
         user,
         payload.companyId,
       );
+      const [startPoint, endPoint] = payload.name.split(/\s*-\s*/);
       const road = await this.roadService.create(user, {
         companyId,
         code: payload.code?.trim(),
         name: payload.name.trim(),
         length: payload.length,
-        startPoint: payload.startPoint.trim(),
-        endPoint: payload.endPoint.trim(),
+        startPoint: startPoint?.trim() || '',
+        endPoint: endPoint?.trim() || '',
+        pickUpPoint: payload.pickUpPoint.trim(),
+        dropOffPoint: payload.dropOffPoint.trim(),
         status: payload.status,
         totalTurn: payload.totalTurn ?? 0,
         standardDuration: payload.standardDuration?.trim() ?? '',
@@ -122,6 +125,8 @@ export class CMSRoadService {
       status: road.status,
       startPoint: road.startPoint,
       endPoint: road.endPoint,
+      pickUpPoint: road.pickUpPoint,
+      dropOffPoint: road.dropOffPoint,
       standardDuration: road.standardDuration ?? '',
       tripsPerDay: road.tripsPerDay ?? 0,
       averageOccupancy: Number(road.averageOccupancy ?? 0),
@@ -134,14 +139,21 @@ export class CMSRoadService {
   }
 
   private toRoadUpdatePayload(payload: UpdateRoadPayloadDto): Partial<TbRoad> {
+    const [startPoint, endPoint] = payload.name?.split(/\s*-\s*/) ?? [];
     return {
-      ...(payload.name !== undefined ? { name: payload.name.trim() } : {}),
-      ...(payload.length !== undefined ? { length: payload.length } : {}),
-      ...(payload.startPoint !== undefined
-        ? { startPoint: payload.startPoint.trim() }
+      ...(payload.name !== undefined
+        ? {
+            name: payload.name.trim(),
+            startPoint: startPoint?.trim() || '',
+            endPoint: endPoint?.trim() || '',
+          }
         : {}),
-      ...(payload.endPoint !== undefined
-        ? { endPoint: payload.endPoint.trim() }
+      ...(payload.length !== undefined ? { length: payload.length } : {}),
+      ...(payload.pickUpPoint !== undefined
+        ? { pickUpPoint: payload.pickUpPoint.trim() }
+        : {}),
+      ...(payload.dropOffPoint !== undefined
+        ? { dropOffPoint: payload.dropOffPoint.trim() }
         : {}),
       ...(payload.status !== undefined ? { status: payload.status } : {}),
       ...(payload.totalTurn !== undefined

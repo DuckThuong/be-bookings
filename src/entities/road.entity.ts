@@ -59,6 +59,18 @@ export class TbRoad {
   endPoint: string;
 
   @Column({
+    type: 'text',
+    comment: 'Điểm đón khách',
+  })
+  pickUpPoint: string;
+
+  @Column({
+    type: 'text',
+    comment: 'Điểm trả khách',
+  })
+  dropOffPoint: string;
+
+  @Column({
     type: 'int',
     default: 0,
     comment: 'Tổng số chuyến',

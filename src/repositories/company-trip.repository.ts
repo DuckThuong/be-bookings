@@ -56,12 +56,7 @@ export class CompanyTripRepository {
     });
   }
 
-  searchActiveForClient(params: {
-    fromCity?: string;
-    fromStation?: string;
-    toCity?: string;
-    toStation?: string;
-  }) {
+  searchActiveForClient(params: { fromCity?: string; toCity?: string }) {
     const qb = this.repo
       .createQueryBuilder('ct')
       .innerJoin('tb_trip', 'trip', 'trip.id = ct.tripId')
@@ -71,32 +66,17 @@ export class CompanyTripRepository {
       .andWhere('road.status = :active', { active: EntityStatus.ACTIVE });
 
     const fromCity = params.fromCity?.trim();
-    const fromStation = params.fromStation?.trim();
     const toCity = params.toCity?.trim();
-    const toStation = params.toStation?.trim();
 
     if (fromCity) {
-      qb.andWhere(
-        '(road.startPoint LIKE :fromCity OR road.name LIKE :fromCity)',
-        { fromCity: `%${fromCity}%` },
-      );
-    }
-
-    if (fromStation) {
-      qb.andWhere('road.startPoint LIKE :fromStation', {
-        fromStation: `%${fromStation}%`,
+      qb.andWhere('(road.startPoint LIKE :fromCity )', {
+        fromCity: `%${fromCity}%`,
       });
     }
 
     if (toCity) {
-      qb.andWhere('(road.endPoint LIKE :toCity OR road.name LIKE :toCity)', {
+      qb.andWhere('(road.endPoint LIKE :toCity)', {
         toCity: `%${toCity}%`,
-      });
-    }
-
-    if (toStation) {
-      qb.andWhere('road.endPoint LIKE :toStation', {
-        toStation: `%${toStation}%`,
       });
     }
 

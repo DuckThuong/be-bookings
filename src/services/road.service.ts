@@ -47,6 +47,8 @@ export class RoadService {
         length: payload.length,
         startPoint: payload.startPoint,
         endPoint: payload.endPoint,
+        pickUpPoint: payload.pickUpPoint,
+        dropOffPoint: payload.dropOffPoint,
         status: payload.status ?? EntityStatus.ACTIVE,
         totalTurn: payload.totalTurn ?? 0,
         standardDuration: payload.standardDuration ?? '',
@@ -77,10 +79,7 @@ export class RoadService {
     return this.roadRepository.findByCompany(resolvedCompanyId);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbRoad> {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbRoad> {
     const road = await this.roadRepository.findById(id);
     if (!road) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
@@ -98,10 +97,12 @@ export class RoadService {
     const updatePayload: Partial<TbRoad> = {
       ...(payload.name !== undefined ? { name: payload.name } : {}),
       ...(payload.length !== undefined ? { length: payload.length } : {}),
-      ...(payload.startPoint !== undefined
-        ? { startPoint: payload.startPoint }
+      ...(payload.pickUpPoint !== undefined
+        ? { pickUpPoint: payload.pickUpPoint }
         : {}),
-      ...(payload.endPoint !== undefined ? { endPoint: payload.endPoint } : {}),
+      ...(payload.dropOffPoint !== undefined
+        ? { dropOffPoint: payload.dropOffPoint }
+        : {}),
       ...(payload.status !== undefined ? { status: payload.status } : {}),
       ...(payload.totalTurn !== undefined
         ? { totalTurn: payload.totalTurn }

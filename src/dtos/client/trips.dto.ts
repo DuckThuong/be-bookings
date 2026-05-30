@@ -62,28 +62,12 @@ export class ClientSearchTripsQueryDto {
   fromCity?: string;
 
   @ApiPropertyOptional({
-    example: 'Bến xe Mỹ Đình',
-    description: 'Bến xe / điểm lên',
-  })
-  @IsOptional()
-  @IsString()
-  fromStation?: string;
-
-  @ApiPropertyOptional({
     example: 'TP. Hồ Chí Minh',
     description: 'Thành phố đến',
   })
   @IsOptional()
   @IsString()
   toCity?: string;
-
-  @ApiPropertyOptional({
-    example: 'Bến xe Miền Đông',
-    description: 'Bến xe / điểm xuống',
-  })
-  @IsOptional()
-  @IsString()
-  toStation?: string;
 
   @ApiPropertyOptional({
     example: '11/05/2026',
@@ -224,20 +208,14 @@ export class ClientTripItemDto {
   amenities: ClientTripAmenityDto[];
 }
 
-export class ClientTripSearchRouteDto {
-  @ApiProperty({ example: 'Hà Nội' })
-  city: string;
 
-  @ApiProperty({ example: 'Bến xe Mỹ Đình' })
-  station: string;
-}
 
 export class ClientTripSearchCriteriaDto {
-  @ApiProperty({ type: ClientTripSearchRouteDto })
-  from: ClientTripSearchRouteDto;
+  @ApiProperty()
+  from: string;
 
-  @ApiProperty({ type: ClientTripSearchRouteDto })
-  to: ClientTripSearchRouteDto;
+  @ApiProperty()
+  to: string;
 
   @ApiProperty({ example: '11/05/2026' })
   date: string;

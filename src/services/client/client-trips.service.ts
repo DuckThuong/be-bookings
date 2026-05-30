@@ -74,9 +74,7 @@ export class ClientTripsService {
     const companyTrips = await this.companyTripRepository.searchActiveForClient(
       {
         fromCity: query.fromCity,
-        fromStation: query.fromStation,
         toCity: query.toCity,
-        toStation: query.toStation,
       },
     );
 
@@ -103,14 +101,8 @@ export class ClientTripsService {
 
     return {
       search: {
-        from: {
-          city: query.fromCity?.trim() || '',
-          station: query.fromStation?.trim() || '',
-        },
-        to: {
-          city: query.toCity?.trim() || '',
-          station: query.toStation?.trim() || '',
-        },
+        from: query.fromCity?.trim() || '',
+        to: query.toCity?.trim() || '',
         date,
         passengers,
         seatType,
@@ -271,12 +263,12 @@ export class ClientTripsService {
       departure: {
         time: trip.departure || '',
         city: ctx.fromCity?.trim() || this.extractCity(road.startPoint),
-        station: road.startPoint,
+        station: road.pickUpPoint,
       },
       arrival: {
         time: trip.arrival || '',
         city: ctx.toCity?.trim() || this.extractCity(road.endPoint),
-        station: road.endPoint,
+        station: road.dropOffPoint,
       },
       duration: road.standardDuration
         ? `~${road.standardDuration}`
