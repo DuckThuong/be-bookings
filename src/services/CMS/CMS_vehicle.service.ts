@@ -27,6 +27,7 @@ import {
 } from '../../dtos/company/company.dto';
 import { TbSeat } from '../../entities/seat.entity';
 import { EntityStatus } from '../../assets/constants/company.constants';
+import { parsePositiveInt } from '../../common/helpers/common.helper';
 
 type NormalizedVehiclePayload = UpdateVehicleDto & {
   code?: string;
@@ -71,10 +72,14 @@ export class CMSVehicleService {
         user,
         normalized as CreateVehicleDto,
       );
-      // await this.syncSeatsForVehicle(user, vehicle, payload);
+      await this.syncSeatsForVehicle(user, vehicle, payload);
       return this.toResponse(
         user,
         await this.vehicleService.findOne(user, vehicle.id),
+        {
+          seatType: this.trimOptional(payload.seatType),
+          seatCount: parsePositiveInt(payload.seatCount),
+        },
       );
     } catch (error) {
       this.rethrow(error);
@@ -86,17 +91,37 @@ export class CMSVehicleService {
     user: UserDecoratorDtoResponse,
   ): Promise<VehicleResponseDto> {
     try {
+      const parsedSeatCount = parsePositiveInt(payload.seatCount);
+      const normalized = this.normalizePayload(payload, false);
       const vehicle = await this.vehicleService.update(
         user,
         payload.id,
-        this.normalizePayload(payload, false),
+        normalized,
       );
-      // if (payload.seatCount !== undefined || payload.seatType !== undefined) {
-      //   await this.syncSeatsForVehicle(user, vehicle, payload);
-      // }
+
+      if (
+        parsedSeatCount !== undefined ||
+        this.trimOptional(payload.seatType)
+      ) {
+        await this.syncSeatsForVehicle(user, vehicle, {
+          ...payload,
+          seatCount: parsedSeatCount ?? payload.seatCount,
+        });
+
+        if (parsedSeatCount !== undefined) {
+          await this.vehicleService.update(user, payload.id, {
+            seatCount: parsedSeatCount,
+          });
+        }
+      }
+
       return this.toResponse(
         user,
         await this.vehicleService.findOne(user, vehicle.id),
+        {
+          seatType: this.trimOptional(payload.seatType),
+          seatCount: parsedSeatCount,
+        },
       );
     } catch (error) {
       this.rethrow(error);
@@ -123,6 +148,7 @@ export class CMSVehicleService {
   private async toResponse(
     user: UserDecoratorDtoResponse,
     vehicle: TbVehicle,
+    options?: { seatType?: string; seatCount?: number },
   ): Promise<CmsVehicleEntityDto> {
     const seats = await this.seatService.findByVehicle(
       user,
@@ -132,6 +158,7 @@ export class CMSVehicleService {
     const activeSeats = this.sortSeatsByOrdinalAsc(
       seats.filter((seat) => seat.status === EntityStatus.ACTIVE),
     );
+    const storedSeatCount = parsePositiveInt(vehicle.seatCount) ?? 0;
 
     return {
       id: vehicle.id,
@@ -143,8 +170,16 @@ export class CMSVehicleService {
       status: vehicle.status,
       name: vehicle.name,
       description: vehicle.description ?? undefined,
-      seatType: activeSeats[0]?.type ?? '',
-      seatCount: activeSeats.length,
+      seatType:
+        activeSeats[0]?.type ??
+        seats.find((seat) => seat.type)?.type ??
+        options?.seatType ??
+        '',
+      seatCount: Math.max(
+        storedSeatCount,
+        activeSeats.length,
+        options?.seatCount ?? 0,
+      ),
     };
   }
 
@@ -156,7 +191,7 @@ export class CMSVehicleService {
     const type = payload.type?.trim() || '';
     const name = payload.name?.trim() || '';
     const status = payload.status?.trim() || '';
-    const seatCount = payload.seatCount;
+    const seatCount = parsePositiveInt(payload.seatCount);
 
     if (requireRequiredFields) {
       if (!code) {
@@ -211,11 +246,7 @@ export class CMSVehicleService {
       );
     }
 
-    if (
-      payload.seatCount === undefined ||
-      !Number.isInteger(payload.seatCount) ||
-      payload.seatCount <= 0
-    ) {
+    if (parsePositiveInt(payload.seatCount) === undefined) {
       throw new BadRequestException(CmsVehicleValidationMessage.SEAT_COUNT_MIN);
     }
   }
@@ -233,7 +264,8 @@ export class CMSVehicleService {
     let activeSeats = this.sortSeatsByOrdinalAsc(
       allSeats.filter((seat) => seat.status === EntityStatus.ACTIVE),
     );
-    const targetCount = payload.seatCount ?? activeSeats.length;
+    const targetCount =
+      parsePositiveInt(payload.seatCount) ?? activeSeats.length;
     const targetType =
       this.trimOptional(payload.seatType) ?? activeSeats[0]?.type;
 

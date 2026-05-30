@@ -8,7 +8,10 @@ import { TbVehicle } from '../entities/vehicle.entity';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
-import { validString } from '../common/helpers/common.helper';
+import {
+  parsePositiveInt,
+  validString,
+} from '../common/helpers/common.helper';
 import {
   CreateVehicleDto,
   UpdateVehicleDto,
@@ -146,6 +149,10 @@ export class VehicleService {
             ? payload.description.trim()
             : cloned.description
           : cloned.description,
+      seatCount:
+        payload.seatCount !== undefined
+          ? (parsePositiveInt(payload.seatCount) ?? cloned.seatCount)
+          : cloned.seatCount,
     };
   }
 

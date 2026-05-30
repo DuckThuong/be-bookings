@@ -67,6 +67,6 @@ export class TbVehicle {
   })
   description: string;
 
-  @Column()
+  @Column({ type: 'int', default: 0 })
   seatCount: number;
 }

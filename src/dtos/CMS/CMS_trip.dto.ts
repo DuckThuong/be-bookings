@@ -142,6 +142,21 @@ export class CmsTripEntityDto {
 
   @ApiProperty({ example: 0 })
   bookedSeats: number;
+
+  @ApiPropertyOptional({ example: 'TP.HCM — Đà Lạt' })
+  roadName?: string;
+
+  @ApiPropertyOptional({ example: 'Nguyễn Văn A' })
+  driverName?: string;
+
+  @ApiPropertyOptional({ example: '51B-123.45' })
+  vehicleLabel?: string;
+
+  @ApiPropertyOptional({ example: 45 })
+  capacity?: number;
+
+  @ApiPropertyOptional({ example: 82 })
+  occupancyRate?: number;
 }
 
 export class TripResponseDto extends CmsTripEntityDto {}

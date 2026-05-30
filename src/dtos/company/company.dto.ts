@@ -239,6 +239,9 @@ export class UpdateVehicleDto {
 
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional({ example: 40 })
+  seatCount?: number;
 }
 
 export class CreateDriverDto {
