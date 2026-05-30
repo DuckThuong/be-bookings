@@ -68,20 +68,40 @@ export class ClientBookingPricingService {
     promoCode: string,
     subTotal: number,
     addonsTotal: number,
-  ): { valid: boolean; promoDiscount: number; message?: string } {
+  ): {
+    valid: boolean;
+    promoCode: string;
+    promoDiscount: number;
+    type?: 'fixed' | 'percent';
+    value?: number;
+    message?: string;
+  } {
+    const normalizedCode = promoCode.trim();
     try {
+      const promo = this.getPromo(normalizedCode);
       const promoDiscount = this.calcPromoDiscount(
-        promoCode,
+        normalizedCode,
         subTotal,
         addonsTotal,
       );
-      return { valid: true, promoDiscount };
+      return {
+        valid: true,
+        promoCode: promo.code,
+        promoDiscount,
+        type: promo.type,
+        value: promo.value,
+      };
     } catch (e) {
       const message =
         e instanceof HttpException
           ? (e.getResponse() as string)
           : ClientErrorMessage.PROMO_INVALID;
-      return { valid: false, promoDiscount: 0, message };
+      return {
+        valid: false,
+        promoCode: normalizedCode,
+        promoDiscount: 0,
+        message,
+      };
     }
   }
 
@@ -109,6 +129,21 @@ export class ClientBookingPricingService {
     return addons.map((line) => {
       const catalog = this.getAddon(line.id);
       const qty = catalog.hasQty ? (line.qty ?? 0) : 1;
+      return {
+        id: catalog.id,
+        name: catalog.name,
+        price: catalog.price,
+        ...(catalog.hasQty ? { qty } : {}),
+      };
+    });
+  }
+
+  normalizeAddonsFromFe(
+    addons: { id: string; quantity?: number }[] = [],
+  ): AddonLineDto[] {
+    return addons.map((line) => {
+      const catalog = this.getAddon(line.id);
+      const qty = catalog.hasQty ? (line.quantity ?? 0) : 1;
       return {
         id: catalog.id,
         name: catalog.name,

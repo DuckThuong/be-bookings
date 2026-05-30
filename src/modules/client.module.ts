@@ -27,6 +27,7 @@ import { SalesModule } from './sales.module';
 import { ClientCatalogController } from '../controllers/client/client-catalog.controller';
 import { ClientAccountController } from '../controllers/client/client-account.controller';
 import { ClientBookingsController } from '../controllers/client/client-bookings.controller';
+import { ClientPromoController } from '../controllers/client/client-promo.controller';
 import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
 import { ClientBookingsService } from '../services/client/client-bookings.service';
 import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
@@ -58,6 +59,7 @@ import { ClientBookingPricingService } from '../services/client/client-booking-p
     ClientCatalogController,
     ClientAccountController,
     ClientBookingsController,
+    ClientPromoController,
   ],
   providers: [
     ClientCatalogService,

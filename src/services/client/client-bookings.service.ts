@@ -6,12 +6,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import {
   CLIENT_BOOKING_CATALOG,
   CLIENT_BOOKING_ENUMS,
-  CLIENT_BOOKING_FLOW,
   CLIENT_BOOKING_META,
   PAYMENT_METHOD_LABELS,
 } from '../../assets/config/client-booking.config';
@@ -26,26 +23,25 @@ import { ClientErrorMessage } from '../../assets/messages/client.message';
 import { CompanyErrorMessage } from '../../assets/messages/company.message';
 import { SalesErrorMessage } from '../../assets/messages/sales.message';
 import { generateEntityCode } from '../../common/helpers/common.helper';
-import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
-import { TbBooking } from '../../entities/sales/booking.entity';
-import { TbPayment } from '../../entities/sales/payment.entity';
-import { TbTicket } from '../../entities/ticket.entity';
-import { TbBasicUser } from '../../entities/user/basic-user.entity';
-import { TbInfoUser } from '../../entities/user/info-user.entity';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
-import { BookingRepository } from '../../repositories/sales/booking.repository';
-import { PaymentRepository } from '../../repositories/sales/payment.repository';
-import { TicketRepository } from '../../repositories/ticket.repository';
-import { CompanyAccessService } from '../company-access.service';
-import { ClientBookingPricingService } from './client-booking-pricing.service';
-import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
-import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
 import {
+  ConfirmPaymentDto,
+  CreateClientBookingDto,
   CreateHoldDto,
   PassengerDto,
   ValidatePromoDto,
 } from '../../dtos/client/bookings.dto';
-import { ConfirmPaymentDto } from '../../dtos/sales/sales.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
+import { TbBooking } from '../../entities/sales/booking.entity';
+import { TbPayment } from '../../entities/sales/payment.entity';
+import { TbTicket } from '../../entities/ticket.entity';
+import { BookingRepository } from '../../repositories/sales/booking.repository';
+import { PaymentRepository } from '../../repositories/sales/payment.repository';
+import { TicketRepository } from '../../repositories/ticket.repository';
+import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
+import { CompanyAccessService } from '../company-access.service';
+import { CompanyTripRepository } from '../../repositories/company-trip.repository';
+import { ClientBookingPricingService } from './client-booking-pricing.service';
+import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
 
 @Injectable()
 export class ClientBookingsService {
@@ -58,49 +54,7 @@ export class ClientBookingsService {
     private readonly paymentRepository: PaymentRepository,
     private readonly companyAccess: CompanyAccessService,
     private readonly companyTripRepository: CompanyTripRepository,
-    @InjectRepository(TbBasicUser)
-    private readonly basicUserRepo: Repository<TbBasicUser>,
-    @InjectRepository(TbInfoUser)
-    private readonly infoUserRepo: Repository<TbInfoUser>,
   ) {}
-
-  getConfig() {
-    return {
-      meta: CLIENT_BOOKING_META,
-      flow: CLIENT_BOOKING_FLOW,
-      enums: CLIENT_BOOKING_ENUMS,
-      catalog: CLIENT_BOOKING_CATALOG,
-    };
-  }
-
-  async getTripContext(user: UserDecoratorDtoResponse, tripId: string) {
-    const ctx = await this.tripResolver.resolve(tripId);
-    const profile = await this.loadUserProfile(user);
-    const trip = this.tripResolver.buildTripDto(ctx);
-
-    return {
-      user: profile,
-      trip,
-      passengerDefaults: {
-        fullName: profile.userName,
-        phone: profile.phone,
-        pickupPoint: CLIENT_BOOKING_CATALOG.pickupPoints[0]?.value ?? '',
-        dropoffPoint: CLIENT_BOOKING_CATALOG.dropoffPoints[0]?.value ?? '',
-      },
-      catalog: this.tripResolver.getCatalogSlice(),
-    };
-  }
-
-  async getSeatMap(tripId: string, vehicleType: string, floor = 1) {
-    const ctx = await this.tripResolver.resolve(tripId);
-    const map = await this.seatMapService.buildSeatMap(ctx, vehicleType, floor);
-    return {
-      tripId: map.tripId,
-      vehicleType: map.vehicleType,
-      floor: map.floor,
-      rows: map.rows,
-    };
-  }
 
   validatePromo(payload: ValidatePromoDto) {
     return this.pricingService.validatePromo(
@@ -108,6 +62,86 @@ export class ClientBookingsService {
       payload.subTotal,
       payload.addonsTotal,
     );
+  }
+
+  async createBooking(
+    user: UserDecoratorDtoResponse,
+    payload: CreateClientBookingDto,
+  ) {
+    const booking = await this.getHoldBooking(payload.holdId);
+    await this.assertBookingOwner(user, booking);
+    await this.assertHoldNotExpired(booking);
+
+    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+
+    if (payload.tripId?.trim()) {
+      const requested = await this.tripResolver.resolve(payload.tripId.trim());
+      if (requested.companyTrip.id !== booking.companyTripId) {
+        throw new HttpException(
+          ClientErrorMessage.TRIP_MISMATCH,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    const vehicleType = booking.vehicleType ?? payload.vehicleType;
+    const floor = booking.floor ?? payload.floor ?? 1;
+    if (booking.vehicleType && booking.vehicleType !== payload.vehicleType) {
+      throw new HttpException(
+        ClientErrorMessage.HOLD_VEHICLE_MISMATCH,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (
+      booking.floor != null &&
+      payload.floor != null &&
+      booking.floor !== payload.floor
+    ) {
+      throw new HttpException(
+        ClientErrorMessage.HOLD_VEHICLE_MISMATCH,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const seatCodes = payload.seats.map((s) => s.id);
+    const holdSeatCodes = await this.mapBookingSeatCodes(booking, ctx);
+    const seatMismatch =
+      seatCodes.length !== holdSeatCodes.length ||
+      seatCodes.some((code) => !holdSeatCodes.includes(code));
+    if (seatMismatch) {
+      throw new HttpException(
+        ClientErrorMessage.SEAT_NOT_AVAILABLE,
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const normalizedAddons = this.pricingService.normalizeAddonsFromFe(
+      payload.addons ?? [],
+    );
+    const pricing = this.pricingService.calcPricing({
+      seatCount: booking.totalSeat,
+      unitPrice: ctx.unitPrice,
+      addons: normalizedAddons,
+      promoCode: payload.promoCode,
+    });
+
+    await this.bookingRepository.update(booking.id, {
+      passenger: payload.passenger,
+      addons: normalizedAddons,
+      promoCode: pricing.promoCode ?? undefined,
+      subtotal: pricing.subTotal,
+      serviceFee: pricing.fee,
+      addonsTotal: pricing.addonsTotal,
+      discountAmount: pricing.promoDiscount,
+      totalPrice: pricing.total,
+      vehicleType,
+      floor,
+    });
+
+    return this.confirmPayment(user, payload.holdId, {
+      paymentMethodId: payload.paymentMethod,
+      transactionRef: payload.transactionRef,
+    });
   }
 
   async createHold(user: UserDecoratorDtoResponse, payload: CreateHoldDto) {
@@ -150,27 +184,44 @@ export class ClientBookingsService {
       );
     } catch {
       throw new HttpException(
-        ClientErrorMessage.SEAT_NOT_AVAILABLE,
-        HttpStatus.BAD_REQUEST,
+        {
+          statusCode: HttpStatus.CONFLICT,
+          message: ClientErrorMessage.SEAT_NOT_AVAILABLE,
+          conflictSeats: payload.seatIds,
+        },
+        HttpStatus.CONFLICT,
       );
     }
 
+    const conflictSeats: string[] = [];
     for (const row of seatMap.rows) {
       for (const seat of row.seats) {
         if (!seat) continue;
         if (payload.seatIds.includes(seat.id) && seat.status === 'vip') {
           throw new HttpException(
-            ClientErrorMessage.VIP_SEAT_NOT_SELECTABLE,
-            HttpStatus.BAD_REQUEST,
+            {
+              statusCode: HttpStatus.CONFLICT,
+              message: ClientErrorMessage.VIP_SEAT_NOT_SELECTABLE,
+              conflictSeats: [seat.id],
+            },
+            HttpStatus.CONFLICT,
           );
         }
         if (payload.seatIds.includes(seat.id) && seat.status === 'booked') {
-          throw new HttpException(
-            ClientErrorMessage.SEAT_NOT_AVAILABLE,
-            HttpStatus.BAD_REQUEST,
-          );
+          conflictSeats.push(seat.id);
         }
       }
+    }
+
+    if (conflictSeats.length > 0) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.CONFLICT,
+          message: ClientErrorMessage.SEAT_NOT_AVAILABLE,
+          conflictSeats,
+        },
+        HttpStatus.CONFLICT,
+      );
     }
 
     const remaining =
@@ -193,7 +244,9 @@ export class ClientBookingsService {
     });
 
     const holdSeconds =
-      payload.holdSeconds ?? CLIENT_BOOKING_META.holdSecondsDefault;
+      payload.holdDurationSeconds ??
+      payload.holdSeconds ??
+      CLIENT_BOOKING_META.holdSecondsDefault;
     const holdExpiresAt = new Date(Date.now() + holdSeconds * 1000);
 
     const booking = await this.bookingRepository.save({
@@ -221,8 +274,9 @@ export class ClientBookingsService {
 
     return {
       holdId: booking.code,
-      holdSeconds,
       expiresAt: holdExpiresAt.toISOString(),
+      seatIds: payload.seatIds,
+      holdSeconds,
       pricing,
       bookingDraft: await this.toBookingDraft(booking, ctx),
     };
@@ -247,7 +301,9 @@ export class ClientBookingsService {
     payload: ConfirmPaymentDto,
   ) {
     if (
-      !CLIENT_BOOKING_ENUMS.paymentMethodId.includes(payload.paymentMethodId)
+      !(CLIENT_BOOKING_ENUMS.paymentMethodId as readonly string[]).includes(
+        payload.paymentMethodId,
+      )
     ) {
       throw new HttpException(
         ClientErrorMessage.PAYMENT_METHOD_INVALID,
@@ -272,15 +328,7 @@ export class ClientBookingsService {
       );
     }
 
-    if (new Date() > new Date(booking.holdExpiresAt)) {
-      await this.bookingRepository.update(booking.id, {
-        status: BookingStatus.EXPIRED,
-      });
-      throw new HttpException(
-        SalesErrorMessage.BOOKING_EXPIRED,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    await this.assertHoldNotExpired(booking);
 
     const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
 
@@ -351,12 +399,14 @@ export class ClientBookingsService {
     const updatedBooking = await this.bookingRepository.findById(booking.id);
     const updatedPayment = await this.paymentRepository.findById(payment.id);
 
-    return this.buildBookingResult(
-      updatedBooking!,
-      ticket,
-      updatedPayment,
-      ctx,
-      payload.paymentMethodId,
+    return this.toFeBookingSuccessResponse(
+      await this.buildBookingResult(
+        updatedBooking!,
+        ticket,
+        updatedPayment,
+        ctx,
+        payload.paymentMethodId,
+      ),
     );
   }
 
@@ -386,12 +436,14 @@ export class ClientBookingsService {
 
     const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
 
-    return this.buildBookingResult(
-      booking,
-      ticket,
-      payment,
-      ctx,
-      booking.paymentMethodId ?? 'card',
+    return this.toFeBookingSuccessResponse(
+      await this.buildBookingResult(
+        booking,
+        ticket,
+        payment,
+        ctx,
+        booking.paymentMethodId ?? 'card',
+      ),
     );
   }
 
@@ -490,17 +542,86 @@ export class ClientBookingsService {
     return [
       {
         id: `notif-${id}-1`,
+        icon: 'ti-mail',
+        colorClass: 'green',
         title: 'Vé đã gửi',
-        desc: 'Vé điện tử đã gửi email',
-        color: 'green' as const,
+        desc: 'Vé điện tử đã được gửi đến email của bạn',
       },
       {
         id: `notif-${id}-2`,
+        icon: 'ti-message',
+        colorClass: 'amber',
         title: 'Xác nhận SMS',
         desc: 'Mã xác nhận đã gửi SĐT',
-        color: 'amber' as const,
       },
     ];
+  }
+
+  private toFeBookingSuccessResponse(
+    result: Awaited<ReturnType<ClientBookingsService['buildBookingResult']>>,
+  ) {
+    const pickup = CLIENT_BOOKING_CATALOG.pickupPoints.find(
+      (p) =>
+        p.value === result.passenger?.pickupPoint ||
+        p.label === result.ticket.departStation,
+    );
+    const dropoff = CLIENT_BOOKING_CATALOG.dropoffPoints.find(
+      (p) =>
+        p.value === result.passenger?.dropoffPoint ||
+        p.label === result.ticket.arriveStation,
+    );
+    const bookingId = result.bookingId;
+    const status =
+      result.status === 'CONFIRMED' || result.status === BookingStatus.CONFIRMED
+        ? 'confirmed'
+        : String(result.status).toLowerCase();
+
+    return {
+      bookingId,
+      status,
+      trip: {
+        bookingId,
+        operatorShortName: result.ticket.operatorShortName,
+        operatorName: result.trip.operatorName,
+        busType: result.ticket.busType,
+        rating: result.ticket.rating,
+        hasInsurance: result.ticket.hasInsurance,
+        departTime: result.trip.departTime,
+        departCity: pickup?.city ?? result.trip.from,
+        departStation: result.ticket.departStation,
+        arriveTime: result.trip.arriveTime,
+        arriveTimeNote: result.trip.arriveNote,
+        arriveCity: dropoff?.city ?? result.trip.to,
+        arriveStation: result.ticket.arriveStation,
+        durationLabel: result.trip.durationLabel,
+        stopsLabel: result.ticket.stopsLabel,
+        date: this.formatFeDate(result.trip.date),
+        boardAt: result.ticket.boardAt,
+        alightAt: result.ticket.alightAt,
+        qrCode: result.ticket.qrCode,
+        paymentMethod: {
+          label: result.payment.label,
+          last4: result.payment.last4,
+        },
+      },
+      seats: result.seats.map(({ id, label }) => ({ id, label })),
+      pricing: result.pricing,
+      notifications: result.notifications,
+    };
+  }
+
+  private formatFeDate(isoDate: string): string {
+    const [year, month, day] = isoDate.split('-');
+    if (!year || !month || !day) return isoDate;
+    return `${day}/${month}/${year}`;
+  }
+
+  private async mapBookingSeatCodes(
+    booking: TbBooking,
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ): Promise<string[]> {
+    const seats = await this.mapBookingSeats(booking, ctx);
+    return seats.map((s) => s.id);
   }
 
   private async mapBookingSeats(
@@ -562,6 +683,18 @@ export class ClientBookingsService {
     };
   }
 
+  private async assertHoldNotExpired(booking: TbBooking) {
+    if (new Date() > new Date(booking.holdExpiresAt)) {
+      await this.bookingRepository.update(booking.id, {
+        status: BookingStatus.EXPIRED,
+      });
+      throw new HttpException(
+        SalesErrorMessage.BOOKING_EXPIRED,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   private async getHoldBooking(holdId: string): Promise<TbBooking> {
     const booking = await this.bookingRepository.findByCode(holdId);
     if (!booking) {
@@ -583,18 +716,6 @@ export class ClientBookingsService {
     const num = Number(id);
     if (Number.isNaN(num)) return null;
     return this.bookingRepository.findById(num);
-  }
-
-  private async loadUserProfile(user: UserDecoratorDtoResponse) {
-    const [basic, info] = await Promise.all([
-      this.basicUserRepo.findOne({ where: { userCode: user.userCode } }),
-      this.infoUserRepo.findOne({ where: { userCode: user.userCode } }),
-    ]);
-    return {
-      userName: info?.userName ?? user.userCode,
-      phone: basic?.phone ?? '',
-      notifCount: 0,
-    };
   }
 
   private resolveCustomerId(

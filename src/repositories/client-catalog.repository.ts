@@ -133,10 +133,7 @@ export class ClientCatalogRepository {
   async findTrips(filter: CatalogTripFilter) {
     const qb = this.tripRepo.createQueryBuilder('t').orderBy('t.id', 'DESC');
     if (filter.startPoint?.trim() && filter.endPoint?.trim()) {
-      const roadId = await this.findRoadId(
-        filter.startPoint,
-        filter.endPoint
-      );
+      const roadId = await this.findRoadId(filter.startPoint, filter.endPoint);
       if (!roadId) {
         return { items: [], total: 0 };
       }
@@ -236,7 +233,7 @@ export class ClientCatalogRepository {
     for (const b of bookings) {
       (b.seatIds ?? []).forEach((id) => ids.add(id));
     }
-    return [...ids];
+    return Array.from(ids);
   }
 
   countRoadsByCompany(companyId: number) {

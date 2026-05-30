@@ -1,19 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
-import { TbTrip } from '../../entities/trip.entity';
-import { TbRoad } from '../../entities/road.entity';
 import { TbCompany } from '../../entities/company/company.entity';
+import { TbRoad } from '../../entities/road.entity';
+import { TbTrip } from '../../entities/trip.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
 import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { TripRepository } from '../../repositories/trip.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ClientErrorMessage } from '../../assets/messages/client.message';
 import { EntityStatus } from '../../assets/constants/company.constants';
-import {
-  CLIENT_BOOKING_CATALOG,
-  CLIENT_BOOKING_META,
-} from '../../assets/config/client-booking.config';
 
 export interface ResolvedTripContext {
   companyTrip: TbCompanyTrip;
@@ -82,24 +78,6 @@ export class ClientBookingTripResolverService {
       companyTripId: companyTrip.id,
       companyId: companyTrip.companyId,
       tripDbId: trip.id,
-    };
-  }
-
-  getCatalogSlice() {
-    return {
-      pickupPoints: CLIENT_BOOKING_CATALOG.pickupPoints,
-      dropoffPoints: CLIENT_BOOKING_CATALOG.dropoffPoints,
-      addonServices: CLIENT_BOOKING_CATALOG.addonServices,
-      promoCodes: CLIENT_BOOKING_CATALOG.promoCodes,
-      paymentMethods: CLIENT_BOOKING_CATALOG.paymentMethods,
-      vehicles: CLIENT_BOOKING_CATALOG.vehicles,
-    };
-  }
-
-  getMeta() {
-    return {
-      ...CLIENT_BOOKING_META,
-      catalog: CLIENT_BOOKING_CATALOG,
     };
   }
 

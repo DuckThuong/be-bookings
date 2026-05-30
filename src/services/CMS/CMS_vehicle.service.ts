@@ -69,7 +69,7 @@ export class CMSVehicleService {
       const normalized = this.normalizePayload(payload, true);
       const vehicle = await this.vehicleService.create(
         user,
-        normalized as CreateVehicleDto
+        normalized as CreateVehicleDto,
       );
       // await this.syncSeatsForVehicle(user, vehicle, payload);
       return this.toResponse(
@@ -155,7 +155,7 @@ export class CMSVehicleService {
     const code = payload.code?.trim() || '';
     const type = payload.type?.trim() || '';
     const name = payload.name?.trim() || '';
-    const status =payload.status?.trim() || '';
+    const status = payload.status?.trim() || '';
     const seatCount = payload.seatCount;
 
     if (requireRequiredFields) {
@@ -206,7 +206,9 @@ export class CMSVehicleService {
 
   private assertSeatPayload(payload: CreateVehiclePayloadDto): void {
     if (!this.trimOptional(payload.seatType)) {
-      throw new BadRequestException(CmsVehicleValidationMessage.SEAT_TYPE_EMPTY);
+      throw new BadRequestException(
+        CmsVehicleValidationMessage.SEAT_TYPE_EMPTY,
+      );
     }
 
     if (
@@ -236,7 +238,9 @@ export class CMSVehicleService {
       this.trimOptional(payload.seatType) ?? activeSeats[0]?.type;
 
     if (targetCount > 0 && !targetType) {
-      throw new BadRequestException(CmsVehicleValidationMessage.SEAT_TYPE_EMPTY);
+      throw new BadRequestException(
+        CmsVehicleValidationMessage.SEAT_TYPE_EMPTY,
+      );
     }
 
     if (targetCount > activeSeats.length) {
@@ -245,12 +249,15 @@ export class CMSVehicleService {
         companyId: vehicle.companyId,
         vehicleId: vehicle.id,
         seats: this.buildSeatItems(
-          targetType as string,
+          targetType,
           targetCount - activeSeats.length,
           maxOrdinal,
         ),
       });
-      activeSeats = this.sortSeatsByOrdinalAsc([...activeSeats, ...createdSeats]);
+      activeSeats = this.sortSeatsByOrdinalAsc([
+        ...activeSeats,
+        ...createdSeats,
+      ]);
     }
 
     if (targetCount < activeSeats.length) {
@@ -272,9 +279,9 @@ export class CMSVehicleService {
     await Promise.all(
       activeSeats.map((seat, index) =>
         this.seatService.update(user, seat.id, vehicle.companyId, {
-          name: this.buildSeatName(targetType as string, index + 1),
+          name: this.buildSeatName(targetType, index + 1),
           index: String(index + 1),
-          type: targetType as string,
+          type: targetType,
           description: seat.description ?? 'Ghe mac dinh',
         }),
       ),
@@ -283,11 +290,7 @@ export class CMSVehicleService {
     return activeSeats;
   }
 
-  private buildSeatItems(
-    seatType: string,
-    count: number,
-    startOffset: number,
-  ) {
+  private buildSeatItems(seatType: string, count: number, startOffset: number) {
     return Array.from({ length: count }, (_, index) => {
       const ordinal = startOffset + index + 1;
       return {

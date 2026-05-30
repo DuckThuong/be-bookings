@@ -13,6 +13,8 @@ export class ClientErrorMessage {
   static readonly SEAT_NOT_AVAILABLE = 'Một hoặc nhiều ghế đã được đặt';
   static readonly NOT_ENOUGH_SEATS = 'Chuyến không còn đủ ghế trống';
   static readonly TRIP_MISMATCH = 'Chuyến mẫu không khớp chuyến khai thác';
+  static readonly HOLD_VEHICLE_MISMATCH =
+    'Loại xe/tầng không khớp phiên giữ chỗ';
   static readonly TICKET_NOT_OWNED = 'Vé không thuộc về bạn';
   static readonly PAYMENT_NOT_OWNED = 'Hóa đơn không thuộc về bạn';
   static readonly PROMO_INVALID = 'Mã khuyến mãi không hợp lệ';
