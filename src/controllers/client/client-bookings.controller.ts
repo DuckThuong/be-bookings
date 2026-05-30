@@ -47,6 +47,18 @@ export class ClientBookingsController {
     return this.bookings.createHold(user, body);
   }
 
+  @Get('seat-selection/:tripId')
+  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
+  @ApiOperation({
+    summary: 'Dữ liệu trang chọn ghế (step 1) — contract FE',
+  })
+  getSeatSelectionPage(
+    @User() user: UserDecoratorDtoResponse,
+    @Param('tripId') tripId: string,
+  ) {
+    return this.bookings.getSeatSelectionPage(user, tripId);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
