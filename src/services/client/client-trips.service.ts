@@ -26,7 +26,7 @@ import {
   ClientSearchTripsQueryDto,
   ClientSearchTripsResponseDto,
   ClientTripItemDto,
-} from '../../dtos/CLIENT/trips.dto';
+} from '../../dtos/client/trips.dto';
 
 interface OperatorMeta {
   rating: number;

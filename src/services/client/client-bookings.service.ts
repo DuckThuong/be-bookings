@@ -31,8 +31,8 @@ import {
   CreateHoldDto,
   PassengerDto,
   ValidatePromoDto,
-} from '../../dtos/CLIENT/bookings.dto';
-import { SeatSelectionQueryDto } from '../../dtos/CLIENT/seat-selection.dto';
+} from '../../dtos/client/bookings.dto';
+import { SeatSelectionQueryDto } from '../../dtos/client/seat-selection.dto';
 import { TbInfoUser } from '../../entities/user/info-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

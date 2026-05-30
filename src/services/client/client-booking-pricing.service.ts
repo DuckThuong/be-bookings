@@ -6,7 +6,7 @@ import {
   ClientCatalogPromo,
 } from '../../assets/config/client-booking.config';
 import { ClientErrorMessage } from '../../assets/messages/client.message';
-import { AddonLineDto } from '../../dtos/CLIENT/bookings.dto';
+import { AddonLineDto } from '../../dtos/client/bookings.dto';
 
 export interface ClientPricingResult {
   subTotal: number;

@@ -3,7 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   ClientSearchTripsQueryDto,
   ClientSearchTripsResponseDto,
-} from '../../dtos/CLIENT/trips.dto';
+} from '../../dtos/client/trips.dto';
 import { ClientTripsService } from '../../services/client/client-trips.service';
 
 @ApiTags('Client - Trips')

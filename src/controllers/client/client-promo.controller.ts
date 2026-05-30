@@ -5,7 +5,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../dtos/user/common.dto';
 import { ClientBookingsService } from '../../services/client/client-bookings.service';
-import { ValidatePromoDto } from '../../dtos/CLIENT/bookings.dto';
+import { ValidatePromoDto } from '../../dtos/client/bookings.dto';
 
 @ApiTags('Client - Promo')
 @Controller('api/promo')
