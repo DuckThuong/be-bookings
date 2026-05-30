@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -23,6 +24,7 @@ import {
   ValidatePromoDto,
   ConfirmPaymentDto,
 } from '../../dtos/client/bookings.dto';
+import { SeatSelectionQueryDto } from '../../dtos/client/seat-selection.dto';
 @ApiTags('Client - Bookings')
 @Controller('api/bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -55,8 +57,9 @@ export class ClientBookingsController {
   getSeatSelectionPage(
     @User() user: UserDecoratorDtoResponse,
     @Param('tripId') tripId: string,
+    @Query() query: SeatSelectionQueryDto,
   ) {
-    return this.bookings.getSeatSelectionPage(user, tripId);
+    return this.bookings.getSeatSelectionPage(user, tripId, query);
   }
 
   @Post()

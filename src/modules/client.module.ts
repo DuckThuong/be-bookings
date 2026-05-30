@@ -14,17 +14,15 @@ import { TbRefund } from '../entities/sales/refund.entity';
 import { TbCommission } from '../entities/sales/commission.entity';
 import { TbBasicUser } from '../entities/user/basic-user.entity';
 import { TbInfoUser } from '../entities/user/info-user.entity';
-import { ClientCatalogService } from '../services/client-catalog.service';
+import { TbMasterData } from '../entities/master-data.entity';
 import { ClientAccountService } from '../services/client-account.service';
 import { ClientEnrichmentService } from '../services/client-enrichment.service';
-import { ClientCatalogRepository } from '../repositories/client-catalog.repository';
 import { ClientAccountRepository } from '../repositories/client-account.repository';
 import { TripRepository } from '../repositories/trip.repository';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { AuthModule } from './auth.module';
 import { CompanyModule } from './company.module';
 import { SalesModule } from './sales.module';
-import { ClientCatalogController } from '../controllers/client/client-catalog.controller';
 import { ClientAccountController } from '../controllers/client/client-account.controller';
 import { ClientBookingsController } from '../controllers/client/client-bookings.controller';
 import { ClientPromoController } from '../controllers/client/client-promo.controller';
@@ -32,6 +30,8 @@ import { ClientBookingTripResolverService } from '../services/client/client-book
 import { ClientBookingsService } from '../services/client/client-bookings.service';
 import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
 import { ClientBookingPricingService } from '../services/client/client-booking-pricing.service';
+import { ClientTripsService } from '../services/client/client-trips.service';
+import { ClientTripsController } from '../controllers/client/client-trips.controller';
 
 @Module({
   imports: [
@@ -50,30 +50,30 @@ import { ClientBookingPricingService } from '../services/client/client-booking-p
       TbCommission,
       TbBasicUser,
       TbInfoUser,
+      TbMasterData,
     ]),
     AuthModule,
     CompanyModule,
     SalesModule,
   ],
   controllers: [
-    ClientCatalogController,
     ClientAccountController,
     ClientBookingsController,
     ClientPromoController,
+    ClientTripsController,
   ],
   providers: [
-    ClientCatalogService,
     ClientAccountService,
     ClientEnrichmentService,
-    ClientCatalogRepository,
     ClientAccountRepository,
     ClientBookingsService,
     ClientBookingTripResolverService,
     ClientBookingSeatMapService,
     ClientBookingPricingService,
+    ClientTripsService,
     TripRepository,
     RolesGuard,
   ],
-  exports: [ClientCatalogService, ClientAccountService, ClientBookingsService],
+  exports: [ClientAccountService, ClientBookingsService],
 })
 export class ClientModule {}

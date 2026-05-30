@@ -7,9 +7,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  CLIENT_BOOKING_BREADCRUMB,
   CLIENT_BOOKING_CATALOG,
   CLIENT_BOOKING_ENUMS,
   CLIENT_BOOKING_META,
+  CLIENT_BOOKING_VEHICLE_DISPLAY,
   PAYMENT_METHOD_LABELS,
 } from '../../assets/config/client-booking.config';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
@@ -30,6 +32,10 @@ import {
   PassengerDto,
   ValidatePromoDto,
 } from '../../dtos/client/bookings.dto';
+import { SeatSelectionQueryDto } from '../../dtos/client/seat-selection.dto';
+import { TbInfoUser } from '../../entities/user/info-user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { TbBooking } from '../../entities/sales/booking.entity';
 import { TbPayment } from '../../entities/sales/payment.entity';
@@ -54,14 +60,116 @@ export class ClientBookingsService {
     private readonly paymentRepository: PaymentRepository,
     private readonly companyAccess: CompanyAccessService,
     private readonly companyTripRepository: CompanyTripRepository,
+    @InjectRepository(TbInfoUser)
+    private readonly infoUserRepo: Repository<TbInfoUser>,
   ) {}
 
-  validatePromo(payload: ValidatePromoDto) {
-    return this.pricingService.validatePromo(
-      payload.promoCode,
-      payload.subTotal,
-      payload.addonsTotal,
+  async getSeatSelectionPage(
+    user: UserDecoratorDtoResponse,
+    tripId: string,
+    query: SeatSelectionQueryDto = {},
+  ) {
+    const ctx = await this.tripResolver.resolve(tripId.trim());
+
+    if (user.role !== UserRole.USER) {
+      await this.companyAccess.assertCompanyAccess(
+        user,
+        ctx.companyTrip.companyId,
+      );
+    }
+
+    const defaultVehicleType = this.tripResolver.inferVehicleType(
+      ctx.vehicle.seatCount,
+      ctx.vehicle.type,
     );
+    const defaultFloor = query.floor ?? 1;
+    const tripDto = this.tripResolver.buildTripDto(ctx);
+    const displayDate = this.resolveDisplayDate(query.date, tripDto.date);
+
+    const [infoUser, vehicles] = await Promise.all([
+      this.infoUserRepo.findOne({ where: { userCode: user.userCode } }),
+      this.buildVehicleLayouts(ctx),
+    ]);
+
+    const pickupPoints = this.filterPointsByLocation(
+      CLIENT_BOOKING_CATALOG.pickupPoints,
+      ctx.road.startPoint,
+    );
+    const dropoffPoints = this.filterPointsByLocation(
+      CLIENT_BOOKING_CATALOG.dropoffPoints,
+      ctx.road.endPoint,
+    );
+
+    const unitPrice = ctx.unitPrice;
+
+    return {
+      meta: {
+        version: CLIENT_BOOKING_META.version,
+        currency: CLIENT_BOOKING_META.currency,
+        holdSecondsDefault: CLIENT_BOOKING_META.holdSecondsDefault,
+        maxSeatsPerBooking: CLIENT_BOOKING_META.maxSeatsPerBooking,
+        feeRate: CLIENT_BOOKING_META.feeRate,
+        pickupAddonUnitPrice: CLIENT_BOOKING_META.pickupAddonUnitPrice,
+        unitPrice,
+      },
+      pageData: {
+        user: {
+          userName: infoUser?.userName ?? user.phone ?? '',
+          notifCount: 0,
+          phone: user.phone ?? null,
+        },
+        breadcrumb: [...CLIENT_BOOKING_BREADCRUMB],
+        trip: {
+          tripId: tripDto.tripId,
+          companyTripId: ctx.companyTrip.id,
+          from: tripDto.from,
+          to: tripDto.to,
+          operatorCode: tripDto.operatorCode,
+          operatorName: tripDto.operatorName,
+          departTime: tripDto.departTime,
+          arriveTime: tripDto.arriveTime,
+          arriveNote: tripDto.arriveNote,
+          date: displayDate,
+          durationLabel: tripDto.durationLabel,
+          unitPrice,
+        },
+        passenger: {
+          fullName: infoUser?.userName ?? '',
+          phone: user.phone ?? '',
+          pickupPointDefault: pickupPoints[0]?.value ?? '',
+          dropoffPointDefault: dropoffPoints[0]?.value ?? '',
+          pickupPointOptions: pickupPoints.map((p) => ({
+            value: p.value,
+            label: p.label,
+          })),
+          dropoffPointOptions: dropoffPoints.map((p) => ({
+            value: p.value,
+            label: p.label,
+          })),
+        },
+      },
+      operator: {
+        code: ctx.company.code.slice(0, 2).toUpperCase(),
+        name: ctx.company.companyName,
+        rating: 4.8,
+        reviewCount: '2.1k',
+        routeLabel: `${ctx.road.startPoint} → ${ctx.road.endPoint}`,
+        amenities: [...CLIENT_BOOKING_CATALOG.operatorAmenities],
+      },
+      catalog: {
+        addonServices: [...CLIENT_BOOKING_CATALOG.addonServices],
+        promoCodes: [...CLIENT_BOOKING_CATALOG.promoCodes],
+        policies: [...CLIENT_BOOKING_CATALOG.policies],
+      },
+      vehicles,
+      defaultVehicleType,
+      defaultFloor,
+    };
+  }
+
+  validatePromo(payload: ValidatePromoDto) {
+    const { promoCode, subTotal, addonsTotal } = payload;
+    return this.pricingService.validatePromo(promoCode, subTotal, addonsTotal);
   }
 
   async createBooking(
@@ -751,5 +859,95 @@ export class ClientBookingsService {
       return;
     }
     throw new ForbiddenException(ClientErrorMessage.FORBIDDEN);
+  }
+
+  private async buildVehicleLayouts(
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ) {
+    const vehicles: Record<
+      string,
+      {
+        label: string;
+        icon: string;
+        mapTitle: string;
+        mapSub: string;
+        floors: number;
+        isSleeper: boolean;
+        layouts: Record<
+          string,
+          Array<{
+            row: number;
+            full?: boolean;
+            seats: Array<{ id: string; status: string } | null>;
+          }>
+        >;
+      }
+    > = {};
+
+    for (const vehicle of CLIENT_BOOKING_CATALOG.vehicles) {
+      const display = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type];
+      const layouts: Record<
+        string,
+        Array<{
+          row: number;
+          full?: boolean;
+          seats: Array<{ id: string; status: string } | null>;
+        }>
+      > = {};
+
+      for (let floor = 1; floor <= vehicle.floors; floor++) {
+        const seatMap = await this.seatMapService.buildSeatMap(
+          ctx,
+          vehicle.type,
+          floor,
+        );
+        layouts[String(floor)] = seatMap.rows.map((row) => ({
+          row: row.row,
+          full: row.full,
+          seats: row.seats.map((seat) =>
+            seat ? { id: seat.id, status: seat.status } : null,
+          ),
+        }));
+      }
+
+      vehicles[vehicle.type] = {
+        label: vehicle.label,
+        icon: display?.icon ?? 'ti-bus',
+        mapTitle: display?.mapTitle ?? vehicle.label,
+        mapSub: display?.mapSub ?? '',
+        floors: vehicle.floors,
+        isSleeper: vehicle.isSleeper,
+        layouts,
+      };
+    }
+
+    return vehicles;
+  }
+
+  private filterPointsByLocation<
+    T extends { value: string; label: string; city: string },
+  >(points: readonly T[], location: string): T[] {
+    const normalized = location.trim().toLowerCase();
+    if (!normalized) return [...points];
+
+    const matched = points.filter(
+      (point) =>
+        normalized.includes(point.city.toLowerCase()) ||
+        normalized.includes(point.label.toLowerCase()),
+    );
+
+    return matched.length > 0 ? matched : [...points];
+  }
+
+  private resolveDisplayDate(dateQuery?: string, fallbackIso?: string): string {
+    const trimmed = dateQuery?.trim();
+    if (trimmed) {
+      if (trimmed.includes('/')) return trimmed;
+      return this.formatFeDate(trimmed);
+    }
+    if (fallbackIso) {
+      return this.formatFeDate(fallbackIso);
+    }
+    return this.formatFeDate(new Date().toISOString().slice(0, 10));
   }
 }
