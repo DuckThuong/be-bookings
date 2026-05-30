@@ -21,9 +21,9 @@ import { CMSBookingService } from '../../services/CMS/CMS_booking.service';
 import {
   CmsBookingListQueryDto,
   CmsBookingListResponseDto,
+  CmsConfirmBookingDto,
   CmsRejectBookingDto,
 } from '../../dtos/CMS/CMS_booking.dto';
-import { ConfirmPaymentDto } from '../../dtos/sales/sales.dto';
 
 @ApiTags('CMS - Booking')
 @Controller('cms/booking')
@@ -56,7 +56,7 @@ export class CMSBookingController {
   confirm(
     @User() user: UserDecoratorDtoResponse,
     @Param('paymentId', ParseIntPipe) paymentId: number,
-    @Body() payload: ConfirmPaymentDto,
+    @Body() payload: CmsConfirmBookingDto,
   ) {
     return this.cmsBookingService.confirm(user, paymentId, payload);
   }

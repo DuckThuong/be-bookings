@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export type CmsBookingUiStatus =
   | 'pending'
@@ -131,4 +131,19 @@ export class CmsRejectBookingDto {
   @IsOptional()
   @IsString()
   reason?: string;
+}
+
+export class CmsConfirmBookingDto {
+  @ApiPropertyOptional({ description: 'Mã giao dịch / tham chiếu thanh toán' })
+  @IsOptional()
+  @IsString()
+  transactionRef?: string;
+
+  @ApiPropertyOptional({
+    example: 5,
+    description: 'Tỷ lệ hoa hồng % (tạo commission)',
+  })
+  @IsOptional()
+  @IsNumber()
+  commissionRate?: number;
 }
