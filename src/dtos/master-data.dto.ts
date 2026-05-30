@@ -1,20 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class MasterDataDtoPayload {
   @ApiProperty({
-    example: 'type',
+    example: 'OPERATOR',
     description: 'Loại dữ liệu',
-    required: true,
+    required: false,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   type?: string;
 
   @ApiProperty({
     example: 'code',
     description: 'Mã dữ liệu',
-    required: true,
+    required: false,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   code?: string;
 }
 
