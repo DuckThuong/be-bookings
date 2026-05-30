@@ -43,11 +43,16 @@ import { TbTicket } from '../../entities/ticket.entity';
 import { BookingRepository } from '../../repositories/sales/booking.repository';
 import { PaymentRepository } from '../../repositories/sales/payment.repository';
 import { TicketRepository } from '../../repositories/ticket.repository';
-import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
+import {
+  pickRepresentativePayment,
+  resolveClientBookingStatus,
+  toClientBookingStatusFe,
+} from '../../common/helpers/client-booking-status.helper';
 import { CompanyAccessService } from '../company-access.service';
 import { CompanyTripRepository } from '../../repositories/company-trip.repository';
-import { ClientBookingPricingService } from './client-booking-pricing.service';
 import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
+import { ClientBookingPricingService } from './client-booking-pricing.service';
+import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
 
 @Injectable()
 export class ClientBookingsService {
@@ -545,10 +550,7 @@ export class ClientBookingsService {
       ? await this.paymentRepository.findByTicketId(ticket.id)
       : [];
 
-    const payment =
-      payments.find((p) => p.status === PaymentStatus.SUCCESS) ??
-      payments[0] ??
-      null;
+    const payment = pickRepresentativePayment(payments);
 
     const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
 
@@ -617,15 +619,7 @@ export class ClientBookingsService {
       (a) => a.id === 'insurance',
     );
 
-    const status =
-      booking.status === BookingStatus.CONFIRMED
-        ? 'CONFIRMED'
-        : ticket?.status === TicketStatus.PAID
-          ? 'CONFIRMED'
-          : booking.status === BookingStatus.CONVERTED &&
-              ticket?.status === TicketStatus.PENDING
-            ? 'PENDING_APPROVAL'
-            : booking.status;
+    const status = resolveClientBookingStatus(booking, ticket, payment);
 
     return {
       bookingId: ticket?.code ?? booking.code,
@@ -653,15 +647,19 @@ export class ClientBookingsService {
         alightAt: trip.arriveTime,
         qrCode: `QR${ticket?.code ?? booking.code}`,
       },
-      notifications: this.buildNotifications(booking, ticket),
+      notifications: this.buildNotifications(booking, ticket, payment),
     };
   }
 
-  private buildNotifications(booking: TbBooking, ticket: TbTicket | null) {
+  private buildNotifications(
+    booking: TbBooking,
+    ticket: TbTicket | null,
+    payment?: TbPayment | null,
+  ) {
     const id = ticket?.code ?? booking.code;
     const awaitingApproval =
-      booking.status === BookingStatus.CONVERTED &&
-      ticket?.status === TicketStatus.PENDING;
+      resolveClientBookingStatus(booking, ticket, payment) ===
+      'PENDING_APPROVAL';
 
     if (awaitingApproval) {
       return [
@@ -714,12 +712,7 @@ export class ClientBookingsService {
         p.label === result.ticket.arriveStation,
     );
     const bookingId = result.bookingId;
-    const status =
-      result.status === 'CONFIRMED' || result.status === BookingStatus.CONFIRMED
-        ? 'confirmed'
-        : result.status === 'PENDING_APPROVAL'
-          ? 'pending_approval'
-          : String(result.status).toLowerCase();
+    const status = toClientBookingStatusFe(result.status);
 
     return {
       bookingId,

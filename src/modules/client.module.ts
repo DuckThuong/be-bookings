@@ -27,7 +27,7 @@ import { ClientAccountController } from '../controllers/client/client-account.co
 import { ClientBookingsController } from '../controllers/client/client-bookings.controller';
 import { ClientPromoController } from '../controllers/client/client-promo.controller';
 import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
-import { ClientBookingsService } from '../services/client/client-bookings.service';
+import { ClientBookingsService } from '../services/client/client-bookings.service'
 import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
 import { ClientBookingPricingService } from '../services/client/client-booking-pricing.service';
 import { ClientTripsService } from '../services/client/client-trips.service';
