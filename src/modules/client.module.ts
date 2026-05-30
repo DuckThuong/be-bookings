@@ -23,15 +23,15 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { AuthModule } from './auth.module';
 import { CompanyModule } from './company.module';
 import { SalesModule } from './sales.module';
-import { ClientAccountController } from '../controllers/client/client-account.controller';
-import { ClientBookingsController } from '../controllers/client/client-bookings.controller';
-import { ClientPromoController } from '../controllers/client/client-promo.controller';
+import { ClientAccountController } from '../controllers/CLIENT/client-account.controller';
+import { ClientBookingsController } from '../controllers/CLIENT/client-bookings.controller';
+import { ClientPromoController } from '../controllers/CLIENT/client-promo.controller';
 import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
 import { ClientBookingsService } from '../services/client/client-bookings.service';
 import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
 import { ClientBookingPricingService } from '../services/client/client-booking-pricing.service';
 import { ClientTripsService } from '../services/client/client-trips.service';
-import { ClientTripsController } from '../controllers/client/client-trips.controller';
+import { ClientTripsController } from '../controllers/CLIENT/client-trips.controller';
 
 @Module({
   imports: [

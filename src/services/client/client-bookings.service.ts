@@ -31,8 +31,8 @@ import {
   CreateHoldDto,
   PassengerDto,
   ValidatePromoDto,
-} from '../../dtos/client/bookings.dto';
-import { SeatSelectionQueryDto } from '../../dtos/client/seat-selection.dto';
+} from '../../dtos/CLIENT/bookings.dto';
+import { SeatSelectionQueryDto } from '../../dtos/CLIENT/seat-selection.dto';
 import { TbInfoUser } from '../../entities/user/info-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -503,8 +503,7 @@ export class ClientBookingsService {
       await this.paymentRepository.update(payment.id, {
         transactionRef: payload.transactionRef,
       });
-      payment =
-        (await this.paymentRepository.findById(payment.id)) ?? payment;
+      payment = (await this.paymentRepository.findById(payment.id)) ?? payment;
     }
 
     await this.bookingRepository.update(booking.id, {

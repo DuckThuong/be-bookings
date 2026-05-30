@@ -14,11 +14,6 @@ import {
   ClientTripSortKey,
 } from '../../assets/config/client-trip-search.config';
 const MASTER_DATA_TYPE_OPERATOR = 'OPERATOR';
-import {
-  ClientSearchTripsQueryDto,
-  ClientSearchTripsResponseDto,
-  ClientTripItemDto,
-} from '../../dtos/client/trips.dto';
 import { TbMasterData } from '../../entities/master-data.entity';
 import { TbCompany } from '../../entities/company/company.entity';
 import { TbRoad } from '../../entities/road.entity';
@@ -27,6 +22,11 @@ import { TbVehicle } from '../../entities/vehicle.entity';
 import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { ClientEnrichmentService } from '../client-enrichment.service';
 import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
+import {
+  ClientSearchTripsQueryDto,
+  ClientSearchTripsResponseDto,
+  ClientTripItemDto,
+} from '../../dtos/CLIENT/trips.dto';
 
 interface OperatorMeta {
   rating: number;

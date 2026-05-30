@@ -23,8 +23,8 @@ import {
   PassengerDto,
   ValidatePromoDto,
   ConfirmPaymentDto,
-} from '../../dtos/client/bookings.dto';
-import { SeatSelectionQueryDto } from '../../dtos/client/seat-selection.dto';
+} from '../../dtos/CLIENT/bookings.dto';
+import { SeatSelectionQueryDto } from '../../dtos/CLIENT/seat-selection.dto';
 @ApiTags('Client - Bookings')
 @Controller('api/bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
