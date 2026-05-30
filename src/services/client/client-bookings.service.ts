@@ -453,7 +453,31 @@ export class ClientBookingsService {
       throw new NotFoundException(CompanyErrorMessage.TICKET_NOT_FOUND);
     }
 
-    let payment = (await this.paymentRepository.findByTicketId(ticket.id)).find(
+    const existingPayments = await this.paymentRepository.findByTicketId(
+      ticket.id,
+    );
+
+    if (
+      booking.status === BookingStatus.CONVERTED &&
+      ticket.status === TicketStatus.PENDING &&
+      existingPayments.length > 0
+    ) {
+      const updatedBooking = await this.bookingRepository.findById(booking.id);
+      const payment =
+        existingPayments.find((p) => p.status === PaymentStatus.PENDING) ??
+        existingPayments[0];
+      return this.toFeBookingSuccessResponse(
+        await this.buildBookingResult(
+          updatedBooking!,
+          ticket,
+          payment,
+          ctx,
+          payload.paymentMethodId,
+        ),
+      );
+    }
+
+    let payment = existingPayments.find(
       (p) => p.status === PaymentStatus.PENDING,
     );
 
@@ -475,34 +499,18 @@ export class ClientBookingsService {
         status: PaymentStatus.PENDING,
         transactionRef: payload.transactionRef,
       });
+    } else if (payload.transactionRef) {
+      await this.paymentRepository.update(payment.id, {
+        transactionRef: payload.transactionRef,
+      });
+      payment =
+        (await this.paymentRepository.findById(payment.id)) ?? payment;
     }
 
-    const paidAt = new Date();
-    await this.paymentRepository.update(payment.id, {
-      status: PaymentStatus.SUCCESS,
-      paidAt,
-      transactionRef: payload.transactionRef ?? payment.transactionRef,
-    });
-
-    await this.ticketRepository.update(ticket.id, {
-      status: TicketStatus.PAID,
-    });
-
     await this.bookingRepository.update(booking.id, {
-      status: BookingStatus.CONFIRMED,
       paymentMethodId: payload.paymentMethodId,
       ticketId: ticket.id,
     });
-
-    const freshTrip = await this.companyTripRepository.findById(
-      booking.companyTripId,
-    );
-    if (freshTrip) {
-      await this.companyTripRepository.update(freshTrip.id, {
-        totalSeatBooked: freshTrip.totalSeatBooked + ticket.totalSeat,
-        totalPrice: Number(freshTrip.totalPrice) + Number(ticket.totalPrice),
-      });
-    }
 
     const updatedBooking = await this.bookingRepository.findById(booking.id);
     const updatedPayment = await this.paymentRepository.findById(payment.id);
@@ -521,6 +529,7 @@ export class ClientBookingsService {
   async getBookingResult(user: UserDecoratorDtoResponse, bookingId: string) {
     const booking =
       (await this.bookingRepository.findByCode(bookingId)) ??
+      (await this.findBookingByTicketCode(bookingId)) ??
       (await this.findBookingByNumericId(bookingId));
 
     if (!booking) {
@@ -610,10 +619,14 @@ export class ClientBookingsService {
     );
 
     const status =
-      booking.status === BookingStatus.CONFIRMED ||
-      ticket?.status === TicketStatus.PAID
+      booking.status === BookingStatus.CONFIRMED
         ? 'CONFIRMED'
-        : booking.status;
+        : ticket?.status === TicketStatus.PAID
+          ? 'CONFIRMED'
+          : booking.status === BookingStatus.CONVERTED &&
+              ticket?.status === TicketStatus.PENDING
+            ? 'PENDING_APPROVAL'
+            : booking.status;
 
     return {
       bookingId: ticket?.code ?? booking.code,
@@ -647,6 +660,29 @@ export class ClientBookingsService {
 
   private buildNotifications(booking: TbBooking, ticket: TbTicket | null) {
     const id = ticket?.code ?? booking.code;
+    const awaitingApproval =
+      booking.status === BookingStatus.CONVERTED &&
+      ticket?.status === TicketStatus.PENDING;
+
+    if (awaitingApproval) {
+      return [
+        {
+          id: `notif-${id}-1`,
+          icon: 'ti-clock',
+          colorClass: 'amber',
+          title: 'Chờ nhà xe xác nhận',
+          desc: 'Đơn đặt vé đang được xử lý. Bạn sẽ nhận thông báo khi được duyệt.',
+        },
+        {
+          id: `notif-${id}-2`,
+          icon: 'ti-message',
+          colorClass: 'blue',
+          title: 'Thanh toán đã ghi nhận',
+          desc: 'Yêu cầu thanh toán đã gửi — chờ nhà xe đối soát và xác nhận vé.',
+        },
+      ];
+    }
+
     return [
       {
         id: `notif-${id}-1`,
@@ -682,7 +718,9 @@ export class ClientBookingsService {
     const status =
       result.status === 'CONFIRMED' || result.status === BookingStatus.CONFIRMED
         ? 'confirmed'
-        : String(result.status).toLowerCase();
+        : result.status === 'PENDING_APPROVAL'
+          ? 'pending_approval'
+          : String(result.status).toLowerCase();
 
     return {
       bookingId,
@@ -818,6 +856,12 @@ export class ClientBookingsService {
       );
     }
     return booking;
+  }
+
+  private async findBookingByTicketCode(code: string) {
+    const ticket = await this.ticketRepository.findByCode(code);
+    if (!ticket?.bookingId) return null;
+    return this.bookingRepository.findById(ticket.bookingId);
   }
 
   private async findBookingByNumericId(id: string) {
