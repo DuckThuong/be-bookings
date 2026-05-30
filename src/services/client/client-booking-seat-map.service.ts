@@ -43,6 +43,7 @@ export class ClientBookingSeatMapService {
       floor,
       rows,
       seatCodeToId: this.mapCodesToIds(floorSeats),
+      seatIdToDisplayId: this.mapIdsToDisplay(floorSeats),
     };
   }
 
@@ -62,13 +63,37 @@ export class ClientBookingSeatMapService {
     return ids;
   }
 
+  formatDisplaySeatId(seat: TbSeat): string {
+    const prefix = (seat.type ?? 'S').trim().charAt(0).toUpperCase() || 'S';
+    return `${prefix}${this.getOrdinal(seat)}`;
+  }
+
+  private mapIdsToDisplay(seats: TbSeat[]): Map<number, string> {
+    const map = new Map<number, string>();
+    for (const seat of seats) {
+      map.set(seat.id, this.formatDisplaySeatId(seat));
+    }
+    return map;
+  }
+
   private mapCodesToIds(seats: TbSeat[]): Map<string, number> {
     const map = new Map<string, number>();
     for (const seat of seats) {
-      map.set(seat.code, seat.id);
-      map.set(seat.name, seat.id);
-      if (seat.code) map.set(seat.code.toUpperCase(), seat.id);
-      if (seat.name) map.set(seat.name.toUpperCase(), seat.id);
+      const displayId = this.formatDisplaySeatId(seat);
+      map.set(displayId, seat.id);
+      map.set(displayId.toUpperCase(), seat.id);
+
+      if (seat.code) {
+        map.set(seat.code, seat.id);
+        map.set(seat.code.toUpperCase(), seat.id);
+      }
+      if (seat.name) {
+        map.set(seat.name, seat.id);
+        map.set(seat.name.toUpperCase(), seat.id);
+        const compactName = seat.name.replace(/-/g, '');
+        map.set(compactName, seat.id);
+        map.set(compactName.toUpperCase(), seat.id);
+      }
     }
     return map;
   }
@@ -126,9 +151,10 @@ export class ClientBookingSeatMapService {
           rowSeats.push(null);
           continue;
         }
+        const displayId = this.formatDisplaySeatId(seat);
         rowSeats.push({
-          id: seat.code || seat.name,
-          label: seat.name || seat.code,
+          id: displayId,
+          label: displayId,
           status: this.mapSeatStatus(seat, occupiedSet),
         });
       }

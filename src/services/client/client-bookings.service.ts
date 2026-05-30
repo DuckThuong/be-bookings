@@ -778,14 +778,9 @@ export class ClientBookingsService {
       booking.vehicleType ?? '16',
       booking.floor ?? 1,
     );
-    const codeById = new Map<number, string>();
-    map.seatCodeToId.forEach((id, code) => {
-      if (!codeById.has(id)) codeById.set(id, code);
-    });
-
     return (booking.seatIds ?? []).map((id) => ({
-      id: codeById.get(id) ?? String(id),
-      label: codeById.get(id) ?? String(id),
+      id: map.seatIdToDisplayId.get(id) ?? String(id),
+      label: map.seatIdToDisplayId.get(id) ?? String(id),
       status: 'booked' as const,
     }));
   }
