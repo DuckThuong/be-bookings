@@ -21,12 +21,12 @@ import { TbTrip } from '../../entities/trip.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
 import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { ClientEnrichmentService } from '../client-enrichment.service';
-import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
 import {
   ClientSearchTripsQueryDto,
   ClientSearchTripsResponseDto,
   ClientTripItemDto,
 } from '../../dtos/CLIENT/trips.dto';
+import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
 
 interface OperatorMeta {
   rating: number;

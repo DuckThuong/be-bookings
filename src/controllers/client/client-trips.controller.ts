@@ -4,7 +4,7 @@ import {
   ClientSearchTripsQueryDto,
   ClientSearchTripsResponseDto,
 } from '../../dtos/CLIENT/trips.dto';
-import { ClientTripsService } from '../../services/client/client-trips.service';
+import { ClientTripsService } from '../../services/CLIENT/client-trips.service';
 
 @ApiTags('Client - Trips')
 @Controller('api/trips')

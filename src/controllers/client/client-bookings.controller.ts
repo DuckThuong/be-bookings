@@ -16,7 +16,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
-import { ClientBookingsService } from '../../services/client/client-bookings.service';
+import { ClientBookingsService } from '../../services/CLIENT/client-bookings.service';
 import {
   CreateHoldDto,
   CreateClientBookingDto,

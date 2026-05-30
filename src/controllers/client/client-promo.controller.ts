@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../dtos/user/common.dto';
-import { ClientBookingsService } from '../../services/client/client-bookings.service';
+import { ClientBookingsService } from '../../services/CLIENT/client-bookings.service';
 import { ValidatePromoDto } from '../../dtos/CLIENT/bookings.dto';
 
 @ApiTags('Client - Promo')

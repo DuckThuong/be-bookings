@@ -14,6 +14,10 @@ import { TbBooking } from '../entities/sales/booking.entity';
 import { TbRefund } from '../entities/sales/refund.entity';
 import { BookingStatus } from '../assets/constants/sales.constants';
 import { TicketStatus } from '../assets/constants/ticket.constants';
+import {
+  pickRepresentativePayment,
+  resolveClientBookingStatus,
+} from '../common/helpers/client-booking-status.helper';
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -255,10 +259,44 @@ export class ClientEnrichmentService {
     const scheduleMap = new Map(
       (await this.enrichCompanyTrips(companyTrips)).map((s) => [s.id, s]),
     );
-    return bookings.map((booking) => ({
-      ...booking,
-      schedule: scheduleMap.get(booking.companyTripId) ?? null,
-    }));
+
+    const ticketIds = [
+      ...new Set(
+        bookings
+          .map((b) => b.ticketId)
+          .filter((id): id is number => id != null),
+      ),
+    ];
+    const tickets =
+      ticketIds.length > 0
+        ? await this.ticketRepo.find({ where: { id: In(ticketIds) } })
+        : [];
+    const ticketMap = new Map(tickets.map((t) => [t.id, t]));
+
+    const payments =
+      ticketIds.length > 0
+        ? await this.paymentRepo.find({
+            where: { ticketId: In(ticketIds) },
+            order: { id: 'DESC' },
+          })
+        : [];
+    return bookings.map((booking) => {
+      const ticket = booking.ticketId
+        ? (ticketMap.get(booking.ticketId) ?? null)
+        : null;
+      const paymentCandidates = ticket
+        ? payments.filter((p) => p.ticketId === ticket.id)
+        : [];
+      const payment = pickRepresentativePayment(paymentCandidates);
+
+      return {
+        ...booking,
+        status: resolveClientBookingStatus(booking, ticket, payment),
+        schedule: scheduleMap.get(booking.companyTripId) ?? null,
+        ticket,
+        payment,
+      };
+    });
   }
 
   async enrichBookingDetail(booking: TbBooking) {
@@ -279,11 +317,22 @@ export class ClientEnrichmentService {
         where: { id: booking.ticketId },
       });
     }
+    const payments = ticket
+      ? await this.paymentRepo.find({
+          where: { ticketId: ticket.id },
+          order: { id: 'DESC' },
+        })
+      : [];
+    const payment = pickRepresentativePayment(payments);
+
     return {
       ...booking,
+      status: resolveClientBookingStatus(booking, ticket, payment),
       seats,
       schedule: scheduleDetail,
       ticket,
+      payments,
+      payment,
     };
   }
 
