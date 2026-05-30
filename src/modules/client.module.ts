@@ -26,12 +26,12 @@ import { SalesModule } from './sales.module';
 import { ClientAccountController } from '../controllers/client/client-account.controller';
 import { ClientBookingsController } from '../controllers/client/client-bookings.controller';
 import { ClientPromoController } from '../controllers/client/client-promo.controller';
-import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
-import { ClientBookingsService } from '../services/client/client-bookings.service'
-import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
-import { ClientBookingPricingService } from '../services/client/client-booking-pricing.service';
+import { ClientBookingsService } from '../services/client/client-bookings.service';
 import { ClientTripsService } from '../services/client/client-trips.service';
 import { ClientTripsController } from '../controllers/client/client-trips.controller';
+import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
+import { ClientBookingPricingService } from '../services/client/client-booking-pricing.service';
+import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
 
 @Module({
   imports: [
