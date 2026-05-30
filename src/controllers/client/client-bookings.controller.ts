@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -14,49 +16,21 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
-import { ClientBookingsService } from '../../services/CLIENT/client-bookings.service';
+import { ClientBookingsService } from '../../services/client/client-bookings.service';
 import {
   CreateHoldDto,
+  CreateClientBookingDto,
   PassengerDto,
-  SeatMapQueryDto,
-  TripContextQueryDto,
   ValidatePromoDto,
-} from '../../dtos/CLIENT/bookings.dto';
-import { ConfirmPaymentDto } from '../../dtos/sales/sales.dto';
+  ConfirmPaymentDto,
+} from '../../dtos/client/bookings.dto';
+import { SeatSelectionQueryDto } from '../../dtos/client/seat-selection.dto';
 @ApiTags('Client - Bookings')
 @Controller('api/bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth('JWT-auth')
 export class ClientBookingsController {
   constructor(private readonly bookings: ClientBookingsService) {}
-
-  @Get('config')
-  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
-  @ApiOperation({ summary: 'Cấu hình luồng đặt vé (meta, catalog, enums)' })
-  getConfig() {
-    return this.bookings.getConfig();
-  }
-
-  @Get('trip-context')
-  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
-  @ApiOperation({ summary: 'Ngữ cảnh chuyến + catalog cho màn đặt vé' })
-  getTripContext(
-    @User() user: UserDecoratorDtoResponse,
-    @Query() query: TripContextQueryDto,
-  ) {
-    return this.bookings.getTripContext(user, query.tripId);
-  }
-
-  @Get('seat-map')
-  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
-  @ApiOperation({ summary: 'Sơ đồ ghế theo hàng/tầng' })
-  getSeatMap(@Query() query: SeatMapQueryDto) {
-    return this.bookings.getSeatMap(
-      query.tripId,
-      query.vehicleType,
-      query.floor ?? 1,
-    );
-  }
 
   @Post('validate-promo')
   @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
@@ -73,6 +47,30 @@ export class ClientBookingsController {
     @Body() body: CreateHoldDto,
   ) {
     return this.bookings.createHold(user, body);
+  }
+
+  @Get('seat-selection/:tripId')
+  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
+  @ApiOperation({
+    summary: 'Dữ liệu trang chọn ghế (step 1) — contract FE',
+  })
+  getSeatSelectionPage(
+    @User() user: UserDecoratorDtoResponse,
+    @Param('tripId') tripId: string,
+    @Query() query: SeatSelectionQueryDto,
+  ) {
+    return this.bookings.getSeatSelectionPage(user, tripId, query);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
+  @ApiOperation({ summary: 'Tạo đơn đặt vé & thanh toán (FE contract)' })
+  createBooking(
+    @User() user: UserDecoratorDtoResponse,
+    @Body() body: CreateClientBookingDto,
+  ) {
+    return this.bookings.createBooking(user, body);
   }
 
   @Patch('hold/:holdId/passenger')

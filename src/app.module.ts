@@ -14,6 +14,7 @@ import { CMSVehicleModule } from './modules/CMS/CMS_vehicle.module';
 import { CMSDriverModule } from './modules/CMS/CMS_driver.module';
 import { CMSTripModule } from './modules/CMS/CMS_trip.module';
 import { CMSRoadModule } from './modules/CMS/CMS_road.module';
+import { CMSBookingModule } from './modules/CMS/CMS_booking.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbCompanyTrip } from './entities/company/company-trip.entity';
 import { TbVehicle } from './entities/vehicle.entity';
@@ -79,6 +80,7 @@ import { TbSeat } from './entities/seat.entity';
     CMSDriverModule,
     CMSTripModule,
     CMSRoadModule,
+    CMSBookingModule,
   ],
   controllers: [],
   providers: [],

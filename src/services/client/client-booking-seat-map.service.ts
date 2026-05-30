@@ -2,8 +2,8 @@
 import { Injectable } from '@nestjs/common';
 import { EntityStatus } from '../../assets/constants/company.constants';
 import { TbSeat } from '../../entities/seat.entity';
-import { ClientCatalogRepository } from '../../repositories/client-catalog.repository';
 import { SeatRepository } from '../../repositories/seat.repository';
+import { ClientEnrichmentService } from '../client-enrichment.service';
 import { ResolvedTripContext } from './client-booking-trip-resolver.service';
 
 const SEATS_PER_ROW = 5;
@@ -14,7 +14,7 @@ export type FeSeatStatus = 'available' | 'booked' | 'vip';
 @Injectable()
 export class ClientBookingSeatMapService {
   constructor(
-    private readonly catalogRepository: ClientCatalogRepository,
+    private readonly enrichment: ClientEnrichmentService,
     private readonly seatRepository: SeatRepository,
   ) {}
 
@@ -23,7 +23,7 @@ export class ClientBookingSeatMapService {
     vehicleType: string,
     floor: number,
   ) {
-    const occupiedIds = await this.catalogRepository.getOccupiedSeatIds(
+    const occupiedIds = await this.enrichment.getOccupiedSeatIds(
       ctx.companyTrip.id,
     );
     const occupiedSet = new Set(occupiedIds);

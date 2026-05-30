@@ -27,23 +27,11 @@ export class CmsVehicleFormPayloadDto {
   @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_CODE_TOO_LONG })
   code?: string;
 
-  @ApiPropertyOptional({ example: '51B-12345' })
-  @IsOptional()
-  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_CODE_INVALID })
-  @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_CODE_TOO_LONG })
-  vehicleCode?: string;
-
   @ApiPropertyOptional({ example: 'Sleeper' })
   @IsOptional()
   @IsString({ message: CmsVehicleValidationMessage.VEHICAL_TYPE_INVALID })
   @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_TYPE_TOO_LONG })
   type?: string;
-
-  @ApiPropertyOptional({ example: 'Sleeper' })
-  @IsOptional()
-  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_TYPE_INVALID })
-  @MaxLength(50, { message: CmsVehicleValidationMessage.VEHICAL_TYPE_TOO_LONG })
-  vehicleType?: string;
 
   @ApiPropertyOptional({ example: 'Sleeper VIP' })
   @IsOptional()
@@ -53,13 +41,6 @@ export class CmsVehicleFormPayloadDto {
   })
   name?: string;
 
-  @ApiPropertyOptional({ example: 'Sleeper VIP' })
-  @IsOptional()
-  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_NAME_INVALID })
-  @MaxLength(255, {
-    message: CmsVehicleValidationMessage.VEHICAL_NAME_TOO_LONG,
-  })
-  vehicleName?: string;
 
   @ApiPropertyOptional({ example: EntityStatus.ACTIVE, enum: EntityStatus })
   @IsOptional()
@@ -69,13 +50,6 @@ export class CmsVehicleFormPayloadDto {
   })
   status?: string;
 
-  @ApiPropertyOptional({ example: EntityStatus.ACTIVE, enum: EntityStatus })
-  @IsOptional()
-  @IsString({ message: CmsVehicleValidationMessage.VEHICAL_STATUS_INVALID })
-  @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE, EntityStatus.MAINTENANCE], {
-    message: CmsVehicleValidationMessage.VEHICAL_STATUS_NOT_IN,
-  })
-  vehicleStatus?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -106,40 +80,6 @@ export class CmsVehicleFormPayloadDto {
   @Min(1, { message: CmsVehicleValidationMessage.SEAT_COUNT_MIN })
   @Max(100, { message: CmsVehicleValidationMessage.SEAT_COUNT_MAX })
   seatCount?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  timeStart?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  timeEnd?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  pricePerSeat?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  tripId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  driverId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  companyTripId?: number;
 }
 
 export class CreateVehiclePayloadDto extends CmsVehicleFormPayloadDto {}
