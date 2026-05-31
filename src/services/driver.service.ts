@@ -23,8 +23,7 @@ export class DriverService {
     payload: CreateDriverDto,
   ): Promise<TbDriver> {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      payload.companyId,
+      user
     );
 
     return this.driverRepository.save({
@@ -42,14 +41,9 @@ export class DriverService {
     });
   }
 
-  async findAll(
-    user: UserDecoratorDtoResponse,
-    companyId?: number,
-  ): Promise<TbDriver[]> {
-    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      companyId,
-    );
+  async findAll(user: UserDecoratorDtoResponse): Promise<TbDriver[]> {
+    const resolvedCompanyId =
+      await this.companyAccess.resolveCompanyIdForUser(user);
     return this.driverRepository.findByCompany(resolvedCompanyId);
   }
 

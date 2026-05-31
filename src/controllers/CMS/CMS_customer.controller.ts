@@ -47,8 +47,7 @@ export class CMSCustomerController {
   ) {
     const detail = await this.cmsCustomerService.getDetail(
       user,
-      userCode,
-      companyId ? parseInt(companyId, 10) : undefined,
+      userCode
     );
     if (!detail) {
       throw new NotFoundException('Không tìm thấy khách hàng');

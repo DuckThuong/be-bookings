@@ -62,8 +62,7 @@ export class CMSBookingService {
     query: CmsBookingListQueryDto,
   ): Promise<CmsBookingListResponseDto> {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      query.companyId,
+      user
     );
 
     const payments = await this.paymentRepository.findByFilter({

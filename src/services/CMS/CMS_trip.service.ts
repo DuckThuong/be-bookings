@@ -42,12 +42,11 @@ export class CMSTripService {
 
   async getAllTrips(
     user: UserDecoratorDtoResponse,
-    companyId?: number,
     roadId?: number,
   ): Promise<CmsTripListResponseDto> {
     const trips = roadId
       ? await this.tripService.findByRoad(user, roadId)
-      : await this.tripService.findAll(user, companyId);
+      : await this.tripService.findAll(user);
     const items = await this.enrichTrips(trips);
     return { items, total: items.length };
   }

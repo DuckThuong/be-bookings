@@ -63,13 +63,9 @@ export class VehicleService {
     });
   }
 
-  async findAll(
-    user: UserDecoratorDtoResponse,
-    companyId?: number,
-  ): Promise<TbVehicle[]> {
+  async findAll(user: UserDecoratorDtoResponse): Promise<TbVehicle[]> {
     const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
       user,
-      companyId,
     );
     return this.vehicleRepository.findByCompany(resolvedCompanyId);
   }

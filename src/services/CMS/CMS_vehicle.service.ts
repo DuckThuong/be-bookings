@@ -69,9 +69,8 @@ export class CMSVehicleService {
 
   async getAllVehicles(
     user: UserDecoratorDtoResponse,
-    companyId?: number,
   ): Promise<CmsVehicleListResponseDto> {
-    const vehicles = await this.vehicleService.findAll(user, companyId);
+    const vehicles = await this.vehicleService.findAll(user);
     const items = await this.enrichVehicles(user, vehicles);
     return { items, total: items.length };
   }

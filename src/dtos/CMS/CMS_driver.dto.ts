@@ -114,7 +114,7 @@ export class CmsDriverEntityDto {
   @ApiProperty({ example: 'B2' })
   license: string;
 
-  @ApiProperty({example: '123456' })
+  @ApiProperty({ example: '123456' })
   licenseNum: string;
 
   @ApiProperty({ example: '0901234567' })

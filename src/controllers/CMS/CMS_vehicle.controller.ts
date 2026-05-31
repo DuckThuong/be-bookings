@@ -7,7 +7,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -28,7 +27,6 @@ import {
   CmsVehicleDetailResponseDto,
   CmsVehicleListResponseDto,
 } from '../../dtos/CMS/CMS_vehicle.dto';
-import { OptionalCompanyIdQueryDto } from '../../dtos/transport/common.dto';
 
 @ApiTags('CMS - Vehicle')
 @Controller('cms/vehicle')
@@ -44,11 +42,8 @@ export class CMSVehicleController {
       'Danh sách phương tiện CMS (xe + ghế + trip + driver + company_trip)',
   })
   @ApiResponse({ status: 200, type: CmsVehicleListResponseDto })
-  findAll(
-    @User() user: UserDecoratorDtoResponse,
-    @Query() query: OptionalCompanyIdQueryDto,
-  ) {
-    return this.cmsVehicleService.getAllVehicles(user, query.companyId);
+  findAll(@User() user: UserDecoratorDtoResponse) {
+    return this.cmsVehicleService.getAllVehicles(user);
   }
 
   @Get(':id')

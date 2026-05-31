@@ -16,7 +16,13 @@ export class VehicleRepository {
   }
 
   findByCompany(companyId: number) {
-    return this.repo.find({ where: { companyId, status: EntityStatus.ACTIVE || EntityStatus.MAINTENANCE }, order: { id: 'DESC' } });
+    return this.repo.find({
+      where: {
+        companyId,
+        status: EntityStatus.ACTIVE || EntityStatus.INACTIVE,
+      },
+      order: { id: 'DESC' },
+    });
   }
 
   findByCode(code: string) {

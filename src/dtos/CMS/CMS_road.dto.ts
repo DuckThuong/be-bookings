@@ -17,10 +17,7 @@ import { CmsRoadValidationMessage } from '../../assets/messages/cms-road.message
 const CMS_ROAD_STATUS_VALUES = [
   EntityStatus.ACTIVE,
   EntityStatus.INACTIVE,
-  'active',
-  'peak',
-  'reduced',
-  'paused',
+  ,
 ] as const;
 
 export class CmsRoadFormPayloadDto {

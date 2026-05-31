@@ -41,9 +41,8 @@ export class RoadController {
   @ApiOperation({ summary: 'Danh sách tuyến theo nhà xe' })
   findAll(
     @User() user: UserDecoratorDtoResponse,
-    @Query() query: CompanyIdQueryDto,
   ) {
-    return this.roadService.findAll(user, query.companyId);
+    return this.roadService.findAll(user);
   }
 
   @Get(':id')

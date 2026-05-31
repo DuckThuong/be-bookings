@@ -67,14 +67,9 @@ export class RoadService {
     }
   }
 
-  async findAll(
-    user: UserDecoratorDtoResponse,
-    companyId?: number,
-  ): Promise<TbRoad[]> {
-    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      companyId,
-    );
+  async findAll(user: UserDecoratorDtoResponse): Promise<TbRoad[]> {
+    const resolvedCompanyId =
+      await this.companyAccess.resolveCompanyIdForUser(user);
     await this.companyAccess.assertCompanyAccess(user, resolvedCompanyId);
     return this.roadRepository.findByCompany(resolvedCompanyId);
   }
@@ -139,8 +134,8 @@ export class RoadService {
     id: number,
   ): Promise<{ message: string }> {
     await this.findOne(user, id);
-    await this.roadRepository.update(id, { status: EntityStatus.INACTIVE });
-    return { message: 'Đã vô hiệu hóa tuyến đường' };
+    await this.roadRepository.delete(id);
+    return { message: 'Đã xóa tuyến đường' };
   }
 
   private isDuplicateKeyError(error: unknown): boolean {

@@ -7,7 +7,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -26,7 +25,6 @@ import {
   CmsDriverDetailResponseDto,
   CmsDriverListResponseDto,
 } from '../../dtos/CMS/CMS_driver.dto';
-import { OptionalCompanyIdQueryDto } from '../../dtos/transport/common.dto';
 
 @ApiTags('CMS - Driver')
 @Controller('cms/driver')
@@ -41,11 +39,8 @@ export class CMSDriverController {
     summary: 'Danh sách tài xế CMS (tài xế + xe + trip + company_trip)',
   })
   @ApiResponse({ status: 200, type: CmsDriverListResponseDto })
-  findAll(
-    @User() user: UserDecoratorDtoResponse,
-    @Query() query: OptionalCompanyIdQueryDto,
-  ) {
-    return this.cmsDriverService.getAllDrivers(user, query.companyId);
+  findAll(@User() user: UserDecoratorDtoResponse) {
+    return this.cmsDriverService.getAllDrivers(user);
   }
 
   @Get(':id')

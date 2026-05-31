@@ -40,7 +40,7 @@ export class CMSRoadService {
     user: UserDecoratorDtoResponse,
     companyId?: number,
   ): Promise<CmsRoadListResponseDto> {
-    const roads = await this.roadService.findAll(user, companyId);
+    const roads = await this.roadService.findAll(user);
     const items = roads.map((road) => this.toResponse(road));
     return { items, total: items.length };
   }
@@ -51,8 +51,7 @@ export class CMSRoadService {
   ): Promise<RoadResponseDto> {
     try {
       const companyId = await this.companyAccess.resolveCompanyIdForUser(
-        user,
-        payload.companyId,
+        user
       );
       const [startPoint, endPoint] = payload.name.split(/\s*-\s*/);
       const road = await this.roadService.create(user, {

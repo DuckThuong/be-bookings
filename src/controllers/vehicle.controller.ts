@@ -7,7 +7,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -21,7 +20,6 @@ import {
 import { User } from '../user.decorator';
 import { VehicleService } from '../services/vehicle.service';
 import { CreateVehicleDto, UpdateVehicleDto } from '../dtos/company/company.dto';
-import { OptionalCompanyIdQueryDto } from '../dtos/transport/common.dto';
 
 @ApiTags('Vehicle')
 @Controller('vehicles')
@@ -42,11 +40,8 @@ export class VehicleController {
 
   @Get()
   @ApiOperation({ summary: 'Danh sách phương tiện theo nhà xe' })
-  findAll(
-    @User() user: UserDecoratorDtoResponse,
-    @Query() query: OptionalCompanyIdQueryDto,
-  ) {
-    return this.vehicleService.findAll(user, query.companyId);
+  findAll(@User() user: UserDecoratorDtoResponse) {
+    return this.vehicleService.findAll(user);
   }
 
   @Get(':id')

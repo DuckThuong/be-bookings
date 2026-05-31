@@ -50,8 +50,7 @@ export class CMSCustomerService {
     query: CmsCustomerListQueryDto,
   ): Promise<CmsCustomerListResponseDto> {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      query.companyId,
+      user
     );
 
     const customerIds =
@@ -77,12 +76,10 @@ export class CMSCustomerService {
 
   async getDetail(
     user: UserDecoratorDtoResponse,
-    userCode: string,
-    companyIdQuery?: number,
+    userCode: string
   ): Promise<CmsCustomerListItemDto | null> {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      companyIdQuery,
+      user
     );
 
     const customerIds =

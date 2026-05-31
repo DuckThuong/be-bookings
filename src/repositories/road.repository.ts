@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TbRoad } from '../entities/road.entity';
 import { EntityStatus } from '../assets/constants/company.constants';
 
@@ -43,7 +43,7 @@ export class RoadRepository {
     return this.repo.find({
       where: {
         companyId,
-        status: EntityStatus.ACTIVE || EntityStatus.MAINTENANCE,
+        status: In([EntityStatus.ACTIVE, EntityStatus.INACTIVE]),
       },
       order: { id: 'DESC' },
     });
@@ -55,6 +55,10 @@ export class RoadRepository {
 
   update(id: number, data: Partial<TbRoad>) {
     return this.repo.update({ id }, data);
+  }
+
+  delete(id: number) {
+    return this.repo.delete({ id });
   }
 
   countActiveByCompany(companyId: number) {

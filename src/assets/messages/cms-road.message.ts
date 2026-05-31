@@ -1,5 +1,6 @@
 /** Thông báo validate cho CMS tạo / cập nhật tuyến đường */
 export class CmsRoadValidationMessage {
+  static readonly NO_PERMISSION = 'Bạn không có quyền thao tác';
   static readonly ROAD_NAME_EMPTY = 'Tên tuyến không được để trống';
   static readonly ROAD_NAME_INVALID = 'Tên tuyến không hợp lệ';
   static readonly ROAD_NAME_TOO_LONG =

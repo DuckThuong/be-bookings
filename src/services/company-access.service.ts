@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { TbCompany } from '../entities/company/company.entity';
 import { TbRoad } from '../entities/road.entity';
@@ -23,6 +24,7 @@ import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { CmsTripValidationMessage } from '../assets/messages/cms-trip.message';
 import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
+import { CmsRoadValidationMessage } from "../assets/messages/cms-road.message";
 
 @Injectable()
 export class CompanyAccessService {
@@ -61,13 +63,9 @@ export class CompanyAccessService {
 
   async resolveCompanyIdForUser(
     user: UserDecoratorDtoResponse,
-    companyId?: number,
   ): Promise<number> {
     if (user.role === UserRole.ADMIN) {
-      if (companyId == null) {
-        throw new BadRequestException(CompanyErrorMessage.COMPANY_ID_REQUIRED);
-      }
-      return (await this.assertCompanyAccess(user, companyId)).id;
+      throw new UnauthorizedException(CmsRoadValidationMessage.NO_PERMISSION);
     }
 
     const companies = await this.companyRepository.findCompaniesByUserLead(

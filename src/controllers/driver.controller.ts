@@ -7,7 +7,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -18,7 +17,6 @@ import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { User } from '../user.decorator';
 import { DriverService } from '../services/driver.service';
 import { CreateDriverDto, UpdateDriverDto } from '../dtos/company/company.dto';
-import { OptionalCompanyIdQueryDto } from '../dtos/transport/common.dto';
 
 @ApiTags('Driver')
 @Controller('drivers')
@@ -39,11 +37,8 @@ export class DriverController {
 
   @Get()
   @ApiOperation({ summary: 'Danh sách tài xế theo nhà xe' })
-  findAll(
-    @User() user: UserDecoratorDtoResponse,
-    @Query() query: OptionalCompanyIdQueryDto,
-  ) {
-    return this.driverService.findAll(user, query.companyId);
+  findAll(@User() user: UserDecoratorDtoResponse) {
+    return this.driverService.findAll(user);
   }
 
   @Get(':id')

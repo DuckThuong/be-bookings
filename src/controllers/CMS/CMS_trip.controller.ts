@@ -46,11 +46,7 @@ export class CMSTripController {
     @User() user: UserDecoratorDtoResponse,
     @Query() query: CmsTripListQueryDto,
   ) {
-    return this.cmsTripService.getAllTrips(
-      user,
-      query.companyId,
-      query.roadId,
-    );
+    return this.cmsTripService.getAllTrips(user, query.roadId);
   }
 
   @Get(':id')

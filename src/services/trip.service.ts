@@ -64,13 +64,9 @@ export class TripService {
     return trip;
   }
 
-  async findAll(
-    user: UserDecoratorDtoResponse,
-    companyId?: number,
-  ): Promise<TbTrip[]> {
+  async findAll(user: UserDecoratorDtoResponse): Promise<TbTrip[]> {
     const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-      companyId,
+      user
     );
     await this.companyAccess.assertCompanyAccess(user, resolvedCompanyId);
     const roads = await this.roadRepository.findByCompany(resolvedCompanyId);
