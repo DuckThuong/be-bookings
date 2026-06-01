@@ -13,6 +13,7 @@ import {
   CLIENT_BOOKING_META,
   CLIENT_BOOKING_VEHICLE_DISPLAY,
   PAYMENT_METHOD_LABELS,
+  type ClientCatalogPoint,
   type ClientCatalogVehicle,
 } from '../../assets/config/client-booking.config';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
@@ -53,6 +54,10 @@ import { CompanyAccessService } from '../company-access.service';
 import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
 import { ClientBookingPricingService } from './client-booking-pricing.service';
 import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
+import {
+  buildVehicleLayout,
+  resolveVehicleLayoutConfig,
+} from '../../common/seat-layout/seat-layout';
 
 @Injectable()
 export class ClientBookingsService {
@@ -82,10 +87,11 @@ export class ClientBookingsService {
     const defaultVehicleType = this.tripResolver.inferVehicleType(
       ctx.vehicle.seatCount,
       ctx.vehicle.type,
+      ctx.vehicle.layoutConfig,
     );
     const defaultFloor = this.clampFloor(
       query.floor ?? 1,
-      this.resolveVehicleCatalog(defaultVehicleType),
+      this.resolveVehicleFloors(ctx),
     );
     const tripDto = this.tripResolver.buildTripDto(ctx);
     const displayDate = this.resolveDisplayDate(query.date, tripDto.date);
@@ -95,13 +101,15 @@ export class ClientBookingsService {
       this.buildVehicleLayouts(ctx),
     ]);
 
-    const pickupPoints = this.filterPointsByLocation(
+    const pickupPoints = this.resolvePointOptions(
       CLIENT_BOOKING_CATALOG.pickupPoints,
       ctx.road.startPoint,
+      'pickup',
     );
-    const dropoffPoints = this.filterPointsByLocation(
+    const dropoffPoints = this.resolvePointOptions(
       CLIENT_BOOKING_CATALOG.dropoffPoints,
       ctx.road.endPoint,
+      'dropoff',
     );
 
     const unitPrice = ctx.unitPrice;
@@ -156,7 +164,7 @@ export class ClientBookingsService {
         name: ctx.company.companyName,
         rating: 4.8,
         reviewCount: '2.1k',
-        routeLabel: `${ctx.road.startPoint} → ${ctx.road.endPoint}`,
+        routeLabel: `${ctx.road.startPoint} -> ${ctx.road.endPoint}`,
         amenities: [...CLIENT_BOOKING_CATALOG.operatorAmenities],
       },
       catalog: {
@@ -196,19 +204,19 @@ export class ClientBookingsService {
     }
 
     const vehicleType = this.resolveVehicleType(ctx);
-    const vehicleCatalog = this.resolveVehicleCatalog(vehicleType);
+    const vehicleFloors = this.resolveVehicleFloors(ctx);
     const payloadFloor =
       payload.floor != null
-        ? this.clampFloor(payload.floor, vehicleCatalog)
+        ? this.clampFloor(payload.floor, vehicleFloors)
         : undefined;
     const floor = this.clampFloor(
       booking.floor ?? payloadFloor ?? 1,
-      vehicleCatalog,
+      vehicleFloors,
     );
     if (
       booking.floor != null &&
       payloadFloor != null &&
-      this.clampFloor(booking.floor, vehicleCatalog) !== payloadFloor
+      this.clampFloor(booking.floor, vehicleFloors) !== payloadFloor
     ) {
       throw new HttpException(
         ClientErrorMessage.HOLD_VEHICLE_MISMATCH,
@@ -285,7 +293,7 @@ export class ClientBookingsService {
     const vehicleType = this.resolveVehicleType(ctx);
     const floor = this.clampFloor(
       payload.floor ?? 1,
-      this.resolveVehicleCatalog(vehicleType),
+      this.resolveVehicleFloors(ctx),
     );
     const seatMap = await this.seatMapService.buildSeatMap(ctx, floor);
 
@@ -308,20 +316,20 @@ export class ClientBookingsService {
 
     const conflictSeats: string[] = [];
     for (const row of seatMap.rows) {
-      for (const seat of row.seats) {
-        if (!seat) continue;
-        if (payload.seatIds.includes(seat.id) && seat.status === 'vip') {
+      for (const cell of row.cells) {
+        if (cell.type !== 'seat') continue;
+        if (payload.seatIds.includes(cell.id) && cell.status === 'vip') {
           throw new HttpException(
             {
               statusCode: HttpStatus.CONFLICT,
               message: ClientErrorMessage.VIP_SEAT_NOT_SELECTABLE,
-              conflictSeats: [seat.id],
+              conflictSeats: [cell.id],
             },
             HttpStatus.CONFLICT,
           );
         }
-        if (payload.seatIds.includes(seat.id) && seat.status === 'booked') {
-          conflictSeats.push(seat.id);
+        if (payload.seatIds.includes(cell.id) && cell.status === 'booked') {
+          conflictSeats.push(cell.id);
         }
       }
     }
@@ -674,7 +682,7 @@ export class ClientBookingsService {
           icon: 'ti-message',
           colorClass: 'blue',
           title: 'Thanh toán đã ghi nhận',
-          desc: 'Yêu cầu thanh toán đã gửi — chờ nhà xe đối soát và xác nhận vé.',
+          desc: 'Yêu cầu thanh toán đã gửi - chờ nhà xe đối soát và xác nhận vé.',
         },
       ];
     }
@@ -904,7 +912,11 @@ export class ClientBookingsService {
           Array<{
             row: number;
             full?: boolean;
-            seats: Array<{ id: string; status: string } | null>;
+            cells: Array<
+              | { type: 'seat'; id: string; label: string; status: string }
+              | { type: 'aisle' }
+              | { type: 'empty' }
+            >;
           }>
         >;
       }
@@ -912,34 +924,42 @@ export class ClientBookingsService {
 
     const vehicleType = this.resolveVehicleType(ctx);
     const vehicle = this.resolveVehicleCatalog(vehicleType);
-    const display = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type];
     const layouts: Record<
       string,
       Array<{
         row: number;
-        full?: boolean;
-        seats: Array<{ id: string; status: string } | null>;
+        cells: Array<
+          | { type: 'seat'; id: string; label: string; status: string }
+          | { type: 'aisle' }
+          | { type: 'empty' }
+        >;
       }>
     > = {};
 
-    for (let floor = 1; floor <= vehicle.floors; floor++) {
+    const layoutConfig = this.resolveLayoutConfig(ctx);
+    const builtLayout = buildVehicleLayout(layoutConfig);
+    const floorCount = layoutConfig.floorCount;
+    for (let floor = 1; floor <= floorCount; floor++) {
       const seatMap = await this.seatMapService.buildSeatMap(ctx, floor);
       layouts[String(floor)] = seatMap.rows.map((row) => ({
         row: row.row,
-        full: row.full,
-        seats: row.seats.map((seat) =>
-          seat ? { id: seat.id, status: seat.status } : null,
-        ),
+        cells: row.cells,
       }));
     }
+    const display = this.buildVehicleDisplay(
+      vehicle,
+      layoutConfig.preset,
+      floorCount,
+      builtLayout.seatCount,
+    );
 
     vehicles[vehicle.type] = {
-      label: vehicle.label,
+      label: display.label,
       icon: display?.icon ?? 'ti-bus',
-      mapTitle: display?.mapTitle ?? vehicle.label,
+      mapTitle: display?.mapTitle ?? display.label,
       mapSub: display?.mapSub ?? '',
-      floors: vehicle.floors,
-      isSleeper: vehicle.isSleeper,
+      floors: floorCount,
+      isSleeper: display.isSleeper,
       layouts,
     };
 
@@ -952,6 +972,7 @@ export class ClientBookingsService {
     return this.tripResolver.inferVehicleType(
       ctx.vehicle.seatCount,
       ctx.vehicle.type,
+      ctx.vehicle.layoutConfig,
     );
   }
 
@@ -962,16 +983,100 @@ export class ClientBookingsService {
     );
   }
 
-  private clampFloor(floor: number, vehicle: ClientCatalogVehicle): number {
-    const requested = Math.max(1, Math.floor(Number(floor) || 1));
-    return Math.min(requested, vehicle.floors);
+  private resolveVehicleFloors(
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ): number {
+    return this.resolveLayoutConfig(ctx).floorCount;
   }
 
-  private filterPointsByLocation<
-    T extends { value: string; label: string; city: string },
-  >(points: readonly T[], location: string): T[] {
+  private clampFloor(floor: number, floorCount: number): number {
+    const requested = Math.max(1, Math.floor(Number(floor) || 1));
+    return Math.min(requested, Math.max(1, floorCount));
+  }
+
+  private resolveLayoutConfig(
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ) {
+    return resolveVehicleLayoutConfig(ctx.vehicle.layoutConfig, {
+      seatCount: ctx.vehicle.seatCount,
+      vehicleType: ctx.vehicle.type,
+    });
+  }
+
+  private buildVehicleDisplay(
+    vehicle: ClientCatalogVehicle,
+    preset: string,
+    floorCount: number,
+    seatCount: number,
+  ): ClientCatalogVehicle & {
+    icon: string;
+    mapTitle: string;
+    mapSub: string;
+  } {
+    const icon = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type]?.icon ?? 'ti-bus';
+    const isSleeper = preset === 'SLEEPER_38';
+
+    if (preset === 'CUSTOM_SIMPLE') {
+      const label = `Xe ${seatCount} chỗ`;
+      return {
+        ...vehicle,
+        label,
+        floors: floorCount,
+        isSleeper: false,
+        icon,
+        mapTitle: label,
+        mapSub: `Sơ đồ ${seatCount} chỗ, ${floorCount} tầng.`,
+      };
+    }
+
+    const display = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type];
+    const label =
+      preset === 'SLEEPER_38'
+        ? `Giường nằm ${seatCount}`
+        : preset === 'COACH'
+          ? `Ghế ngồi ${seatCount}`
+          : `Xe ${seatCount} chỗ`;
+
+    return {
+      ...vehicle,
+      label,
+      floors: floorCount,
+      isSleeper,
+      icon,
+      mapTitle:
+        display?.mapTitle ??
+        `${label}${floorCount > 1 ? ` - ${floorCount} tầng` : ''}`,
+      mapSub:
+        display?.mapSub ??
+        `Sơ đồ ${seatCount} chỗ, ${floorCount} tầng.`,
+    };
+  }
+
+  private resolvePointOptions(
+    points: readonly ClientCatalogPoint[],
+    location: string,
+    fallbackPrefix: string,
+  ): ClientCatalogPoint[] {
+    const matched = this.filterPointsByLocation(points, location);
+    if (matched.length > 0) return matched;
+
+    const label = location.trim();
+    const valueBase = this.slugifyPointValue(label || fallbackPrefix);
+    return [
+      {
+        value: `${fallbackPrefix}-${valueBase}`,
+        label: label || fallbackPrefix,
+        city: label || fallbackPrefix,
+      },
+    ];
+  }
+
+  private filterPointsByLocation(
+    points: readonly ClientCatalogPoint[],
+    location: string,
+  ): ClientCatalogPoint[] {
     const normalized = location.trim().toLowerCase();
-    if (!normalized) return [...points];
+    if (!normalized) return [];
 
     const matched = points.filter(
       (point) =>
@@ -979,7 +1084,18 @@ export class ClientBookingsService {
         normalized.includes(point.label.toLowerCase()),
     );
 
-    return matched.length > 0 ? matched : [...points];
+    return matched;
+  }
+
+  private slugifyPointValue(value: string): string {
+    const normalized = value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    return normalized || 'point';
   }
 
   private resolveDisplayDate(dateQuery?: string, fallbackIso?: string): string {

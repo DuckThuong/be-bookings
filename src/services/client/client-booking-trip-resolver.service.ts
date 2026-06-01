@@ -9,6 +9,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClientErrorMessage } from '../../assets/messages/client.message';
 import { EntityStatus } from '../../assets/constants/company.constants';
+import {
+  layoutPresetToClientVehicleType,
+  resolveVehicleLayoutConfig,
+} from '../../common/seat-layout/seat-layout';
 
 export interface ResolvedTripContext {
   trip: TbTrip;
@@ -70,7 +74,22 @@ export class ClientBookingTripResolverService {
     };
   }
 
-  inferVehicleType(seatCount: number, vehicleTypeRaw?: string): string {
+  inferVehicleType(
+    seatCount: number,
+    vehicleTypeRaw?: string,
+    layoutConfigRaw?: unknown,
+  ): string {
+    const layoutPreset = resolveVehicleLayoutConfig(layoutConfigRaw, {
+      seatCount,
+      vehicleType: vehicleTypeRaw,
+    }).preset;
+    if (layoutPreset) {
+      return layoutPresetToClientVehicleType(
+        layoutPreset,
+        seatCount,
+        vehicleTypeRaw,
+      );
+    }
     const normalized = vehicleTypeRaw?.trim();
     if (normalized && ['16', '36', '45'].includes(normalized)) {
       return normalized;

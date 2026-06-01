@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { VehicleLayoutConfig } from '../common/seat-layout/seat-layout';
 
 @Entity('tb_vehicle')
 export class TbVehicle {
@@ -69,4 +70,12 @@ export class TbVehicle {
 
   @Column({ type: 'int', default: 0 })
   seatCount: number;
+
+  @Column({
+    name: 'layout_config',
+    type: 'json',
+    nullable: true,
+    comment: 'Cấu hình ma trận ghế/lối đi',
+  })
+  layoutConfig?: VehicleLayoutConfig | null;
 }

@@ -8,12 +8,22 @@ import {
   ClientBookingTripResolverService,
   ResolvedTripContext,
 } from './client-booking-trip-resolver.service';
-
-const SEATED_SEATS_PER_ROW = 4;
-const SLEEPER_SEATS_PER_ROW = 2;
-const AISLE_INDEX = 2;
+import {
+  buildVehicleLayout,
+  layoutPresetToClientVehicleType,
+  resolveVehicleLayoutConfig,
+} from '../../common/seat-layout/seat-layout';
 
 export type FeSeatStatus = 'available' | 'booked' | 'vip';
+export type FeSeatCell =
+  | {
+      type: 'seat';
+      id: string;
+      label: string;
+      status: FeSeatStatus;
+    }
+  | { type: 'aisle' }
+  | { type: 'empty' };
 
 @Injectable()
 export class ClientBookingSeatMapService {
@@ -24,35 +34,63 @@ export class ClientBookingSeatMapService {
   ) {}
 
   async buildSeatMap(ctx: ResolvedTripContext, floor: number) {
-    const vehicleType = this.tripResolver.inferVehicleType(
+    const layoutConfig = resolveVehicleLayoutConfig(ctx.vehicle.layoutConfig, {
+      seatCount: ctx.vehicle.seatCount,
+      vehicleType: ctx.vehicle.type,
+    });
+    const layout = buildVehicleLayout(layoutConfig);
+    const vehicleType = layoutPresetToClientVehicleType(
+      layoutConfig.preset,
       ctx.vehicle.seatCount,
       ctx.vehicle.type,
     );
-    const normalizedFloor = this.normalizeFloor(vehicleType, floor);
+    const normalizedFloor = this.normalizeFloor(layoutConfig.floorCount, floor);
     const occupiedIds = await this.enrichment.getOccupiedSeatIds(ctx.trip.id);
     const occupiedSet = new Set(occupiedIds);
     const allSeats = await this.seatRepository.findByVehicle(
       ctx.trip.vehicleId,
     );
-    const activeSeats = this.limitSeatsToVehicleSeatCount(
+    const activeSeats = this.sortSeatsByOrdinalAsc(
       allSeats.filter((s) => s.status === EntityStatus.ACTIVE),
-      ctx.vehicle.seatCount,
+    ).slice(0, layout.seatCount);
+    const seatsByOrdinal = new Map(
+      activeSeats.map((seat) => [this.getOrdinal(seat), seat]),
     );
-    const floorSeats = this.filterByFloor(
-      activeSeats,
-      vehicleType,
-      normalizedFloor,
-    );
-
-    const rows = this.buildRows(floorSeats, occupiedSet, vehicleType);
+    const floors = layout.floors.map((layoutFloor) => ({
+      floor: layoutFloor.floor,
+      label: layoutFloor.label,
+      rows: layoutFloor.rows.map((row) => ({
+        row: row.row,
+        cells: row.cells.map((cell): FeSeatCell => {
+          if (cell.type !== 'seat') {
+            return { type: cell.type };
+          }
+          const seat = seatsByOrdinal.get(cell.ordinal);
+          if (!seat) {
+            return { type: 'empty' };
+          }
+          const displayId = this.formatDisplaySeatId(seat);
+          return {
+            type: 'seat',
+            id: displayId,
+            label: displayId,
+            status: this.mapSeatStatus(seat, occupiedSet),
+          };
+        }),
+      })),
+    }));
+    const selectedFloor =
+      floors.find((item) => item.floor === normalizedFloor) ?? floors[0];
 
     return {
       tripId: ctx.tripIdFe,
       vehicleType,
+      seatCount: layout.seatCount,
       floor: normalizedFloor,
-      rows,
-      seatCodeToId: this.mapCodesToIds(floorSeats),
-      seatIdToDisplayId: this.mapIdsToDisplay(floorSeats),
+      floors,
+      rows: selectedFloor?.rows ?? [],
+      seatCodeToId: this.mapCodesToIds(activeSeats),
+      seatIdToDisplayId: this.mapIdsToDisplay(activeSeats),
     };
   }
 
@@ -73,6 +111,10 @@ export class ClientBookingSeatMapService {
   }
 
   formatDisplaySeatId(seat: TbSeat): string {
+    const name = seat.name?.trim();
+    if (name && /^[A-Z]\d{2,}$/i.test(name)) {
+      return name.toUpperCase();
+    }
     const prefix = (seat.type ?? 'S').trim().charAt(0).toUpperCase() || 'S';
     return `${prefix}${this.getOrdinal(seat)}`;
   }
@@ -107,102 +149,16 @@ export class ClientBookingSeatMapService {
     return map;
   }
 
-  private limitSeatsToVehicleSeatCount(
-    seats: TbSeat[],
-    seatCount: number,
-  ): TbSeat[] {
-    const capacity = Math.max(0, Math.floor(Number(seatCount) || 0));
-    const sorted = [...seats].sort(
-      (a, b) => this.getOrdinal(a) - this.getOrdinal(b),
-    );
-    return capacity > 0 ? sorted.slice(0, capacity) : [];
-  }
-
-  private normalizeFloor(vehicleType: string, floor: number): number {
+  private normalizeFloor(floorCount: number, floor: number): number {
     const requested = Math.max(1, Math.floor(Number(floor) || 1));
-    const maxFloor = vehicleType === '36' ? 2 : 1;
+    const maxFloor = Math.max(1, floorCount);
     return Math.min(requested, maxFloor);
   }
 
-  private filterByFloor(
-    seats: TbSeat[],
-    vehicleType: string,
-    floor: number,
-  ): TbSeat[] {
-    const sorted = [...seats].sort(
+  private sortSeatsByOrdinalAsc(seats: TbSeat[]): TbSeat[] {
+    return [...seats].sort(
       (a, b) => this.getOrdinal(a) - this.getOrdinal(b),
     );
-    if (vehicleType !== '36' || floor === 1) {
-      if (vehicleType === '36' && floor === 1) {
-        const half = Math.ceil(sorted.length / 2);
-        return sorted.slice(0, half);
-      }
-      return sorted;
-    }
-    const half = Math.ceil(sorted.length / 2);
-    return sorted.slice(half);
-  }
-
-  private buildRows(
-    seats: TbSeat[],
-    occupiedSet: Set<number>,
-    vehicleType: string,
-  ) {
-    const sorted = [...seats].sort(
-      (a, b) => this.getOrdinal(a) - this.getOrdinal(b),
-    );
-    const seatsPerRow =
-      vehicleType === '36' ? SLEEPER_SEATS_PER_ROW : SEATED_SEATS_PER_ROW;
-    const rows: {
-      row: number;
-      full?: boolean;
-      seats: Array<{
-        id: string;
-        label: string;
-        status: FeSeatStatus;
-      } | null>;
-    }[] = [];
-
-    let rowNum = 1;
-    for (let i = 0; i < sorted.length; i += seatsPerRow) {
-      const chunk = sorted.slice(i, i + seatsPerRow);
-      const rowSeats: Array<{
-        id: string;
-        label: string;
-        status: FeSeatStatus;
-      } | null> = [];
-
-      for (let col = 0; col < seatsPerRow; col++) {
-        const hasAislePlaceholder =
-          seatsPerRow === SEATED_SEATS_PER_ROW &&
-          chunk.length < SEATED_SEATS_PER_ROW;
-        if (col === AISLE_INDEX && hasAislePlaceholder) {
-          rowSeats.push(null);
-          continue;
-        }
-        const seatIndex =
-          hasAislePlaceholder && col > AISLE_INDEX ? col - 1 : col;
-        const seat = chunk[seatIndex];
-        if (!seat) {
-          rowSeats.push(null);
-          continue;
-        }
-        const displayId = this.formatDisplaySeatId(seat);
-        rowSeats.push({
-          id: displayId,
-          label: displayId,
-          status: this.mapSeatStatus(seat, occupiedSet),
-        });
-      }
-
-      rows.push({
-        row: rowNum++,
-        full: chunk.length >= seatsPerRow,
-        seats: rowSeats,
-      });
-    }
-
-    return rows;
   }
 
   private mapSeatStatus(seat: TbSeat, occupiedSet: Set<number>): FeSeatStatus {

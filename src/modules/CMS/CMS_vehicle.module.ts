@@ -7,10 +7,11 @@ import { AuthModule } from '../auth.module';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
+import { TbBooking } from '../../entities/sales/booking.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TbTrip, TbRoad]),
+    TypeOrmModule.forFeature([TbTrip, TbRoad, TbBooking]),
     AuthModule,
     CompanyModule,
   ],

@@ -32,6 +32,14 @@ import {
 import { TbSeat } from '../../entities/seat.entity';
 import { EntityStatus } from '../../assets/constants/company.constants';
 import { parsePositiveInt } from '../../common/helpers/common.helper';
+import {
+  buildVehicleLayout,
+  normalizeVehicleLayoutConfig,
+  parseStoredLayoutConfig,
+  VehicleLayoutConfig,
+} from '../../common/seat-layout/seat-layout';
+import { TbBooking } from '../../entities/sales/booking.entity';
+import { BookingStatus } from '../../assets/constants/sales.constants';
 
 type NormalizedVehiclePayload = UpdateVehicleDto & {
   code?: string;
@@ -43,6 +51,7 @@ type NormalizedVehiclePayload = UpdateVehicleDto & {
 type VehicleResponseOptions = {
   seatType?: string;
   seatCount?: number;
+  layoutConfig?: VehicleLayoutConfig;
   trips?: TbTrip[];
   roadMap?: Map<number, TbRoad>;
 };
@@ -56,6 +65,8 @@ export class CMSVehicleService {
     private readonly tripRepo: Repository<TbTrip>,
     @InjectRepository(TbRoad)
     private readonly roadRepo: Repository<TbRoad>,
+    @InjectRepository(TbBooking)
+    private readonly bookingRepo: Repository<TbBooking>,
   ) {}
 
   async getVehicleById(
@@ -80,19 +91,24 @@ export class CMSVehicleService {
     user: UserDecoratorDtoResponse,
   ): Promise<VehicleResponseDto> {
     try {
-      this.assertSeatPayload(payload);
-      const normalized = this.normalizePayload(payload, true);
+      const layout = this.resolveVehicleLayout(payload);
+      const normalized = {
+        ...this.normalizePayload(payload, true),
+        seatCount: layout.seatCount,
+        layoutConfig: layout.config,
+      };
       const vehicle = await this.vehicleService.create(
         user,
         normalized as CreateVehicleDto,
       );
-      await this.syncSeatsForVehicle(user, vehicle, payload);
+      await this.syncSeatsForVehicle(user, vehicle, layout.config);
       const [item] = await this.enrichVehicles(
         user,
         [await this.vehicleService.findOne(user, vehicle.id)],
         {
-          seatType: this.trimOptional(payload.seatType),
-          seatCount: parsePositiveInt(payload.seatCount),
+          seatType: layout.config.seatType,
+          seatCount: layout.seatCount,
+          layoutConfig: layout.config,
         },
       );
       return item;
@@ -106,36 +122,43 @@ export class CMSVehicleService {
     user: UserDecoratorDtoResponse,
   ): Promise<VehicleResponseDto> {
     try {
-      const parsedSeatCount = parsePositiveInt(payload.seatCount);
-      const normalized = this.normalizePayload(payload, false);
+      const existing = await this.vehicleService.findOne(user, payload.id);
+      const shouldSyncLayout =
+        payload.layoutPreset !== undefined ||
+        payload.layoutConfig !== undefined ||
+        payload.seatType !== undefined ||
+        payload.seatCount !== undefined;
+      const layout = shouldSyncLayout
+        ? this.resolveVehicleLayout(payload, existing)
+        : undefined;
+
+      if (layout) {
+        await this.assertNoActiveBookingsForLayoutChange(existing.id);
+      }
+
+      const normalized = {
+        ...this.normalizePayload(payload, false),
+        ...(layout
+          ? { seatCount: layout.seatCount, layoutConfig: layout.config }
+          : {}),
+      };
       const vehicle = await this.vehicleService.update(
         user,
         payload.id,
         normalized,
       );
 
-      if (
-        parsedSeatCount !== undefined ||
-        this.trimOptional(payload.seatType)
-      ) {
-        await this.syncSeatsForVehicle(user, vehicle, {
-          ...payload,
-          seatCount: parsedSeatCount ?? payload.seatCount,
-        });
-
-        if (parsedSeatCount !== undefined) {
-          await this.vehicleService.update(user, payload.id, {
-            seatCount: parsedSeatCount,
-          });
-        }
+      if (layout) {
+        await this.syncSeatsForVehicle(user, vehicle, layout.config);
       }
 
       const [item] = await this.enrichVehicles(
         user,
         [await this.vehicleService.findOne(user, vehicle.id)],
         {
-          seatType: this.trimOptional(payload.seatType),
-          seatCount: parsedSeatCount,
+          seatType: layout?.config.seatType,
+          seatCount: layout?.seatCount,
+          layoutConfig: layout?.config,
         },
       );
       return item;
@@ -164,7 +187,10 @@ export class CMSVehicleService {
   private async enrichVehicles(
     user: UserDecoratorDtoResponse,
     vehicles: TbVehicle[],
-    responseOptions?: Pick<VehicleResponseOptions, 'seatType' | 'seatCount'>,
+    responseOptions?: Pick<
+      VehicleResponseOptions,
+      'seatType' | 'seatCount' | 'layoutConfig'
+    >,
   ): Promise<CmsVehicleEntityDto[]> {
     if (vehicles.length === 0) {
       return [];
@@ -239,6 +265,13 @@ export class CMSVehicleService {
         activeSeats.length,
         options?.seatCount ?? 0,
       ),
+      layoutPreset:
+        options?.layoutConfig?.preset ??
+        parseStoredLayoutConfig(vehicle.layoutConfig)?.preset,
+      layoutConfig:
+        options?.layoutConfig ??
+        parseStoredLayoutConfig(vehicle.layoutConfig) ??
+        null,
     };
   }
 
@@ -328,6 +361,7 @@ export class CMSVehicleService {
     const name = payload.name?.trim() || '';
     const status = payload.status?.trim() || '';
     const seatCount = parsePositiveInt(payload.seatCount);
+    const layoutConfig = parseStoredLayoutConfig(payload.layoutConfig);
 
     if (requireRequiredFields) {
       if (!code) {
@@ -358,6 +392,7 @@ export class CMSVehicleService {
       ...(name !== undefined ? { name } : {}),
       ...(status !== undefined ? { status } : {}),
       ...(seatCount !== undefined ? { seatCount } : {}),
+      ...(layoutConfig !== undefined ? { layoutConfig } : {}),
       ...(payload.image !== undefined
         ? { image: this.trimOptional(payload.image) }
         : {}),
@@ -375,104 +410,32 @@ export class CMSVehicleService {
     return trimmed ? trimmed : undefined;
   }
 
-  private assertSeatPayload(payload: CreateVehiclePayloadDto): void {
-    if (!this.trimOptional(payload.seatType)) {
-      throw new BadRequestException(
-        CmsVehicleValidationMessage.SEAT_TYPE_EMPTY,
-      );
-    }
-
-    if (parsePositiveInt(payload.seatCount) === undefined) {
-      throw new BadRequestException(CmsVehicleValidationMessage.SEAT_COUNT_MIN);
-    }
-  }
-
   private async syncSeatsForVehicle(
     user: UserDecoratorDtoResponse,
     vehicle: TbVehicle,
-    payload: CreateVehiclePayloadDto | UpdateVehiclePayloadDto,
+    layoutConfig: VehicleLayoutConfig,
   ): Promise<TbSeat[]> {
-    const allSeats = await this.seatService.findByVehicle(
+    const layout = buildVehicleLayout(layoutConfig);
+    await this.seatService.removeAllByVehicle(
       user,
       vehicle.companyId,
       vehicle.id,
     );
-    let activeSeats = this.sortSeatsByOrdinalAsc(
-      allSeats.filter((seat) => seat.status === EntityStatus.ACTIVE),
-    );
-    const targetCount =
-      parsePositiveInt(payload.seatCount) ?? activeSeats.length;
-    const targetType =
-      this.trimOptional(payload.seatType) ?? activeSeats[0]?.type;
 
-    if (targetCount > 0 && !targetType) {
-      throw new BadRequestException(
-        CmsVehicleValidationMessage.SEAT_TYPE_EMPTY,
-      );
-    }
-
-    if (targetCount > activeSeats.length) {
-      const maxOrdinal = this.getMaxSeatOrdinal(activeSeats);
-      const createdSeats = await this.seatService.createBatch(user, {
-        companyId: vehicle.companyId,
-        vehicleId: vehicle.id,
-        seats: this.buildSeatItems(
-          targetType,
-          targetCount - activeSeats.length,
-          maxOrdinal,
-        ),
-      });
-      activeSeats = this.sortSeatsByOrdinalAsc([
-        ...activeSeats,
-        ...createdSeats,
-      ]);
-    }
-
-    if (targetCount < activeSeats.length) {
-      const removeCount = activeSeats.length - targetCount;
-      const seatsToRemove = this.sortSeatsByOrdinalDesc(activeSeats).slice(
-        0,
-        removeCount,
-      );
-
-      for (const seat of seatsToRemove) {
-        await this.seatService.remove(user, seat.id, vehicle.companyId);
-      }
-
-      const removedIds = new Set(seatsToRemove.map((seat) => seat.id));
-      activeSeats = activeSeats.filter((seat) => !removedIds.has(seat.id));
-    }
-
-    activeSeats = this.sortSeatsByOrdinalAsc(activeSeats);
-    await Promise.all(
-      activeSeats.map((seat, index) =>
-        this.seatService.update(user, seat.id, vehicle.companyId, {
-          name: this.buildSeatName(targetType, index + 1),
-          index: String(index + 1),
-          type: targetType,
-          description: seat.description ?? 'Ghe mac dinh',
+    return this.seatService.createBatch(user, {
+      companyId: vehicle.companyId,
+      vehicleId: vehicle.id,
+      seats: layout.seatCells.map((cell) => ({
+        name: cell.label,
+        index: String(cell.ordinal),
+        type: layout.config.seatType,
+        description: JSON.stringify({
+          floor: cell.floor,
+          row: cell.row,
+          column: cell.column,
         }),
-      ),
-    );
-
-    return activeSeats;
-  }
-
-  private buildSeatItems(seatType: string, count: number, startOffset: number) {
-    return Array.from({ length: count }, (_, index) => {
-      const ordinal = startOffset + index + 1;
-      return {
-        name: this.buildSeatName(seatType, ordinal),
-        index: String(ordinal),
-        type: seatType,
-        description: 'Ghe mac dinh',
-      };
+      })),
     });
-  }
-
-  private buildSeatName(seatType: string, ordinal: number): string {
-    const prefix = seatType.trim().charAt(0).toUpperCase() || 'S';
-    return `${prefix}-${ordinal}`;
   }
 
   private getSeatOrdinal(seat: TbSeat): number {
@@ -485,23 +448,64 @@ export class CMSVehicleService {
     return match ? Number(match[1]) : 0;
   }
 
-  private getMaxSeatOrdinal(seats: TbSeat[]): number {
-    return seats.reduce(
-      (max, seat) => Math.max(max, this.getSeatOrdinal(seat)),
-      0,
-    );
-  }
-
   private sortSeatsByOrdinalAsc(seats: TbSeat[]): TbSeat[] {
     return [...seats].sort(
       (a, b) => this.getSeatOrdinal(a) - this.getSeatOrdinal(b),
     );
   }
 
-  private sortSeatsByOrdinalDesc(seats: TbSeat[]): TbSeat[] {
-    return [...seats].sort(
-      (a, b) => this.getSeatOrdinal(b) - this.getSeatOrdinal(a),
+  private resolveVehicleLayout(
+    payload: CreateVehiclePayloadDto | UpdateVehiclePayloadDto,
+    existing?: TbVehicle,
+  ) {
+    const existingConfig = parseStoredLayoutConfig(existing?.layoutConfig);
+    const config = normalizeVehicleLayoutConfig(
+      {
+        ...(existingConfig ?? {}),
+        ...(payload.layoutConfig ?? {}),
+        preset:
+          payload.layoutPreset ??
+          payload.layoutConfig?.preset ??
+          existingConfig?.preset,
+        seatType:
+          this.trimOptional(payload.seatType) ??
+          payload.layoutConfig?.seatType ??
+          existingConfig?.seatType,
+      },
+      {
+        seatType:
+          this.trimOptional(payload.seatType) ?? existingConfig?.seatType,
+        seatCount: parsePositiveInt(payload.seatCount) ?? existing?.seatCount,
+        vehicleType: payload.type ?? existing?.type,
+      },
     );
+
+    return buildVehicleLayout(config);
+  }
+
+  private async assertNoActiveBookingsForLayoutChange(
+    vehicleId: number,
+  ): Promise<void> {
+    const trips = await this.tripRepo.find({ where: { vehicleId } });
+    const tripIds = trips.map((trip) => trip.id);
+    if (tripIds.length === 0) return;
+
+    const activeBooking = await this.bookingRepo.findOne({
+      where: {
+        tripId: In(tripIds),
+        status: In([
+          BookingStatus.HOLD,
+          BookingStatus.CONVERTED,
+          BookingStatus.CONFIRMED,
+        ]),
+      },
+    });
+
+    if (activeBooking) {
+      throw new BadRequestException(
+        'Không thể đổi sơ đồ ghế khi xe đã có booking đang hoạt động',
+      );
+    }
   }
 
   private rethrow(error: unknown): never {

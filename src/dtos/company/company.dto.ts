@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EntityStatus } from '../../assets/constants/company.constants';
+import { VehicleLayoutConfig } from '../../common/seat-layout/seat-layout';
 
 export class CreateCompanyDto {
   @ApiProperty({ example: 'Nhà xe Phương Trang' })
@@ -222,6 +223,9 @@ export class CreateVehicleDto {
 
   @ApiProperty({ example: 40 })
   seatCount: number;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  layoutConfig?: VehicleLayoutConfig | null;
 }
 
 export class UpdateVehicleDto {
@@ -248,6 +252,9 @@ export class UpdateVehicleDto {
 
   @ApiPropertyOptional({ example: 40 })
   seatCount?: number;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  layoutConfig?: VehicleLayoutConfig | null;
 }
 
 export class CreateDriverDto {
