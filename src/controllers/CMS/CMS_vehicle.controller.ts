@@ -39,7 +39,7 @@ export class CMSVehicleController {
   @Get()
   @ApiOperation({
     summary:
-      'Danh sách phương tiện CMS (xe + ghế + trip + driver + company_trip)',
+      'Danh sách phương tiện CMS (xe + ghế + trip + driver)',
   })
   @ApiResponse({ status: 200, type: CmsVehicleListResponseDto })
   findAll(@User() user: UserDecoratorDtoResponse) {

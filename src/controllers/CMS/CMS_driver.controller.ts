@@ -36,7 +36,7 @@ export class CMSDriverController {
 
   @Get()
   @ApiOperation({
-    summary: 'Danh sách tài xế CMS (tài xế + xe + trip + company_trip)',
+    summary: 'Danh sách tài xế CMS (tài xế + xe + trip)',
   })
   @ApiResponse({ status: 200, type: CmsDriverListResponseDto })
   findAll(@User() user: UserDecoratorDtoResponse) {
@@ -45,7 +45,7 @@ export class CMSDriverController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Chi tiết tài xế CMS theo ID (tài xế + xe + trip + company_trip)',
+    summary: 'Chi tiết tài xế CMS theo ID (tài xế + xe + trip)',
   })
   @ApiResponse({ status: 200, type: CmsDriverDetailResponseDto })
   findOne(

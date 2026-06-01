@@ -6,9 +6,6 @@ export class CreateTicketDto {
   companyId: number;
 
   @ApiProperty({ example: 1 })
-  companyTripId: number;
-
-  @ApiProperty({ example: 1 })
   tripId: number;
 
   @ApiProperty({ example: 'USR001', description: 'userCode khách' })

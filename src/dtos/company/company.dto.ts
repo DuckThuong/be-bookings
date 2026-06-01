@@ -302,61 +302,6 @@ export class UpdateDriverDto {
   status?: string;
 }
 
-export class CreateCompanyTripDto {
-  @ApiProperty({ example: 1, description: 'ID nhà xe' })
-  companyId: number;
-
-  @ApiProperty({ example: 1, description: 'ID chuyến mẫu (tb_trip)' })
-  tripId: number;
-
-  @ApiProperty({ example: 1, description: 'ID phương tiện' })
-  vehicleId: number;
-
-  @ApiProperty({ example: 1, description: 'ID tài xế' })
-  driverId: number;
-
-  @ApiProperty({ example: 40 })
-  totalSeat: number;
-
-  @ApiPropertyOptional({ example: 0 })
-  totalSeatBooked?: number;
-
-  @ApiProperty({ example: 350000 })
-  pricePerSeat: number;
-
-  @ApiPropertyOptional()
-  description?: string;
-
-  @ApiPropertyOptional({ enum: EntityStatus })
-  status?: string;
-}
-
-export class UpdateCompanyTripDto {
-  @ApiPropertyOptional()
-  tripId?: number;
-
-  @ApiPropertyOptional()
-  vehicleId?: number;
-
-  @ApiPropertyOptional()
-  driverId?: number;
-
-  @ApiPropertyOptional()
-  totalSeat?: number;
-
-  @ApiPropertyOptional()
-  totalSeatBooked?: number;
-
-  @ApiPropertyOptional()
-  pricePerSeat?: number;
-
-  @ApiPropertyOptional()
-  description?: string;
-
-  @ApiPropertyOptional({ enum: EntityStatus })
-  status?: string;
-}
-
 export class CreateSeatDto {
   @ApiProperty({ example: 1, description: 'ID nhà xe (kiểm tra quyền)' })
   companyId: number;
@@ -413,6 +358,5 @@ export class CompanyOverviewDto {
   tripCount: number;
   vehicleCount: number;
   driverCount: number;
-  companyTripCount: number;
   seatCount: number;
 }

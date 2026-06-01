@@ -8,7 +8,7 @@ import { TbPayment } from '../../entities/sales/payment.entity';
 import { TbCommission } from '../../entities/sales/commission.entity';
 import { PaymentRepository } from '../../repositories/sales/payment.repository';
 import { TicketRepository } from '../../repositories/ticket.repository';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
+import { TripRepository } from '../../repositories/trip.repository';
 import { CommissionRepository } from '../../repositories/sales/commission.repository';
 import {
   BookingStatus,
@@ -36,7 +36,7 @@ export class PaymentService {
     private readonly paymentRepository: PaymentRepository,
     private readonly ticketRepository: TicketRepository,
     private readonly bookingRepository: BookingRepository,
-    private readonly companyTripRepository: CompanyTripRepository,
+    private readonly tripRepository: TripRepository,
     private readonly commissionRepository: CommissionRepository,
     private readonly companyAccess: CompanyAccessService,
   ) {}
@@ -61,7 +61,7 @@ export class PaymentService {
     return this.paymentRepository.save({
       code: generateEntityCode(SALES_CODE_PREFIX.PAYMENT),
       ticketId: ticket.id,
-      companyTripId: ticket.companyTripId,
+      tripId: ticket.tripId,
       companyId: ticket.companyId,
       customerId: ticket.customerId,
       amount: ticket.totalPrice,
@@ -77,7 +77,7 @@ export class PaymentService {
     user: UserDecoratorDtoResponse,
     filter: {
       companyId?: number;
-      companyTripId?: number;
+      tripId?: number;
       customerId?: string;
       status?: string;
     },
@@ -140,15 +140,10 @@ export class PaymentService {
       });
     }
 
-    const companyTrip = await this.companyTripRepository.findById(
-      payment.companyTripId,
+    await this.tripRepository.incrementBookedSeats(
+      ticket.tripId,
+      ticket.totalSeat,
     );
-    if (companyTrip) {
-      await this.companyTripRepository.update(companyTrip.id, {
-        totalSeatBooked: companyTrip.totalSeatBooked + ticket.totalSeat,
-        totalPrice: Number(companyTrip.totalPrice) + Number(ticket.totalPrice),
-      });
-    }
 
     let commission: TbCommission | null = null;
     if (payload.commissionRate !== undefined && payload.commissionRate > 0) {

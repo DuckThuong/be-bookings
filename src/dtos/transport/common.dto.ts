@@ -43,7 +43,7 @@ export class TicketFilterQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  companyTripId?: number;
+  tripId?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

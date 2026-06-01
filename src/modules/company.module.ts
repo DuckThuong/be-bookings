@@ -5,7 +5,6 @@ import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
 import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
-import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbSeat } from '../entities/seat.entity';
 import { TbTicket } from '../entities/ticket.entity';
 import { CompanyController } from '../controllers/company.controller';
@@ -14,7 +13,6 @@ import { TripController } from '../controllers/trip.controller';
 import { VehicleController } from '../controllers/vehicle.controller';
 import { DriverController } from '../controllers/driver.controller';
 import { SeatController } from '../controllers/seat.controller';
-import { CompanyTripController } from '../controllers/company-trip.controller';
 import { TicketController } from '../controllers/ticket.controller';
 import { CompanyService } from '../services/company.service';
 import { RoadService } from '../services/road.service';
@@ -22,7 +20,6 @@ import { TripService } from '../services/trip.service';
 import { VehicleService } from '../services/vehicle.service';
 import { DriverService } from '../services/driver.service';
 import { SeatService } from '../services/seat.service';
-import { CompanyTripService } from '../services/company-trip.service';
 import { TicketService } from '../services/ticket.service';
 import { CompanyAccessService } from '../services/company-access.service';
 import { CompanyRepository } from '../repositories/company.repository';
@@ -31,7 +28,6 @@ import { TripRepository } from '../repositories/trip.repository';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { DriverRepository } from '../repositories/driver.repository';
 import { SeatRepository } from '../repositories/seat.repository';
-import { CompanyTripRepository } from '../repositories/company-trip.repository';
 import { TicketRepository } from '../repositories/ticket.repository';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { AuthModule } from './auth.module';
@@ -44,7 +40,6 @@ import { AuthModule } from './auth.module';
       TbTrip,
       TbVehicle,
       TbDriver,
-      TbCompanyTrip,
       TbSeat,
       TbTicket,
     ]),
@@ -57,7 +52,6 @@ import { AuthModule } from './auth.module';
     VehicleController,
     DriverController,
     SeatController,
-    CompanyTripController,
     TicketController,
   ],
   providers: [
@@ -67,7 +61,6 @@ import { AuthModule } from './auth.module';
     VehicleService,
     DriverService,
     SeatService,
-    CompanyTripService,
     TicketService,
     CompanyAccessService,
     CompanyRepository,
@@ -76,7 +69,6 @@ import { AuthModule } from './auth.module';
     VehicleRepository,
     DriverRepository,
     SeatRepository,
-    CompanyTripRepository,
     TicketRepository,
     RolesGuard,
   ],
@@ -88,10 +80,9 @@ import { AuthModule } from './auth.module';
     VehicleService,
     DriverService,
     SeatService,
-    CompanyTripService,
     TicketService,
     CompanyRepository,
-    CompanyTripRepository,
+    TripRepository,
     SeatRepository,
     TicketRepository,
     TypeOrmModule,

@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TbCompanyTripStat } from '../../entities/sales/company-trip-stat.entity';
+import { TbTripStat } from '../../entities/sales/trip-stat.entity';
 
 @Injectable()
-export class CompanyTripStatRepository {
+export class TripStatRepository {
   constructor(
-    @InjectRepository(TbCompanyTripStat)
-    private readonly repo: Repository<TbCompanyTripStat>,
+    @InjectRepository(TbTripStat)
+    private readonly repo: Repository<TbTripStat>,
   ) {}
 
   findById(id: number) {
     return this.repo.findOne({ where: { id } });
   }
 
-  findByTripAndDate(companyTripId: number, statDate: string) {
-    return this.repo.findOne({ where: { companyTripId, statDate } });
+  findByTripAndDate(tripId: number, statDate: string) {
+    return this.repo.findOne({ where: { tripId, statDate } });
   }
 
   findByCompany(companyId: number) {
@@ -25,18 +25,18 @@ export class CompanyTripStatRepository {
     });
   }
 
-  findByCompanyTrip(companyTripId: number) {
+  findByTrip(tripId: number) {
     return this.repo.find({
-      where: { companyTripId },
+      where: { tripId },
       order: { statDate: 'DESC' },
     });
   }
 
-  save(data: Partial<TbCompanyTripStat>) {
+  save(data: Partial<TbTripStat>) {
     return this.repo.save(this.repo.create(data));
   }
 
-  update(id: number, data: Partial<TbCompanyTripStat>) {
+  update(id: number, data: Partial<TbTripStat>) {
     return this.repo.update({ id }, data);
   }
 }

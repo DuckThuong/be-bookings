@@ -55,9 +55,6 @@ export class SeatSelectionTripDto {
   tripId: string;
 
   @ApiProperty()
-  companyTripId: number;
-
-  @ApiProperty()
   from: string;
 
   @ApiProperty()

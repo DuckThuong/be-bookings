@@ -340,8 +340,7 @@ export class DashboardRepository {
   ): Promise<DashboardTopRouteRow[]> {
     const rows = await this.paymentRepo
       .createQueryBuilder('p')
-      .innerJoin('tb_company_trip', 'ct', 'ct.id = p.companyTripId')
-      .innerJoin('tb_trip', 't', 't.id = ct.tripId')
+      .innerJoin('tb_trip', 't', 't.id = p.tripId')
       .innerJoin('tb_road', 'r', 'r.id = t.roadId')
       .select(
         "CONCAT(r.startPoint, ' → ', r.endPoint)",

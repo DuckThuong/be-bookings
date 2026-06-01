@@ -29,10 +29,6 @@ export class TicketService {
     payload: CreateTicketDto,
   ): Promise<TbTicket> {
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
-    await this.companyAccess.assertCompanyTripBelongsToCompany(
-      payload.companyId,
-      payload.companyTripId,
-    );
     await this.companyAccess.assertTripBelongsToCompany(
       payload.companyId,
       payload.tripId,
@@ -45,7 +41,6 @@ export class TicketService {
     return this.ticketRepository.save({
       code: generateEntityCode(CODE_PREFIX.TICKET),
       companyId: payload.companyId,
-      companyTripId: payload.companyTripId,
       tripId: payload.tripId,
       customerId: payload.customerId,
       pricePerSeat: payload.pricePerSeat,
@@ -64,7 +59,7 @@ export class TicketService {
     user: UserDecoratorDtoResponse,
     filter: {
       companyId?: number;
-      companyTripId?: number;
+      tripId?: number;
       customerId?: string;
     },
   ): Promise<TbTicket[]> {

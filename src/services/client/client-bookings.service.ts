@@ -13,6 +13,7 @@ import {
   CLIENT_BOOKING_META,
   CLIENT_BOOKING_VEHICLE_DISPLAY,
   PAYMENT_METHOD_LABELS,
+  type ClientCatalogVehicle,
 } from '../../assets/config/client-booking.config';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
 import {
@@ -49,7 +50,6 @@ import {
   toClientBookingStatusFe,
 } from '../../common/helpers/client-booking-status.helper';
 import { CompanyAccessService } from '../company-access.service';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
 import { ClientBookingPricingService } from './client-booking-pricing.service';
 import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
@@ -64,7 +64,6 @@ export class ClientBookingsService {
     private readonly ticketRepository: TicketRepository,
     private readonly paymentRepository: PaymentRepository,
     private readonly companyAccess: CompanyAccessService,
-    private readonly companyTripRepository: CompanyTripRepository,
     @InjectRepository(TbInfoUser)
     private readonly infoUserRepo: Repository<TbInfoUser>,
   ) {}
@@ -77,17 +76,17 @@ export class ClientBookingsService {
     const ctx = await this.tripResolver.resolve(tripId.trim());
 
     if (user.role !== UserRole.USER) {
-      await this.companyAccess.assertCompanyAccess(
-        user,
-        ctx.companyTrip.companyId,
-      );
+      await this.companyAccess.assertCompanyAccess(user, ctx.trip.companyId);
     }
 
     const defaultVehicleType = this.tripResolver.inferVehicleType(
       ctx.vehicle.seatCount,
       ctx.vehicle.type,
     );
-    const defaultFloor = query.floor ?? 1;
+    const defaultFloor = this.clampFloor(
+      query.floor ?? 1,
+      this.resolveVehicleCatalog(defaultVehicleType),
+    );
     const tripDto = this.tripResolver.buildTripDto(ctx);
     const displayDate = this.resolveDisplayDate(query.date, tripDto.date);
 
@@ -126,7 +125,6 @@ export class ClientBookingsService {
         breadcrumb: [...CLIENT_BOOKING_BREADCRUMB],
         trip: {
           tripId: tripDto.tripId,
-          companyTripId: ctx.companyTrip.id,
           from: tripDto.from,
           to: tripDto.to,
           operatorCode: tripDto.operatorCode,
@@ -185,11 +183,11 @@ export class ClientBookingsService {
     await this.assertBookingOwner(user, booking);
     await this.assertHoldNotExpired(booking);
 
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
 
     if (payload.tripId?.trim()) {
       const requested = await this.tripResolver.resolve(payload.tripId.trim());
-      if (requested.companyTrip.id !== booking.companyTripId) {
+      if (requested.trip.id !== booking.tripId) {
         throw new HttpException(
           ClientErrorMessage.TRIP_MISMATCH,
           HttpStatus.BAD_REQUEST,
@@ -197,18 +195,20 @@ export class ClientBookingsService {
       }
     }
 
-    const vehicleType = booking.vehicleType ?? payload.vehicleType;
-    const floor = booking.floor ?? payload.floor ?? 1;
-    if (booking.vehicleType && booking.vehicleType !== payload.vehicleType) {
-      throw new HttpException(
-        ClientErrorMessage.HOLD_VEHICLE_MISMATCH,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    const vehicleType = this.resolveVehicleType(ctx);
+    const vehicleCatalog = this.resolveVehicleCatalog(vehicleType);
+    const payloadFloor =
+      payload.floor != null
+        ? this.clampFloor(payload.floor, vehicleCatalog)
+        : undefined;
+    const floor = this.clampFloor(
+      booking.floor ?? payloadFloor ?? 1,
+      vehicleCatalog,
+    );
     if (
       booking.floor != null &&
-      payload.floor != null &&
-      booking.floor !== payload.floor
+      payloadFloor != null &&
+      this.clampFloor(booking.floor, vehicleCatalog) !== payloadFloor
     ) {
       throw new HttpException(
         ClientErrorMessage.HOLD_VEHICLE_MISMATCH,
@@ -278,16 +278,16 @@ export class ClientBookingsService {
     if (user.role !== UserRole.USER) {
       await this.companyAccess.assertCompanyAccess(
         user,
-        ctx.companyTrip.companyId,
+        ctx.trip.companyId,
       );
     }
 
-    const floor = payload.floor ?? 1;
-    const seatMap = await this.seatMapService.buildSeatMap(
-      ctx,
-      payload.vehicleType,
-      floor,
+    const vehicleType = this.resolveVehicleType(ctx);
+    const floor = this.clampFloor(
+      payload.floor ?? 1,
+      this.resolveVehicleCatalog(vehicleType),
     );
+    const seatMap = await this.seatMapService.buildSeatMap(ctx, floor);
 
     let numericSeatIds: number[];
     try {
@@ -338,7 +338,7 @@ export class ClientBookingsService {
     }
 
     const remaining =
-      ctx.companyTrip.totalSeat - ctx.companyTrip.totalSeatBooked;
+      ctx.vehicle.seatCount - (ctx.trip.bookedSeats ?? 0);
     if (payload.seatIds.length > remaining) {
       throw new HttpException(
         ClientErrorMessage.NOT_ENOUGH_SEATS,
@@ -364,8 +364,7 @@ export class ClientBookingsService {
 
     const booking = await this.bookingRepository.save({
       code: generateEntityCode(SALES_CODE_PREFIX.BOOKING),
-      companyId: ctx.companyTrip.companyId,
-      companyTripId: ctx.companyTrip.id,
+      companyId: ctx.trip.companyId,
       tripId: ctx.trip.id,
       customerId,
       seatIds: numericSeatIds,
@@ -379,7 +378,7 @@ export class ClientBookingsService {
       promoCode: pricing.promoCode ?? undefined,
       addons: normalizedAddons,
       passenger: payload.passenger ?? null,
-      vehicleType: payload.vehicleType,
+      vehicleType,
       floor,
       status: BookingStatus.HOLD,
       holdExpiresAt,
@@ -404,7 +403,7 @@ export class ClientBookingsService {
     await this.assertBookingOwner(user, booking);
     await this.bookingRepository.update(booking.id, { passenger });
     const updated = await this.bookingRepository.findById(booking.id);
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
     return this.toBookingDraft(updated!, ctx);
   }
 
@@ -443,7 +442,7 @@ export class ClientBookingsService {
 
     await this.assertHoldNotExpired(booking);
 
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
 
     let ticket = booking.ticketId
       ? await this.ticketRepository.findById(booking.ticketId)
@@ -496,7 +495,7 @@ export class ClientBookingsService {
       payment = await this.paymentRepository.save({
         code: generateEntityCode(SALES_CODE_PREFIX.PAYMENT),
         ticketId: ticket.id,
-        companyTripId: booking.companyTripId,
+        tripId: booking.tripId,
         companyId: booking.companyId,
         customerId: booking.customerId,
         amount: booking.totalPrice,
@@ -552,7 +551,7 @@ export class ClientBookingsService {
 
     const payment = pickRepresentativePayment(payments);
 
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
 
     return this.toFeBookingSuccessResponse(
       await this.buildBookingResult(
@@ -574,7 +573,6 @@ export class ClientBookingsService {
     const ticket = await this.ticketRepository.save({
       code: generateEntityCode(CODE_PREFIX.TICKET),
       companyId: booking.companyId,
-      companyTripId: booking.companyTripId,
       tripId: booking.tripId,
       customerId: booking.customerId,
       pricePerSeat: booking.pricePerSeat,
@@ -612,8 +610,9 @@ export class ClientBookingsService {
     const dropoff = CLIENT_BOOKING_CATALOG.dropoffPoints.find(
       (p) => p.value === booking.passenger?.dropoffPoint,
     );
+    const vehicleType = this.resolveVehicleType(ctx);
     const vehicle = CLIENT_BOOKING_CATALOG.vehicles.find(
-      (v) => v.type === booking.vehicleType,
+      (v) => v.type === vehicleType,
     );
     const hasInsurance = (booking.addons ?? []).some(
       (a) => a.id === 'insurance',
@@ -637,7 +636,7 @@ export class ClientBookingsService {
       },
       ticket: {
         operatorShortName: ctx.company.code,
-        busType: vehicle?.label ?? booking.vehicleType ?? '',
+        busType: vehicle?.label ?? vehicleType,
         rating: 4.8,
         hasInsurance,
         departStation: pickup?.label ?? trip.from,
@@ -766,11 +765,7 @@ export class ClientBookingsService {
     booking: TbBooking,
     ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
   ) {
-    const map = await this.seatMapService.buildSeatMap(
-      ctx,
-      booking.vehicleType ?? '16',
-      booking.floor ?? 1,
-    );
+    const map = await this.seatMapService.buildSeatMap(ctx, booking.floor ?? 1);
     return (booking.seatIds ?? []).map((id) => ({
       id: map.seatIdToDisplayId.get(id) ?? String(id),
       label: map.seatIdToDisplayId.get(id) ?? String(id),
@@ -805,7 +800,7 @@ export class ClientBookingsService {
     return {
       holdId: booking.code,
       tripId: trip.tripId,
-      vehicleType: booking.vehicleType,
+      vehicleType: this.resolveVehicleType(ctx),
       floor: booking.floor ?? 1,
       seatIds: seats.map((s) => s.id),
       addons: booking.addons ?? [],
@@ -915,44 +910,61 @@ export class ClientBookingsService {
       }
     > = {};
 
-    for (const vehicle of CLIENT_BOOKING_CATALOG.vehicles) {
-      const display = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type];
-      const layouts: Record<
-        string,
-        Array<{
-          row: number;
-          full?: boolean;
-          seats: Array<{ id: string; status: string } | null>;
-        }>
-      > = {};
+    const vehicleType = this.resolveVehicleType(ctx);
+    const vehicle = this.resolveVehicleCatalog(vehicleType);
+    const display = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type];
+    const layouts: Record<
+      string,
+      Array<{
+        row: number;
+        full?: boolean;
+        seats: Array<{ id: string; status: string } | null>;
+      }>
+    > = {};
 
-      for (let floor = 1; floor <= vehicle.floors; floor++) {
-        const seatMap = await this.seatMapService.buildSeatMap(
-          ctx,
-          vehicle.type,
-          floor,
-        );
-        layouts[String(floor)] = seatMap.rows.map((row) => ({
-          row: row.row,
-          full: row.full,
-          seats: row.seats.map((seat) =>
-            seat ? { id: seat.id, status: seat.status } : null,
-          ),
-        }));
-      }
-
-      vehicles[vehicle.type] = {
-        label: vehicle.label,
-        icon: display?.icon ?? 'ti-bus',
-        mapTitle: display?.mapTitle ?? vehicle.label,
-        mapSub: display?.mapSub ?? '',
-        floors: vehicle.floors,
-        isSleeper: vehicle.isSleeper,
-        layouts,
-      };
+    for (let floor = 1; floor <= vehicle.floors; floor++) {
+      const seatMap = await this.seatMapService.buildSeatMap(ctx, floor);
+      layouts[String(floor)] = seatMap.rows.map((row) => ({
+        row: row.row,
+        full: row.full,
+        seats: row.seats.map((seat) =>
+          seat ? { id: seat.id, status: seat.status } : null,
+        ),
+      }));
     }
 
+    vehicles[vehicle.type] = {
+      label: vehicle.label,
+      icon: display?.icon ?? 'ti-bus',
+      mapTitle: display?.mapTitle ?? vehicle.label,
+      mapSub: display?.mapSub ?? '',
+      floors: vehicle.floors,
+      isSleeper: vehicle.isSleeper,
+      layouts,
+    };
+
     return vehicles;
+  }
+
+  private resolveVehicleType(
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ): string {
+    return this.tripResolver.inferVehicleType(
+      ctx.vehicle.seatCount,
+      ctx.vehicle.type,
+    );
+  }
+
+  private resolveVehicleCatalog(vehicleType: string): ClientCatalogVehicle {
+    return (
+      CLIENT_BOOKING_CATALOG.vehicles.find((item) => item.type === vehicleType) ??
+      CLIENT_BOOKING_CATALOG.vehicles[0]
+    );
+  }
+
+  private clampFloor(floor: number, vehicle: ClientCatalogVehicle): number {
+    const requested = Math.max(1, Math.floor(Number(floor) || 1));
+    return Math.min(requested, vehicle.floors);
   }
 
   private filterPointsByLocation<
