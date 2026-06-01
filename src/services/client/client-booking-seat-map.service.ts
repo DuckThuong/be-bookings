@@ -6,7 +6,7 @@ import { SeatRepository } from '../../repositories/seat.repository';
 import { ClientEnrichmentService } from '../client-enrichment.service';
 import { ResolvedTripContext } from './client-booking-trip-resolver.service';
 
-const SEATS_PER_ROW = 5;
+const SEATS_PER_ROW = 4;
 const AISLE_INDEX = 2;
 
 export type FeSeatStatus = 'available' | 'booked' | 'vip';
@@ -141,11 +141,13 @@ export class ClientBookingSeatMapService {
       } | null> = [];
 
       for (let col = 0; col < SEATS_PER_ROW; col++) {
-        if (col === AISLE_INDEX && chunk.length < SEATS_PER_ROW) {
+        const hasAislePlaceholder = chunk.length < SEATS_PER_ROW;
+        if (col === AISLE_INDEX && hasAislePlaceholder) {
           rowSeats.push(null);
           continue;
         }
-        const seatIndex = col > AISLE_INDEX ? col - 1 : col;
+        const seatIndex =
+          hasAislePlaceholder && col > AISLE_INDEX ? col - 1 : col;
         const seat = chunk[seatIndex];
         if (!seat) {
           rowSeats.push(null);
