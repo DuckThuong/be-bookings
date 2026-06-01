@@ -1,17 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import {
-  BookingStatus,
-  PaymentStatus,
-} from '../../assets/constants/sales.constants';
-import { TicketStatus } from '../../assets/constants/ticket.constants';
+import { resolveCmsBookingUiStatus } from '../../common/cms/booking-ui-status';
 import { CLIENT_BOOKING_CATALOG } from '../../assets/config/client-booking.config';
 import {
   CmsBookingListItemDto,
   CmsBookingListQueryDto,
   CmsBookingListResponseDto,
-  CmsBookingUiStatus,
   CmsBookingVehicleSidebarDto,
 } from '../../dtos/CMS/CMS_booking.dto';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
@@ -221,7 +216,7 @@ export class CMSBookingService {
         seats: seatLabels,
         seatCount: ticket?.totalSeat ?? seatLabels.length,
         amount: Number(payment.amount),
-        status: this.resolveUiStatus(payment, ticket, booking),
+        status: resolveCmsBookingUiStatus(payment, ticket, booking),
         bookedAt: this.formatDateTime(payment.createdAt),
         note: '',
         pickup: PICKUP_LABELS[passenger?.pickupPoint ?? ''] ?? passenger?.pickupPoint ?? '—',
@@ -232,38 +227,6 @@ export class CMSBookingService {
         paymentMethod: booking?.paymentMethodId ?? payment.method,
       };
     });
-  }
-
-  private resolveUiStatus(
-    payment: TbPayment,
-    ticket: TbTicket | null,
-    booking: TbBooking | null,
-  ): CmsBookingUiStatus {
-    if (
-      payment.status === PaymentStatus.FAILED ||
-      booking?.status === BookingStatus.CANCELLED ||
-      ticket?.status === TicketStatus.CANCELLED
-    ) {
-      return 'cancelled';
-    }
-
-    if (
-      booking?.status === BookingStatus.CONFIRMED &&
-      ticket?.status === TicketStatus.PAID &&
-      payment.status === PaymentStatus.SUCCESS
-    ) {
-      return 'confirmed';
-    }
-
-    if (
-      payment.status === PaymentStatus.PENDING ||
-      ticket?.status === TicketStatus.PENDING ||
-      booking?.status === BookingStatus.CONVERTED
-    ) {
-      return 'pending';
-    }
-
-    return 'pending';
   }
 
   private applyListFilters(

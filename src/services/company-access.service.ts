@@ -25,6 +25,7 @@ import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { CmsTripValidationMessage } from '../assets/messages/cms-trip.message';
 import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { CmsRoadValidationMessage } from "../assets/messages/cms-road.message";
+import { DashboardScope } from '../common/helpers/dashboard-scope.helper';
 
 @Injectable()
 export class CompanyAccessService {
@@ -59,6 +60,37 @@ export class CompanyAccessService {
     }
 
     throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
+  }
+
+  /**
+   * Phạm vi dashboard: admin = toàn hệ thống (hoặc 1 company nếu truyền companyId),
+   * owner = chỉ nhà xe của user.
+   */
+  async resolveDashboardScope(
+    user: UserDecoratorDtoResponse,
+    companyId?: number,
+  ): Promise<DashboardScope> {
+    if (user.role === UserRole.ADMIN) {
+      if (companyId != null) {
+        await this.assertCompanyAccess(user, companyId);
+        return { type: 'platform', companyId };
+      }
+      return { type: 'platform' };
+    }
+
+    if (user.role === UserRole.OWNER) {
+      const ownerCompanyId = await this.resolveCompanyIdForUser(user);
+      if (companyId != null && companyId !== ownerCompanyId) {
+        throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
+      }
+      return { type: 'company', companyId: ownerCompanyId };
+    }
+
+    throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
+  }
+
+  isPlatformScope(scope: DashboardScope): boolean {
+    return scope.type === 'platform' && scope.companyId == null;
   }
 
   async resolveCompanyIdForUser(
