@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -22,7 +21,6 @@ import {
 import { User } from '../user.decorator';
 import { TripService } from '../services/trip.service';
 import { CreateTripDto, UpdateTripDto } from '../dtos/company/company.dto';
-import { CompanyErrorMessage } from '../assets/messages/company.message';
 
 @ApiTags('Trip')
 @Controller('trips')
@@ -42,16 +40,12 @@ export class TripController {
   @ApiOperation({ summary: 'Danh sách chuyến (theo companyId hoặc roadId)' })
   findAll(
     @User() user: UserDecoratorDtoResponse,
-    @Query('companyId') companyId?: string,
     @Query('roadId') roadId?: string,
   ) {
     if (roadId) {
       return this.tripService.findByRoad(user, parseInt(roadId, 10));
     }
-    if (companyId) {
-      return this.tripService.findAll(user, parseInt(companyId, 10));
-    }
-    throw new BadRequestException(CompanyErrorMessage.INVALID_REFERENCE);
+    return this.tripService.findAll(user);
   }
 
   @Get(':id')

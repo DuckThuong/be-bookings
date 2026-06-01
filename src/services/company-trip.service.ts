@@ -28,7 +28,7 @@ export class CompanyTripService {
     );
     await this.companyAccess.assertVehicleBelongsToCompany(
       payload.companyId,
-      payload.verhicalId,
+      payload.vehicleId,
     );
     await this.companyAccess.assertDriverBelongsToCompany(
       payload.companyId,
@@ -38,11 +38,11 @@ export class CompanyTripService {
     return this.companyTripRepository.save({
       companyId: payload.companyId,
       tripId: payload.tripId,
-      verhicalId: payload.verhicalId,
+      vehicleId: payload.vehicleId,
       driverId: payload.driverId,
       description: payload.description ?? '',
       totalSeat: payload.totalSeat,
-      totalSeatBooked: 0,
+      totalSeatBooked: payload.totalSeatBooked ?? 0,
       totalPrice: 0,
       pricePerSeat: payload.pricePerSeat,
       status: payload.status ?? EntityStatus.ACTIVE,
@@ -82,10 +82,10 @@ export class CompanyTripService {
         payload.tripId,
       );
     }
-    if (payload.verhicalId !== undefined) {
+    if (payload.vehicleId !== undefined) {
       await this.companyAccess.assertVehicleBelongsToCompany(
         current.companyId,
-        payload.verhicalId,
+        payload.vehicleId,
       );
     }
     if (payload.driverId !== undefined) {
@@ -108,5 +108,64 @@ export class CompanyTripService {
       status: EntityStatus.INACTIVE,
     });
     return { message: 'Đã vô hiệu hóa chuyến nhà xe' };
+  }
+
+  async findByVehicle(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    vehicleId: number,
+  ): Promise<TbCompanyTrip[]> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertVehicleBelongsToCompany(
+      companyId,
+      vehicleId,
+    );
+    return this.companyTripRepository.findByVehicleId(vehicleId);
+  }
+
+  async findByDriver(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    driverId: number,
+  ): Promise<TbCompanyTrip[]> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertDriverBelongsToCompany(companyId, driverId);
+    return this.companyTripRepository.findByDriverId(driverId);
+  }
+
+  async findByTrip(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    tripId: number,
+  ): Promise<TbCompanyTrip[]> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertTripBelongsToCompany(companyId, tripId);
+    return this.companyTripRepository.findByTripId(tripId);
+  }
+
+  async removeAllByVehicle(
+    user: UserDecoratorDtoResponse,
+    companyId: number,
+    vehicleId: number,
+  ): Promise<{ message: string; deactivatedCount: number }> {
+    await this.companyAccess.assertCompanyAccess(user, companyId);
+    await this.companyAccess.assertVehicleBelongsToCompany(
+      companyId,
+      vehicleId,
+    );
+
+    const trips = await this.companyTripRepository.findByVehicleId(vehicleId);
+    const activeCount = trips.filter(
+      (t) => t.status === EntityStatus.ACTIVE,
+    ).length;
+
+    if (trips.length > 0) {
+      await this.companyTripRepository.deactivateByVehicleId(vehicleId);
+    }
+
+    return {
+      message: 'Đã vô hiệu hóa tất cả chuyến khai thác của phương tiện',
+      deactivatedCount: activeCount > 0 ? activeCount : trips.length,
+    };
   }
 }

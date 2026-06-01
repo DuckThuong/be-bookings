@@ -1,8 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 import {
-  BookingStatus,
   PaymentStatus,
-  RefundStatus,
   SettlementStatus,
 } from '../../assets/constants/sales.constants';
 
@@ -57,9 +56,16 @@ export class CreatePaymentDto {
 
 export class ConfirmPaymentDto {
   @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   transactionRef?: string;
 
-  @ApiPropertyOptional({ example: 5, description: 'Tỷ lệ hoa hồng % (tạo commission)' })
+  @ApiPropertyOptional({
+    example: 5,
+    description: 'Tỷ lệ hoa hồng % (tạo commission)',
+  })
+  @IsOptional()
+  @IsNumber()
   commissionRate?: number;
 }
 

@@ -5,14 +5,19 @@ import { TbCompany } from '../entities/company/company.entity';
 import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbSeat } from '../entities/seat.entity';
 import { TbTicket } from '../entities/ticket.entity';
 import { TbPayment } from '../entities/sales/payment.entity';
 import { TbBooking } from '../entities/sales/booking.entity';
 import { TbRefund } from '../entities/sales/refund.entity';
-import { ClientCatalogRepository } from '../repositories/client-catalog.repository';
+import { BookingStatus } from '../assets/constants/sales.constants';
+import { TicketStatus } from '../assets/constants/ticket.constants';
+import {
+  pickRepresentativePayment,
+  resolveClientBookingStatus,
+} from '../common/helpers/client-booking-status.helper';
 
 export interface PaginatedResult<T> {
   items: T[];
@@ -33,8 +38,8 @@ export class ClientEnrichmentService {
     private readonly tripRepo: Repository<TbTrip>,
     @InjectRepository(TbCompanyTrip)
     private readonly companyTripRepo: Repository<TbCompanyTrip>,
-    @InjectRepository(TbVerhical)
-    private readonly vehicleRepo: Repository<TbVerhical>,
+    @InjectRepository(TbVehicle)
+    private readonly vehicleRepo: Repository<TbVehicle>,
     @InjectRepository(TbDriver)
     private readonly driverRepo: Repository<TbDriver>,
     @InjectRepository(TbSeat)
@@ -47,8 +52,31 @@ export class ClientEnrichmentService {
     private readonly bookingRepo: Repository<TbBooking>,
     @InjectRepository(TbRefund)
     private readonly refundRepo: Repository<TbRefund>,
-    private readonly catalogRepository: ClientCatalogRepository,
   ) {}
+
+  async getOccupiedSeatIds(companyTripId: number): Promise<number[]> {
+    const tickets = await this.ticketRepo.find({
+      where: {
+        companyTripId,
+        status: In([TicketStatus.PENDING, TicketStatus.PAID]),
+      },
+    });
+    const bookings = await this.bookingRepo
+      .createQueryBuilder('b')
+      .where('b.companyTripId = :companyTripId', { companyTripId })
+      .andWhere('b.status = :status', { status: BookingStatus.HOLD })
+      .andWhere('b.holdExpiresAt > :now', { now: new Date() })
+      .getMany();
+
+    const ids = new Set<number>();
+    for (const t of tickets) {
+      (t.seatIds ?? []).forEach((id) => ids.add(id));
+    }
+    for (const b of bookings) {
+      (b.seatIds ?? []).forEach((id) => ids.add(id));
+    }
+    return Array.from(ids);
+  }
 
   wrapPaginated<T>(
     items: T[],
@@ -65,95 +93,6 @@ export class ClientEnrichmentService {
     };
   }
 
-  async enrichCompanies(companies: TbCompany[]) {
-    return Promise.all(
-      companies.map(async (company) => {
-        const [roadCount, activeTripCount] = await Promise.all([
-          this.catalogRepository.countRoadsByCompany(company.id),
-          this.catalogRepository.countCompanyTripsByCompany(company.id),
-        ]);
-        return {
-          ...company,
-          roadCount,
-          activeCompanyTripCount: activeTripCount,
-        };
-      }),
-    );
-  }
-
-  async enrichCompanyDetail(company: TbCompany) {
-    const roads = await this.catalogRepository.findRoadsByCompany(company.id);
-    const [roadCount, activeTripCount] = await Promise.all([
-      this.catalogRepository.countRoadsByCompany(company.id),
-      this.catalogRepository.countCompanyTripsByCompany(company.id),
-    ]);
-    const roadDetails = await this.enrichRoads(roads);
-    return {
-      ...company,
-      roadCount,
-      activeCompanyTripCount: activeTripCount,
-      roads: roadDetails,
-    };
-  }
-
-  async enrichRoads(roads: TbRoad[]) {
-    if (roads.length === 0) {
-      return [];
-    }
-    const companyMap = await this.loadCompanies(
-      roads.map((r) => r.companyId),
-    );
-    return roads.map((road) => ({
-      ...road,
-      company: companyMap.get(road.companyId) ?? null,
-    }));
-  }
-
-  async enrichRoadDetail(road: TbRoad) {
-    const company = await this.companyRepo.findOne({
-      where: { id: road.companyId },
-    });
-    const trips = await this.catalogRepository.findTripsByRoadId(road.id);
-    const tripDetails = await this.enrichTrips(trips);
-    return {
-      ...road,
-      company,
-      trips: tripDetails,
-    };
-  }
-
-  async enrichTrips(trips: TbTrip[]) {
-    if (trips.length === 0) {
-      return [];
-    }
-    const roadMap = await this.loadRoads(trips.map((t) => t.roadId));
-    const companyIds = [...roadMap.values()].map((r) => r.companyId);
-    const companyMap = await this.loadCompanies(companyIds);
-    return trips.map((trip) => {
-      const road = roadMap.get(trip.roadId) ?? null;
-      const company = road ? (companyMap.get(road.companyId) ?? null) : null;
-      return { ...trip, road, company };
-    });
-  }
-
-  async enrichTripDetail(trip: TbTrip) {
-    const road = await this.roadRepo.findOne({ where: { id: trip.roadId } });
-    const company = road
-      ? await this.companyRepo.findOne({ where: { id: road.companyId } })
-      : null;
-    const companyTrips = await this.companyTripRepo.find({
-      where: { tripId: trip.id, status: 'ACTIVE' },
-      order: { id: 'DESC' },
-    });
-    const schedules = await this.enrichCompanyTrips(companyTrips);
-    return {
-      ...trip,
-      road,
-      company,
-      companyTrips: schedules,
-    };
-  }
-
   async enrichCompanyTrips(companyTrips: TbCompanyTrip[]) {
     if (companyTrips.length === 0) {
       return [];
@@ -161,7 +100,7 @@ export class ClientEnrichmentService {
     const [companyMap, tripMap, vehicleMap, driverMap] = await Promise.all([
       this.loadCompanies(companyTrips.map((c) => c.companyId)),
       this.loadTrips(companyTrips.map((c) => c.tripId)),
-      this.loadVehicles(companyTrips.map((c) => c.verhicalId)),
+      this.loadVehicles(companyTrips.map((c) => c.vehicleId)),
       this.loadDrivers(companyTrips.map((c) => c.driverId)),
     ]);
     const roadIds = [...tripMap.values()].map((t) => t.roadId);
@@ -178,7 +117,7 @@ export class ClientEnrichmentService {
           company: companyMap.get(ct.companyId) ?? null,
           trip,
           road,
-          vehicle: vehicleMap.get(ct.verhicalId) ?? null,
+          vehicle: vehicleMap.get(ct.vehicleId) ?? null,
           driver: driverMap.get(ct.driverId) ?? null,
         };
       }),
@@ -186,16 +125,15 @@ export class ClientEnrichmentService {
   }
 
   async enrichCompanyTripDetail(companyTrip: TbCompanyTrip) {
-    const occupiedSeatIds =
-      await this.catalogRepository.getOccupiedSeatIds(companyTrip.id);
+    const occupiedSeatIds = await this.getOccupiedSeatIds(companyTrip.id);
     const seats = await this.seatRepo.find({
-      where: { verhicalId: companyTrip.verhicalId },
+      where: { vehicleId: companyTrip.vehicleId },
       order: { id: 'ASC' },
     });
     const [company, trip, vehicle, driver] = await Promise.all([
       this.companyRepo.findOne({ where: { id: companyTrip.companyId } }),
       this.tripRepo.findOne({ where: { id: companyTrip.tripId } }),
-      this.vehicleRepo.findOne({ where: { id: companyTrip.verhicalId } }),
+      this.vehicleRepo.findOne({ where: { id: companyTrip.vehicleId } }),
       this.driverRepo.findOne({ where: { id: companyTrip.driverId } }),
     ]);
     const road = trip
@@ -278,7 +216,9 @@ export class ClientEnrichmentService {
       return [];
     }
     const ticketIds = [...new Set(payments.map((p) => p.ticketId))];
-    const tickets = await this.ticketRepo.find({ where: { id: In(ticketIds) } });
+    const tickets = await this.ticketRepo.find({
+      where: { id: In(ticketIds) },
+    });
     const ticketMap = new Map(
       (await this.enrichTickets(tickets)).map((t) => [t.id, t]),
     );
@@ -319,10 +259,44 @@ export class ClientEnrichmentService {
     const scheduleMap = new Map(
       (await this.enrichCompanyTrips(companyTrips)).map((s) => [s.id, s]),
     );
-    return bookings.map((booking) => ({
-      ...booking,
-      schedule: scheduleMap.get(booking.companyTripId) ?? null,
-    }));
+
+    const ticketIds = [
+      ...new Set(
+        bookings
+          .map((b) => b.ticketId)
+          .filter((id): id is number => id != null),
+      ),
+    ];
+    const tickets =
+      ticketIds.length > 0
+        ? await this.ticketRepo.find({ where: { id: In(ticketIds) } })
+        : [];
+    const ticketMap = new Map(tickets.map((t) => [t.id, t]));
+
+    const payments =
+      ticketIds.length > 0
+        ? await this.paymentRepo.find({
+            where: { ticketId: In(ticketIds) },
+            order: { id: 'DESC' },
+          })
+        : [];
+    return bookings.map((booking) => {
+      const ticket = booking.ticketId
+        ? (ticketMap.get(booking.ticketId) ?? null)
+        : null;
+      const paymentCandidates = ticket
+        ? payments.filter((p) => p.ticketId === ticket.id)
+        : [];
+      const payment = pickRepresentativePayment(paymentCandidates);
+
+      return {
+        ...booking,
+        status: resolveClientBookingStatus(booking, ticket, payment),
+        schedule: scheduleMap.get(booking.companyTripId) ?? null,
+        ticket,
+        payment,
+      };
+    });
   }
 
   async enrichBookingDetail(booking: TbBooking) {
@@ -339,13 +313,26 @@ export class ClientEnrichmentService {
         : [];
     let ticket: TbTicket | null = null;
     if (booking.ticketId) {
-      ticket = await this.ticketRepo.findOne({ where: { id: booking.ticketId } });
+      ticket = await this.ticketRepo.findOne({
+        where: { id: booking.ticketId },
+      });
     }
+    const payments = ticket
+      ? await this.paymentRepo.find({
+          where: { ticketId: ticket.id },
+          order: { id: 'DESC' },
+        })
+      : [];
+    const payment = pickRepresentativePayment(payments);
+
     return {
       ...booking,
+      status: resolveClientBookingStatus(booking, ticket, payment),
       seats,
       schedule: scheduleDetail,
       ticket,
+      payments,
+      payment,
     };
   }
 
@@ -379,7 +366,7 @@ export class ClientEnrichmentService {
   private async loadVehicles(ids: number[]) {
     const unique = [...new Set(ids)];
     if (unique.length === 0) {
-      return new Map<number, TbVerhical>();
+      return new Map<number, TbVehicle>();
     }
     const rows = await this.vehicleRepo.find({ where: { id: In(unique) } });
     return new Map(rows.map((r) => [r.id, r]));
@@ -393,5 +380,4 @@ export class ClientEnrichmentService {
     const rows = await this.driverRepo.find({ where: { id: In(unique) } });
     return new Map(rows.map((r) => [r.id, r]));
   }
-
 }

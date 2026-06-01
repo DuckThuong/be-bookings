@@ -11,10 +11,7 @@ import {
   ClientMyInvoiceQueryDto,
   ClientMyTicketQueryDto,
 } from '../dtos/client/client.dto';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { parsePageLimit } from '../common/helpers/pagination.helper';
 import { CompanyRepository } from '../repositories/company.repository';
 import { CompanyAccessService } from './company-access.service';
@@ -41,7 +38,11 @@ export class ClientAccountService {
     user: UserDecoratorDtoResponse,
     query: ClientMyTicketQueryDto,
   ) {
-    const scope = await this.buildListScope(user, query.customerId, query.companyId);
+    const scope = await this.buildListScope(
+      user,
+      query.customerId,
+      query.companyId,
+    );
     const { page, limit } = parsePageLimit(query.page, query.limit);
     const { items, total } = await this.accountRepository.findTickets({
       ...scope,
@@ -73,7 +74,11 @@ export class ClientAccountService {
     user: UserDecoratorDtoResponse,
     query: ClientMyInvoiceQueryDto,
   ) {
-    const scope = await this.buildListScope(user, query.customerId, query.companyId);
+    const scope = await this.buildListScope(
+      user,
+      query.customerId,
+      query.companyId,
+    );
     const { page, limit } = parsePageLimit(query.page, query.limit);
     const { items, total } = await this.accountRepository.findInvoices({
       ...scope,
@@ -106,7 +111,11 @@ export class ClientAccountService {
     user: UserDecoratorDtoResponse,
     query: ClientMyBookingQueryDto,
   ) {
-    const scope = await this.buildListScope(user, query.customerId, query.companyId);
+    const scope = await this.buildListScope(
+      user,
+      query.customerId,
+      query.companyId,
+    );
     const { page, limit } = parsePageLimit(query.page, query.limit);
     const { items, total } = await this.accountRepository.findBookings({
       ...scope,
@@ -154,7 +163,7 @@ export class ClientAccountService {
 
     if (user.role === UserRole.OWNER) {
       const companies = await this.companyRepository.findCompaniesByUserLead(
-        user.userCode,
+        user.id.toString(),
       );
       const companyIds = companies.map((c) => c.id);
       if (companyIdQuery !== undefined) {

@@ -11,12 +11,14 @@ import { TicketRepository } from '../../repositories/ticket.repository';
 import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { CommissionRepository } from '../../repositories/sales/commission.repository';
 import {
+  BookingStatus,
   PaymentStatus,
   SALES_CODE_PREFIX,
 } from '../../assets/constants/sales.constants';
+import { TicketStatus } from '../../assets/constants/ticket.constants';
+import { BookingRepository } from '../../repositories/sales/booking.repository';
 import { SalesErrorMessage } from '../../assets/messages/sales.message';
 import { CompanyErrorMessage } from '../../assets/messages/company.message';
-import { TicketStatus } from '../../assets/constants/ticket.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
 import {
   ConfirmPaymentDto,
@@ -33,6 +35,7 @@ export class PaymentService {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly ticketRepository: TicketRepository,
+    private readonly bookingRepository: BookingRepository,
     private readonly companyTripRepository: CompanyTripRepository,
     private readonly commissionRepository: CommissionRepository,
     private readonly companyAccess: CompanyAccessService,
@@ -131,6 +134,12 @@ export class PaymentService {
 
     await this.ticketRepository.update(ticket.id, { status: TicketStatus.PAID });
 
+    if (ticket.bookingId) {
+      await this.bookingRepository.update(ticket.bookingId, {
+        status: BookingStatus.CONFIRMED,
+      });
+    }
+
     const companyTrip = await this.companyTripRepository.findById(
       payment.companyTripId,
     );
@@ -167,6 +176,37 @@ export class PaymentService {
     await this.companyAccess.assertCompanyAccess(user, payment.companyId);
     await this.paymentRepository.update(id, { status: PaymentStatus.FAILED });
     return this.paymentRepository.findById(id);
+  }
+
+  async rejectApproval(user: UserDecoratorDtoResponse, id: number) {
+    const payment = await this.getPaymentOrThrow(id);
+    await this.companyAccess.assertCompanyAccess(user, payment.companyId);
+
+    if (payment.status === PaymentStatus.SUCCESS) {
+      throw new HttpException(
+        SalesErrorMessage.PAYMENT_ALREADY_SUCCESS,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.paymentRepository.update(id, { status: PaymentStatus.FAILED });
+
+    const ticket = await this.ticketRepository.findById(payment.ticketId);
+    if (ticket) {
+      await this.ticketRepository.update(ticket.id, {
+        status: TicketStatus.CANCELLED,
+      });
+      if (ticket.bookingId) {
+        await this.bookingRepository.update(ticket.bookingId, {
+          status: BookingStatus.CANCELLED,
+        });
+      }
+    }
+
+    return {
+      message: 'Đã từ chối đặt vé',
+      payment: await this.paymentRepository.findById(id),
+    };
   }
 
   private async getPaymentOrThrow(id: number) {

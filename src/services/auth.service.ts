@@ -14,11 +14,15 @@ import {
   equalString,
   generateEntityCode,
   generateOtp,
-  randomString,
   validString,
 } from '../common/helpers/common.helper';
 import { isEmail } from '../common/validators/validator';
 import { JwtPayload } from '../dtos/jwt.dto';
+import {
+  UserDecoratorDtoResponse,
+  UserRole,
+  UserStatus,
+} from '../dtos/user/common.dto';
 import {
   AuthResponseDto,
   ChangePasswordPayloadDto,
@@ -29,11 +33,6 @@ import {
   SignUpPayloadDto,
 } from '../dtos/user/user.dto';
 import { AuthRepository } from '../repositories/auth.repository';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-  UserStatus,
-} from '../dtos/user/common.dto';
 import { MailService } from './mail.service';
 import { OtpCacheService } from './otp-cache.service';
 
@@ -89,6 +88,7 @@ export class AuthService {
 
       return {
         accessToken: this.jwtService.sign(payload),
+        role: user.role,
       };
     } catch (error) {
       console.log('error: ', error);
@@ -130,8 +130,9 @@ export class AuthService {
       );
     }
     try {
+      const code = generateEntityCode('USR');
       const userRegis = await this.authRepository.createUser({
-        userCode: generateEntityCode('USR'),
+        userCode: code,
         email: payload.email,
         isEmailVerified: true,
         password: payload.password,
@@ -140,7 +141,10 @@ export class AuthService {
         status: UserStatus.ACTIVE,
       });
 
+      console.log(code);
+
       await this.authRepository.createInfoUser({
+        userCode: code,
         userName: payload.name,
         userDob: payload.dateOfBirth,
         userGender: payload.gender,
@@ -159,6 +163,7 @@ export class AuthService {
 
       return {
         accessToken: this.jwtService.sign(jwtPayload),
+        role: userRegis.role,
       };
     } catch (error) {
       console.log('error: ', error);

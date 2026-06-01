@@ -7,7 +7,7 @@ import {
   EntityStatus,
 } from '../assets/constants/company.constants';
 import { generateEntityCode } from '../common/helpers/common.helper';
-import { CreateDriverDto, UpdateDriverDto } from '../dtos/company/company.dto';
+import { CreateDriverDto } from '../dtos/company/company.dto';
 import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
 import { CompanyAccessService } from './company-access.service';
 
@@ -22,18 +22,16 @@ export class DriverService {
     user: UserDecoratorDtoResponse,
     payload: CreateDriverDto,
   ): Promise<TbDriver> {
-    await this.companyAccess.assertCompanyAccess(user, payload.companyId);
-    await this.companyAccess.assertVehicleBelongsToCompany(
-      payload.companyId,
-      payload.verhicalId,
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(
+      user
     );
 
     return this.driverRepository.save({
-      companyId: payload.companyId,
-      verhicalId: payload.verhicalId,
-      code: generateEntityCode(CODE_PREFIX.DRIVER),
+      companyId,
+      code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
       name: payload.name,
       license: payload.license,
+      licenseNum: payload.licenseNum,
       phone: payload.phone,
       email: payload.email,
       description: payload.description ?? undefined,
@@ -43,18 +41,13 @@ export class DriverService {
     });
   }
 
-  async findAll(
-    user: UserDecoratorDtoResponse,
-    companyId: number,
-  ): Promise<TbDriver[]> {
-    await this.companyAccess.assertCompanyAccess(user, companyId);
-    return this.driverRepository.findByCompany(companyId);
+  async findAll(user: UserDecoratorDtoResponse): Promise<TbDriver[]> {
+    const resolvedCompanyId =
+      await this.companyAccess.resolveCompanyIdForUser(user);
+    return this.driverRepository.findByCompany(resolvedCompanyId);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbDriver> {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbDriver> {
     const driver = await this.driverRepository.findById(id);
     if (!driver) {
       throw new NotFoundException(CompanyErrorMessage.DRIVER_NOT_FOUND);
@@ -66,16 +59,9 @@ export class DriverService {
   async update(
     user: UserDecoratorDtoResponse,
     id: number,
-    payload: UpdateDriverDto,
+    payload: Partial<TbDriver>,
   ): Promise<TbDriver> {
-    const driver = await this.findOne(user, id);
-
-    if (payload.verhicalId !== undefined) {
-      await this.companyAccess.assertVehicleBelongsToCompany(
-        driver.companyId,
-        payload.verhicalId,
-      );
-    }
+    await this.findOne(user, id);
 
     await this.driverRepository.update(id, payload);
     return this.findOne(user, id);

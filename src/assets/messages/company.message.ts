@@ -1,5 +1,6 @@
 export class CompanyErrorMessage {
   static readonly COMPANY_NOT_FOUND = 'Không tìm thấy nhà xe';
+  static readonly COMPANY_ID_REQUIRED = 'Cần truyền companyId';
   static readonly ROAD_NOT_FOUND = 'Không tìm thấy tuyến đường';
   static readonly TRIP_NOT_FOUND = 'Không tìm thấy chuyến xe';
   static readonly VEHICLE_NOT_FOUND = 'Không tìm thấy phương tiện';

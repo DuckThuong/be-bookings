@@ -15,6 +15,10 @@ export class TripRepository {
     return this.repo.findOne({ where: { id } });
   }
 
+  findByCode(code: string) {
+    return this.repo.findOne({ where: { code } });
+  }
+
   findByRoadIds(roadIds: number[]) {
     if (roadIds.length === 0) {
       return [];

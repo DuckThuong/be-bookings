@@ -10,9 +10,15 @@ import { CompanyModule } from './modules/company.module';
 import { SalesModule } from './modules/sales.module';
 import { CustomerModule } from './modules/customer.module';
 import { ClientModule } from './modules/client.module';
+import { CMSVehicleModule } from './modules/CMS/CMS_vehicle.module';
+import { CMSDriverModule } from './modules/CMS/CMS_driver.module';
+import { CMSTripModule } from './modules/CMS/CMS_trip.module';
+import { CMSRoadModule } from './modules/CMS/CMS_road.module';
+import { CMSBookingModule } from './modules/CMS/CMS_booking.module';
+import { CMSCustomerModule } from './modules/CMS/CMS_customer.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbCompanyTrip } from './entities/company/company-trip.entity';
-import { TbVerhical } from './entities/verhical.entity';
+import { TbVehicle } from './entities/vehicle.entity';
 import { TbTrip } from './entities/trip.entity';
 import { TbDriver } from './entities/driver.entity';
 import { TbCompany } from './entities/company/company.entity';
@@ -55,7 +61,7 @@ import { TbSeat } from './entities/seat.entity';
           TbDriver,
           TbSeat,
           TbTrip,
-          TbVerhical,
+          TbVehicle,
           TbRoad,
           TbTicket,
         ],
@@ -71,6 +77,12 @@ import { TbSeat } from './entities/seat.entity';
     SalesModule,
     CustomerModule,
     ClientModule,
+    CMSVehicleModule,
+    CMSDriverModule,
+    CMSTripModule,
+    CMSRoadModule,
+    CMSBookingModule,
+    CMSCustomerModule,
   ],
   controllers: [],
   providers: [],

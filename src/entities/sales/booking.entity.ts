@@ -121,6 +121,75 @@ export class TbBooking {
   })
   ticketId: number;
 
+  @Column({
+    type: 'json',
+    nullable: true,
+    comment: 'Thông tin hành khách',
+  })
+  passenger: {
+    fullName: string;
+    phone: string;
+    pickupPoint: string;
+    dropoffPoint: string;
+  } | null;
+
+  @Column({
+    type: 'json',
+    nullable: true,
+    comment: 'Dịch vụ thêm',
+  })
+  addons: {
+    id: string;
+    name: string;
+    price: number;
+    qty?: number;
+  }[];
+
+  @Column({
+    name: 'service_fee',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Phí dịch vụ',
+  })
+  serviceFee: number;
+
+  @Column({
+    name: 'addons_total',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+    comment: 'Tổng tiền addon',
+  })
+  addonsTotal: number;
+
+  @Column({
+    name: 'vehicle_type',
+    type: 'varchar',
+    length: 10,
+    nullable: true,
+    comment: 'Loại xe FE',
+  })
+  vehicleType: string;
+
+  @Column({
+    type: 'int',
+    nullable: true,
+    comment: 'Tầng xe',
+  })
+  floor: number;
+
+  @Column({
+    name: 'payment_method_id',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+    comment: 'Phương thức thanh toán FE',
+  })
+  paymentMethodId: string;
+
   @CreateDateColumn({
     name: 'created_at',
     comment: 'Ngày tạo',

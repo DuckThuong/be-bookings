@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TbCompany } from '../entities/company/company.entity';
 import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbSeat } from '../entities/seat.entity';
@@ -42,7 +42,7 @@ import { AuthModule } from './auth.module';
       TbCompany,
       TbRoad,
       TbTrip,
-      TbVerhical,
+      TbVehicle,
       TbDriver,
       TbCompanyTrip,
       TbSeat,

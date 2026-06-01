@@ -56,7 +56,7 @@ export class CompanyService {
 
     if (user.role === UserRole.OWNER) {
       const existing = await this.companyRepository.findCompaniesByUserLead(
-        user.userCode,
+        user.id.toString(),
       );
       const active = existing.find((c) => c.status === EntityStatus.ACTIVE);
       if (active) {
@@ -70,7 +70,7 @@ export class CompanyService {
     return this.companyRepository.saveCompany({
       companyName: payload.companyName.trim(),
       description: payload.description ?? undefined,
-      userLeadId: user.userCode,
+      userLeadId: user.id.toString(),
       code: generateEntityCode(CODE_PREFIX.COMPANY),
       status: payload.status ?? EntityStatus.ACTIVE,
     });
@@ -81,14 +81,14 @@ export class CompanyService {
       return this.companyRepository.findAllCompanies();
     }
     if (user.role === UserRole.OWNER) {
-      return this.companyRepository.findCompaniesByUserLead(user.userCode);
+      return this.companyRepository.findCompaniesByUserLead(user.id.toString());
     }
     throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
   }
 
   async getMyCompany(user: UserDecoratorDtoResponse): Promise<TbCompany> {
     const companies = await this.companyRepository.findCompaniesByUserLead(
-      user.userCode,
+      user.id.toString(),
     );
     const active = companies.find((c) => c.status === EntityStatus.ACTIVE);
     if (!active) {

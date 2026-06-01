@@ -1,12 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { TbCompany } from '../entities/company/company.entity';
 import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbSeat } from '../entities/seat.entity';
@@ -17,11 +20,11 @@ import { VehicleRepository } from '../repositories/vehicle.repository';
 import { DriverRepository } from '../repositories/driver.repository';
 import { CompanyTripRepository } from '../repositories/company-trip.repository';
 import { SeatRepository } from '../repositories/seat.repository';
+import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { CmsTripValidationMessage } from '../assets/messages/cms-trip.message';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
+import { CmsRoadValidationMessage } from "../assets/messages/cms-road.message";
 
 @Injectable()
 export class CompanyAccessService {
@@ -48,11 +51,31 @@ export class CompanyAccessService {
       return company;
     }
 
-    if (user.role === UserRole.OWNER && company.userLeadId === user.userCode) {
+    if (
+      user.role === UserRole.OWNER &&
+      company.userLeadId === user.id.toString()
+    ) {
       return company;
     }
 
     throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
+  }
+
+  async resolveCompanyIdForUser(
+    user: UserDecoratorDtoResponse,
+  ): Promise<number> {
+    if (user.role === UserRole.ADMIN) {
+      throw new UnauthorizedException(CmsRoadValidationMessage.NO_PERMISSION);
+    }
+
+    const companies = await this.companyRepository.findCompaniesByUserLead(
+      user.id.toString(),
+    );
+    const active = companies.find((c) => c.status == EntityStatus.ACTIVE);
+    if (!active) {
+      throw new NotFoundException(CompanyErrorMessage.COMPANY_NOT_FOUND);
+    }
+    return active.id;
   }
 
   async assertRoadBelongsToCompany(
@@ -60,7 +83,10 @@ export class CompanyAccessService {
     roadId: number,
   ): Promise<TbRoad> {
     const road = await this.roadRepository.findById(roadId);
-    if (!road || road.companyId !== companyId) {
+    if (!road) {
+      throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
+    }
+    if (road.companyId !== companyId) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_BELONG_COMPANY);
     }
     return road;
@@ -84,9 +110,12 @@ export class CompanyAccessService {
   async assertVehicleBelongsToCompany(
     companyId: number,
     vehicleId: number,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const vehicle = await this.vehicleRepository.findById(vehicleId);
-    if (!vehicle || vehicle.companyId !== companyId) {
+    if (!vehicle) {
+      throw new NotFoundException(CompanyErrorMessage.VEHICLE_NOT_FOUND);
+    }
+    if (vehicle.companyId !== companyId) {
       throw new NotFoundException(
         CompanyErrorMessage.VEHICLE_NOT_BELONG_COMPANY,
       );
@@ -99,7 +128,10 @@ export class CompanyAccessService {
     driverId: number,
   ): Promise<TbDriver> {
     const driver = await this.driverRepository.findById(driverId);
-    if (!driver || driver.companyId !== companyId) {
+    if (!driver) {
+      throw new NotFoundException(CompanyErrorMessage.DRIVER_NOT_FOUND);
+    }
+    if (driver.companyId !== companyId) {
       throw new NotFoundException(
         CompanyErrorMessage.DRIVER_NOT_BELONG_COMPANY,
       );
@@ -111,7 +143,8 @@ export class CompanyAccessService {
     companyId: number,
     companyTripId: number,
   ): Promise<TbCompanyTrip> {
-    const companyTrip = await this.companyTripRepository.findById(companyTripId);
+    const companyTrip =
+      await this.companyTripRepository.findById(companyTripId);
     if (!companyTrip || companyTrip.companyId !== companyId) {
       throw new NotFoundException(CompanyErrorMessage.COMPANY_TRIP_NOT_FOUND);
     }
@@ -126,7 +159,73 @@ export class CompanyAccessService {
     if (!seat) {
       throw new NotFoundException(CompanyErrorMessage.SEAT_NOT_FOUND);
     }
-    await this.assertVehicleBelongsToCompany(companyId, seat.verhicalId);
+    await this.assertVehicleBelongsToCompany(companyId, seat.vehicleId);
     return seat;
+  }
+
+  /** Resolve tuyến theo mã (road.code) hoặc tên (road.name) trong phạm vi nhà xe */
+  async resolveRoadByRouteKey(
+    companyId: number,
+    routeKey: string,
+  ): Promise<TbRoad> {
+    const key = routeKey?.trim();
+    if (!key) {
+      throw new BadRequestException(CmsTripValidationMessage.ROUTE_EMPTY);
+    }
+    const byCode = await this.roadRepository.findByCodeAndCompany(
+      key,
+      companyId,
+    );
+    if (byCode) {
+      return byCode;
+    }
+    const byName = await this.roadRepository.findByNameAndCompany(
+      key,
+      companyId,
+    );
+    if (byName) {
+      return byName;
+    }
+    throw new BadRequestException(CmsTripValidationMessage.ROUTE_NOT_FOUND);
+  }
+
+  async resolveVehicleByCode(
+    companyId: number,
+    vehicleCode: string,
+  ): Promise<TbVehicle> {
+    const code = vehicleCode?.trim();
+    if (!code) {
+      throw new BadRequestException(CmsTripValidationMessage.VEHICLE_EMPTY);
+    }
+    const vehicle = await this.vehicleRepository.findByCode(code);
+    if (!vehicle) {
+      throw new BadRequestException(CmsTripValidationMessage.VEHICLE_NOT_FOUND);
+    }
+    if (vehicle.companyId !== companyId) {
+      throw new BadRequestException(
+        CmsTripValidationMessage.VEHICLE_NOT_BELONG_COMPANY,
+      );
+    }
+    return vehicle;
+  }
+
+  async resolveDriverByCode(
+    companyId: number,
+    driverCode: string,
+  ): Promise<TbDriver> {
+    const code = driverCode?.trim();
+    if (!code) {
+      throw new BadRequestException(CmsTripValidationMessage.DRIVER_EMPTY);
+    }
+    const driver = await this.driverRepository.findByCode(code);
+    if (!driver) {
+      throw new BadRequestException(CmsTripValidationMessage.DRIVER_NOT_FOUND);
+    }
+    if (driver.companyId !== companyId) {
+      throw new BadRequestException(
+        CmsTripValidationMessage.DRIVER_NOT_BELONG_COMPANY,
+      );
+    }
+    return driver;
   }
 }

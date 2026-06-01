@@ -10,10 +10,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import { ClientAccountService } from '../../services/client-account.service';
 import {

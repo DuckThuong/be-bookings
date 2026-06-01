@@ -40,13 +40,6 @@ export class TbRoad {
   @Column({
     type: 'varchar',
     length: 50,
-    comment: 'Loại tuyến đường',
-  })
-  type: string;
-
-  @Column({
-    type: 'varchar',
-    length: 50,
     comment: 'Trạng thái tuyến đường',
   })
   status: string;
@@ -66,18 +59,16 @@ export class TbRoad {
   endPoint: string;
 
   @Column({
-    type: 'varchar',
-    length: 20,
-    comment: 'Giờ khởi hành',
+    type: 'text',
+    comment: 'Điểm đón khách',
   })
-  startTime: string;
+  pickUpPoint: string;
 
   @Column({
-    type: 'varchar',
-    length: 20,
-    comment: 'Giờ kết thúc',
+    type: 'text',
+    comment: 'Điểm trả khách',
   })
-  endTime: string;
+  dropOffPoint: string;
 
   @Column({
     type: 'int',
@@ -85,4 +76,61 @@ export class TbRoad {
     comment: 'Tổng số chuyến',
   })
   totalTurn: number;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: '',
+    comment: 'Thời gian di chuyển chuẩn (vd: 6h30m)',
+  })
+  standardDuration: string;
+
+  @Column({
+    type: 'int',
+    default: 0,
+    comment: 'Số chuyến mỗi ngày (kế hoạch)',
+  })
+  tripsPerDay: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 0,
+    comment: 'Tỉ lệ lấp đầy trung bình (%)',
+  })
+  averageOccupancy: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    comment: 'Doanh thu ước tính',
+  })
+  estimatedRevenue: number;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    comment: 'Xe chủ lực (tên hoặc mã hiển thị)',
+  })
+  leadVehicle: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Mức nhu cầu',
+  })
+  demandLevel: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    comment: 'Ghi chú',
+  })
+  note: string | null;
 }

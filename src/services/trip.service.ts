@@ -33,13 +33,28 @@ export class TripService {
       payload.roadId,
     );
     await this.companyAccess.assertCompanyAccess(user, road.companyId);
+    await this.companyAccess.assertVehicleBelongsToCompany(
+      road.companyId,
+      payload.vehicleId,
+    );
+    await this.companyAccess.assertDriverBelongsToCompany(
+      road.companyId,
+      payload.driverId,
+    );
 
     const trip = await this.tripRepository.save({
-      code: generateEntityCode(CODE_PREFIX.TRIP),
+      companyId: road.companyId,
+      driverId: payload.driverId,
+      vehicleId: payload.vehicleId,
+      code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.TRIP),
       name: payload.name,
       roadId: payload.roadId,
       description: payload.description ?? undefined,
       status: payload.status ?? EntityStatus.ACTIVE,
+      departure: payload.departure ?? '',
+      arrival: payload.arrival ?? '',
+      seatPrice: payload.seatPrice,
+      bookedSeats: payload.bookedSeats ?? 0,
     });
 
     await this.roadRepository.update(payload.roadId, {
@@ -49,12 +64,12 @@ export class TripService {
     return trip;
   }
 
-  async findAll(
-    user: UserDecoratorDtoResponse,
-    companyId: number,
-  ): Promise<TbTrip[]> {
-    await this.companyAccess.assertCompanyAccess(user, companyId);
-    const roads = await this.roadRepository.findByCompany(companyId);
+  async findAll(user: UserDecoratorDtoResponse): Promise<TbTrip[]> {
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user
+    );
+    await this.companyAccess.assertCompanyAccess(user, resolvedCompanyId);
+    const roads = await this.roadRepository.findByCompany(resolvedCompanyId);
     return this.tripRepository.findByRoadIds(roads.map((r) => r.id));
   }
 
@@ -91,13 +106,42 @@ export class TripService {
     id: number,
     payload: UpdateTripDto,
   ): Promise<TbTrip> {
-    await this.findOne(user, id);
+    const existing = await this.findOne(user, id);
+    const existingRoad = await this.roadRepository.findById(existing.roadId);
+    if (!existingRoad) {
+      throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
+    }
     if (payload.roadId !== undefined) {
       const road = await this.roadRepository.findById(payload.roadId);
       if (!road) {
         throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
       }
       await this.companyAccess.assertCompanyAccess(user, road.companyId);
+      if (payload.vehicleId !== undefined) {
+        await this.companyAccess.assertVehicleBelongsToCompany(
+          road.companyId,
+          payload.vehicleId,
+        );
+      }
+      if (payload.driverId !== undefined) {
+        await this.companyAccess.assertDriverBelongsToCompany(
+          road.companyId,
+          payload.driverId,
+        );
+      }
+    } else {
+      if (payload.vehicleId !== undefined) {
+        await this.companyAccess.assertVehicleBelongsToCompany(
+          existingRoad.companyId,
+          payload.vehicleId,
+        );
+      }
+      if (payload.driverId !== undefined) {
+        await this.companyAccess.assertDriverBelongsToCompany(
+          existingRoad.companyId,
+          payload.driverId,
+        );
+      }
     }
     await this.tripRepository.update(id, payload);
     return this.findOne(user, id);
