@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TbRoad } from '../entities/road.entity';
 import { EntityStatus } from '../assets/constants/company.constants';
 
@@ -15,8 +15,38 @@ export class RoadRepository {
     return this.repo.findOne({ where: { id } });
   }
 
+  findByCodeAndCompany(code: string, companyId: number) {
+    return this.repo.findOne({ where: { code, companyId } });
+  }
+
+  findByNameAndCompany(name: string, companyId: number) {
+    return this.repo.findOne({ where: { name, companyId } });
+  }
+
+  findByRouteIdentity(
+    companyId: number,
+    name: string,
+    startPoint: string,
+    endPoint: string,
+  ) {
+    return this.repo.findOne({
+      where: {
+        companyId,
+        name,
+        startPoint,
+        endPoint,
+      },
+    });
+  }
+
   findByCompany(companyId: number) {
-    return this.repo.find({ where: { companyId }, order: { id: 'DESC' } });
+    return this.repo.find({
+      where: {
+        companyId,
+        status: In([EntityStatus.ACTIVE, EntityStatus.INACTIVE]),
+      },
+      order: { id: 'DESC' },
+    });
   }
 
   save(data: Partial<TbRoad>) {
@@ -25,6 +55,10 @@ export class RoadRepository {
 
   update(id: number, data: Partial<TbRoad>) {
     return this.repo.update({ id }, data);
+  }
+
+  delete(id: number) {
+    return this.repo.delete({ id });
   }
 
   countActiveByCompany(companyId: number) {

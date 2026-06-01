@@ -4,12 +4,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
-import { validString } from '../common/helpers/common.helper';
-import { CreateVehicleDto, UpdateVehicleDto } from '../dtos/company/company.dto';
+import {
+  parsePositiveInt,
+  validString,
+} from '../common/helpers/common.helper';
+import {
+  CreateVehicleDto,
+  UpdateVehicleDto,
+} from '../dtos/company/company.dto';
 import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
 import { CompanyAccessService } from './company-access.service';
 
@@ -23,9 +29,10 @@ export class VehicleService {
   async create(
     user: UserDecoratorDtoResponse,
     payload: CreateVehicleDto,
-  ): Promise<TbVerhical> {
-    await this.companyAccess.assertCompanyAccess(user, payload.companyId);
-
+  ): Promise<TbVehicle> {
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user
+    );
     if (!validString(payload.code)) {
       throw new HttpException(
         CompanyErrorMessage.INVALID_REFERENCE,
@@ -44,10 +51,11 @@ export class VehicleService {
     }
 
     return this.vehicleRepository.save({
-      companyId: payload.companyId,
+      companyId: resolvedCompanyId,
       code: payload.code.trim(),
       type: payload.type,
       name: payload.name,
+      seatCount: payload.seatCount,
       image: payload.image ?? undefined,
       schedule: payload.schedule ?? undefined,
       description: payload.description ?? undefined,
@@ -55,18 +63,17 @@ export class VehicleService {
     });
   }
 
-  async findAll(
-    user: UserDecoratorDtoResponse,
-    companyId: number,
-  ): Promise<TbVerhical[]> {
-    await this.companyAccess.assertCompanyAccess(user, companyId);
-    return this.vehicleRepository.findByCompany(companyId);
+  async findAll(user: UserDecoratorDtoResponse): Promise<TbVehicle[]> {
+    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
+      user,
+    );
+    return this.vehicleRepository.findByCompany(resolvedCompanyId);
   }
 
   async findOne(
     user: UserDecoratorDtoResponse,
     id: number,
-  ): Promise<TbVerhical> {
+  ): Promise<TbVehicle> {
     const vehicle = await this.vehicleRepository.findById(id);
     if (!vehicle) {
       throw new NotFoundException(CompanyErrorMessage.VEHICLE_NOT_FOUND);
@@ -79,14 +86,13 @@ export class VehicleService {
     user: UserDecoratorDtoResponse,
     id: number,
     payload: UpdateVehicleDto,
-  ): Promise<TbVerhical> {
-    const vehicle = await this.findOne(user, id);
+  ): Promise<TbVehicle> {
+    const existingVehicle = await this.findOne(user, id);
+    const formatted = this.buildVehicleUpdateData(existingVehicle, payload);
 
-    if (payload.code) {
-      const existing = await this.vehicleRepository.findByCode(
-        payload.code.trim(),
-      );
-      if (existing && existing.id !== id) {
+    if (formatted.code && formatted.code !== existingVehicle.code) {
+      const duplicate = await this.vehicleRepository.findByCode(formatted.code);
+      if (duplicate && duplicate.id !== id) {
         throw new HttpException(
           CompanyErrorMessage.CODE_CONFLICT,
           HttpStatus.CONFLICT,
@@ -94,8 +100,56 @@ export class VehicleService {
       }
     }
 
-    await this.vehicleRepository.update(id, payload);
+    await this.vehicleRepository.update(id, formatted);
     return this.findOne(user, id);
+  }
+
+  private buildVehicleUpdateData(
+    existing: TbVehicle,
+    payload: UpdateVehicleDto,
+  ): Partial<TbVehicle> {
+    const cloned: TbVehicle = { ...existing };
+
+    return {
+      code:
+        payload.code !== undefined && validString(payload.code)
+          ? payload.code.trim()
+          : cloned.code,
+      type:
+        payload.type !== undefined && validString(payload.type)
+          ? payload.type.trim()
+          : cloned.type,
+      name:
+        payload.name !== undefined && validString(payload.name)
+          ? payload.name.trim()
+          : cloned.name,
+      status:
+        payload.status !== undefined && validString(payload.status)
+          ? payload.status.trim()
+          : cloned.status,
+      image:
+        payload.image !== undefined
+          ? validString(payload.image)
+            ? payload.image.trim()
+            : cloned.image
+          : cloned.image,
+      schedule:
+        payload.schedule !== undefined
+          ? validString(payload.schedule)
+            ? payload.schedule.trim()
+            : cloned.schedule
+          : cloned.schedule,
+      description:
+        payload.description !== undefined
+          ? validString(payload.description)
+            ? payload.description.trim()
+            : cloned.description
+          : cloned.description,
+      seatCount:
+        payload.seatCount !== undefined
+          ? (parsePositiveInt(payload.seatCount) ?? cloned.seatCount)
+          : cloned.seatCount,
+    };
   }
 
   async remove(

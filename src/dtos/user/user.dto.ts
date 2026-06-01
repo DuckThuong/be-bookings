@@ -1,4 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+import {
+  ErrorForgotPasswordMessage,
+  ErrorLoginMessage,
+  ErrorRegisterMessage,
+  ErrorResetPasswordMessage,
+} from '../../assets/messages/auth.message';
 import { UserRole, UserStatus } from './common.dto';
 
 export class LoginPayloadDto {
@@ -11,6 +26,10 @@ export class LoginPayloadDto {
     nullable: false,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorLoginMessage.PHONE_EMPTY })
+  @IsString({ message: ErrorLoginMessage.PHONE_NOT_VALID })
+  @MinLength(10, { message: ErrorLoginMessage.PHONE_NOT_VALID })
+  @MaxLength(10, { message: ErrorLoginMessage.PHONE_NOT_VALID })
   phoneNumber: string;
 
   @ApiProperty({
@@ -20,6 +39,8 @@ export class LoginPayloadDto {
     nullable: false,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorLoginMessage.PASSWORD_EMPTY })
+  @IsString({ message: ErrorLoginMessage.PASSWORD_NOT_VALID })
   password: string;
 }
 
@@ -33,6 +54,10 @@ export class SignUpPayloadDto {
     nullable: false,
     type: String,
   })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(50)
   name: string;
 
   @ApiProperty({
@@ -44,6 +69,10 @@ export class SignUpPayloadDto {
     nullable: false,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorLoginMessage.PHONE_EMPTY })
+  @IsString({ message: ErrorLoginMessage.PHONE_NOT_VALID })
+  @MinLength(10, { message: ErrorLoginMessage.PHONE_NOT_VALID })
+  @MaxLength(10, { message: ErrorLoginMessage.PHONE_NOT_VALID })
   phone: string;
 
   @ApiProperty({
@@ -53,6 +82,8 @@ export class SignUpPayloadDto {
     nullable: false,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorRegisterMessage.PASSWORD_EMPTY })
+  @IsString({ message: ErrorRegisterMessage.PASSWORD_NOT_VALID })
   password: string;
 
   @ApiProperty({
@@ -62,6 +93,8 @@ export class SignUpPayloadDto {
     nullable: false,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorRegisterMessage.CONFIRM_PASSWORD_EMPTY })
+  @IsString({ message: ErrorRegisterMessage.CONFIRM_PASSWORD_NOT_VALID })
   confirm_password: string;
 
   @ApiProperty({
@@ -73,6 +106,8 @@ export class SignUpPayloadDto {
     nullable: false,
     type: Number,
   })
+  @IsInt()
+  @IsIn([1, 2])
   acceptRole: number;
 
   @ApiProperty({
@@ -81,6 +116,8 @@ export class SignUpPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorRegisterMessage.EMAIL_EMPTY })
+  @IsEmail({}, { message: ErrorRegisterMessage.EMAIL_NOT_VALID })
   email: string;
 
   @ApiProperty({
@@ -89,6 +126,8 @@ export class SignUpPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty()
+  @IsString()
   dateOfBirth: string;
 
   @ApiProperty({
@@ -99,6 +138,8 @@ export class SignUpPayloadDto {
     nullable: false,
     type: Number,
   })
+  @IsInt()
+  @IsIn([1, 2, 3])
   gender: number;
 }
 
@@ -109,6 +150,8 @@ export class ForgotPasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorForgotPasswordMessage.EMAIL_NOT_EXIST })
+  @IsEmail({}, { message: ErrorForgotPasswordMessage.EMAIL_NOT_EXIST })
   email: string;
 }
 
@@ -119,6 +162,8 @@ export class ResetPasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty()
+  @IsEmail()
   email: string;
 
   @ApiProperty({
@@ -127,6 +172,8 @@ export class ResetPasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty()
+  @IsString()
   otp: string;
 
   @ApiProperty({
@@ -135,6 +182,8 @@ export class ResetPasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
+  @IsString({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
   password: string;
 
   @ApiProperty({
@@ -143,6 +192,8 @@ export class ResetPasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
+  @IsString({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
   confirm_password: string;
 }
 
@@ -153,6 +204,8 @@ export class ChangePasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
+  @IsString({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
   oldPassword: string;
 
   @ApiProperty({
@@ -161,6 +214,8 @@ export class ChangePasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
+  @IsString({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
   password: string;
 
   @ApiProperty({
@@ -169,6 +224,8 @@ export class ChangePasswordPayloadDto {
     required: true,
     type: String,
   })
+  @IsNotEmpty({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
+  @IsString({ message: ErrorResetPasswordMessage.PASSWORD_NOT_VALID })
   confirm_password: string;
 }
 
@@ -192,6 +249,14 @@ export class AuthResponseDto {
     type: String,
   })
   accessToken: string;
+
+  @ApiProperty({
+    example: 'USER',
+    description: 'Vai trò của người dùng',
+    required: true,
+    type: String,
+  })
+  role: UserRole;
 }
 
 /** Gộp `tb_basic_user` + `tb_info_user` (join qua `userCode`). */

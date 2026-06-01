@@ -14,6 +14,7 @@ export enum BookingStatus {
   HOLD = 'HOLD',
   EXPIRED = 'EXPIRED',
   CONVERTED = 'CONVERTED',
+  CONFIRMED = 'CONFIRMED',
   CANCELLED = 'CANCELLED',
 }
 

@@ -18,7 +18,7 @@ export class TbCompany {
   @Column({
     type: 'varchar',
     length: 24,
-    comment: 'Mã người đại diện (userCode)',
+    comment: 'ID người đại diện (user.id)',
   })
   userLeadId: string;
 

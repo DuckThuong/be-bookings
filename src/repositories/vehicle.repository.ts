@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TbVerhical } from '../entities/verhical.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { EntityStatus } from '../assets/constants/company.constants';
 
 @Injectable()
 export class VehicleRepository {
   constructor(
-    @InjectRepository(TbVerhical)
-    private readonly repo: Repository<TbVerhical>,
+    @InjectRepository(TbVehicle)
+    private readonly repo: Repository<TbVehicle>,
   ) {}
 
   findById(id: number) {
@@ -16,18 +16,24 @@ export class VehicleRepository {
   }
 
   findByCompany(companyId: number) {
-    return this.repo.find({ where: { companyId }, order: { id: 'DESC' } });
+    return this.repo.find({
+      where: {
+        companyId,
+        status: EntityStatus.ACTIVE || EntityStatus.INACTIVE,
+      },
+      order: { id: 'DESC' },
+    });
   }
 
   findByCode(code: string) {
     return this.repo.findOne({ where: { code } });
   }
 
-  save(data: Partial<TbVerhical>) {
+  save(data: Partial<TbVehicle>) {
     return this.repo.save(this.repo.create(data));
   }
 
-  update(id: number, data: Partial<TbVerhical>) {
+  update(id: number, data: Partial<TbVehicle>) {
     return this.repo.update({ id }, data);
   }
 

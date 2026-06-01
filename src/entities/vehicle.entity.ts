@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('tb_verhical')
-export class TbVerhical {
+@Entity('tb_vehicle')
+export class TbVehicle {
   @PrimaryGeneratedColumn('increment', {
     comment: 'Primary key',
     type: 'int',
@@ -66,4 +66,7 @@ export class TbVerhical {
     comment: 'Mô tả phương tiện',
   })
   description: string;
+
+  @Column({ type: 'int', default: 0 })
+  seatCount: number;
 }

@@ -14,6 +14,10 @@ export class BookingRepository {
     return this.repo.findOne({ where: { id } });
   }
 
+  findByCode(code: string) {
+    return this.repo.findOne({ where: { code } });
+  }
+
   findByFilter(filter: {
     companyId?: number;
     companyTripId?: number;

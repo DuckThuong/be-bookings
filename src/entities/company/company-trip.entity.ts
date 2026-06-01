@@ -29,9 +29,9 @@ export class TbCompanyTrip {
 
   @Column({
     type: 'int',
-    comment: 'ID phương tiện (tb_verhical)',
+    comment: 'ID phương tiện (tb_vehicle)',
   })
-  verhicalId: number;
+  vehicleId: number;
 
   @Column({
     type: 'int',

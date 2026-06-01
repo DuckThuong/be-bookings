@@ -13,6 +13,19 @@ export const generateEntityCode = (prefix: string): string => {
   return `${prefix}${suffix}`.slice(0, 24);
 };
 
+export const parsePositiveInt = (value: unknown): number | undefined => {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return Math.trunc(parsed);
+};
+
 export const validString = (value?: string) => {
   if (!value) {
     return false;
