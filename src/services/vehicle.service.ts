@@ -56,6 +56,7 @@ export class VehicleService {
       type: payload.type,
       name: payload.name,
       seatCount: payload.seatCount,
+      layoutConfig: payload.layoutConfig ?? undefined,
       image: payload.image ?? undefined,
       schedule: payload.schedule ?? undefined,
       description: payload.description ?? undefined,
@@ -149,6 +150,10 @@ export class VehicleService {
         payload.seatCount !== undefined
           ? (parsePositiveInt(payload.seatCount) ?? cloned.seatCount)
           : cloned.seatCount,
+      layoutConfig:
+        payload.layoutConfig !== undefined
+          ? payload.layoutConfig
+          : cloned.layoutConfig,
     };
   }
 

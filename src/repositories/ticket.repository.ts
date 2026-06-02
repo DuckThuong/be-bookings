@@ -20,15 +20,15 @@ export class TicketRepository {
 
   findByFilter(filter: {
     companyId?: number;
-    companyTripId?: number;
+    tripId?: number;
     customerId?: string;
   }) {
     const where: FindOptionsWhere<TbTicket> = {};
     if (filter.companyId !== undefined) {
       where.companyId = filter.companyId;
     }
-    if (filter.companyTripId !== undefined) {
-      where.companyTripId = filter.companyTripId;
+    if (filter.tripId !== undefined) {
+      where.tripId = filter.tripId;
     }
     if (filter.customerId) {
       where.customerId = filter.customerId;

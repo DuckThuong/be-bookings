@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
+import { CmsTripValidationMessage } from '../assets/messages/cms-trip.message';
+import { TbDriver } from '../entities/driver.entity';
+import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
+import { TbVehicle } from '../entities/vehicle.entity';
 import { TripRepository } from '../repositories/trip.repository';
 import { RoadRepository } from '../repositories/road.repository';
 import {
@@ -33,14 +41,15 @@ export class TripService {
       payload.roadId,
     );
     await this.companyAccess.assertCompanyAccess(user, road.companyId);
-    await this.companyAccess.assertVehicleBelongsToCompany(
+    const vehicle = await this.companyAccess.assertVehicleBelongsToCompany(
       road.companyId,
       payload.vehicleId,
     );
-    await this.companyAccess.assertDriverBelongsToCompany(
+    const driver = await this.companyAccess.assertDriverBelongsToCompany(
       road.companyId,
       payload.driverId,
     );
+    this.assertTripRelationsActive(road, vehicle, driver);
 
     const trip = await this.tripRepository.save({
       companyId: road.companyId,
@@ -107,42 +116,25 @@ export class TripService {
     payload: UpdateTripDto,
   ): Promise<TbTrip> {
     const existing = await this.findOne(user, id);
-    const existingRoad = await this.roadRepository.findById(existing.roadId);
-    if (!existingRoad) {
+
+    const roadId = payload.roadId ?? existing.roadId;
+    const vehicleId = payload.vehicleId ?? existing.vehicleId;
+    const driverId = payload.driverId ?? existing.driverId;
+    const road = await this.roadRepository.findById(roadId);
+    if (!road) {
       throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
     }
-    if (payload.roadId !== undefined) {
-      const road = await this.roadRepository.findById(payload.roadId);
-      if (!road) {
-        throw new NotFoundException(CompanyErrorMessage.ROAD_NOT_FOUND);
-      }
-      await this.companyAccess.assertCompanyAccess(user, road.companyId);
-      if (payload.vehicleId !== undefined) {
-        await this.companyAccess.assertVehicleBelongsToCompany(
-          road.companyId,
-          payload.vehicleId,
-        );
-      }
-      if (payload.driverId !== undefined) {
-        await this.companyAccess.assertDriverBelongsToCompany(
-          road.companyId,
-          payload.driverId,
-        );
-      }
-    } else {
-      if (payload.vehicleId !== undefined) {
-        await this.companyAccess.assertVehicleBelongsToCompany(
-          existingRoad.companyId,
-          payload.vehicleId,
-        );
-      }
-      if (payload.driverId !== undefined) {
-        await this.companyAccess.assertDriverBelongsToCompany(
-          existingRoad.companyId,
-          payload.driverId,
-        );
-      }
-    }
+    await this.companyAccess.assertCompanyAccess(user, road.companyId);
+    const vehicle = await this.companyAccess.assertVehicleBelongsToCompany(
+      road.companyId,
+      vehicleId,
+    );
+    const driver = await this.companyAccess.assertDriverBelongsToCompany(
+      road.companyId,
+      driverId,
+    );
+    this.assertTripRelationsActive(road, vehicle, driver);
+
     await this.tripRepository.update(id, payload);
     return this.findOne(user, id);
   }
@@ -154,5 +146,21 @@ export class TripService {
     await this.findOne(user, id);
     await this.tripRepository.update(id, { status: EntityStatus.INACTIVE });
     return { message: 'Đã vô hiệu hóa chuyến xe' };
+  }
+
+  private assertTripRelationsActive(
+    road: TbRoad,
+    vehicle: TbVehicle,
+    driver: TbDriver,
+  ): void {
+    if (road.status !== EntityStatus.ACTIVE) {
+      throw new BadRequestException(CmsTripValidationMessage.ROAD_INACTIVE);
+    }
+    if (vehicle.status !== EntityStatus.ACTIVE) {
+      throw new BadRequestException(CmsTripValidationMessage.VEHICLE_INACTIVE);
+    }
+    if (driver.status !== EntityStatus.ACTIVE) {
+      throw new BadRequestException(CmsTripValidationMessage.DRIVER_INACTIVE);
+    }
   }
 }

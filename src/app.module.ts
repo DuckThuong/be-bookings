@@ -20,7 +20,6 @@ import { CMSDashboardModule } from './modules/CMS/CMS_dashboard.module';
 import { CMSRevenueModule } from './modules/CMS/CMS_revenue.module';
 import { CMSReportModule } from './modules/CMS/CMS_report.module';
 import { TbMasterData } from './entities/master-data.entity';
-import { TbCompanyTrip } from './entities/company/company-trip.entity';
 import { TbVehicle } from './entities/vehicle.entity';
 import { TbTrip } from './entities/trip.entity';
 import { TbDriver } from './entities/driver.entity';
@@ -60,7 +59,6 @@ import { TbSeat } from './entities/seat.entity';
           TbBasicUser,
           TbMasterData,
           TbCompany,
-          TbCompanyTrip,
           TbDriver,
           TbSeat,
           TbTrip,

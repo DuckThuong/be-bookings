@@ -4,7 +4,6 @@ import { In, Repository } from 'typeorm';
 import { TbCompany } from '../entities/company/company.entity';
 import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
-import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
 import { TbSeat } from '../entities/seat.entity';
@@ -36,8 +35,6 @@ export class ClientEnrichmentService {
     private readonly roadRepo: Repository<TbRoad>,
     @InjectRepository(TbTrip)
     private readonly tripRepo: Repository<TbTrip>,
-    @InjectRepository(TbCompanyTrip)
-    private readonly companyTripRepo: Repository<TbCompanyTrip>,
     @InjectRepository(TbVehicle)
     private readonly vehicleRepo: Repository<TbVehicle>,
     @InjectRepository(TbDriver)
@@ -54,16 +51,16 @@ export class ClientEnrichmentService {
     private readonly refundRepo: Repository<TbRefund>,
   ) {}
 
-  async getOccupiedSeatIds(companyTripId: number): Promise<number[]> {
+  async getOccupiedSeatIds(tripId: number): Promise<number[]> {
     const tickets = await this.ticketRepo.find({
       where: {
-        companyTripId,
+        tripId,
         status: In([TicketStatus.PENDING, TicketStatus.PAID]),
       },
     });
     const bookings = await this.bookingRepo
       .createQueryBuilder('b')
-      .where('b.companyTripId = :companyTripId', { companyTripId })
+      .where('b.tripId = :tripId', { tripId })
       .andWhere('b.status = :status', { status: BookingStatus.HOLD })
       .andWhere('b.holdExpiresAt > :now', { now: new Date() })
       .getMany();
@@ -93,94 +90,59 @@ export class ClientEnrichmentService {
     };
   }
 
-  async enrichCompanyTrips(companyTrips: TbCompanyTrip[]) {
-    if (companyTrips.length === 0) {
+  async enrichTripsForClient(trips: TbTrip[]) {
+    if (trips.length === 0) {
       return [];
     }
-    const [companyMap, tripMap, vehicleMap, driverMap] = await Promise.all([
-      this.loadCompanies(companyTrips.map((c) => c.companyId)),
-      this.loadTrips(companyTrips.map((c) => c.tripId)),
-      this.loadVehicles(companyTrips.map((c) => c.vehicleId)),
-      this.loadDrivers(companyTrips.map((c) => c.driverId)),
+    const [companyMap, roadMap, vehicleMap, driverMap] = await Promise.all([
+      this.loadCompanies(trips.map((t) => t.companyId)),
+      this.loadRoads(trips.map((t) => t.roadId)),
+      this.loadVehicles(trips.map((t) => t.vehicleId)),
+      this.loadDrivers(trips.map((t) => t.driverId)),
     ]);
-    const roadIds = [...tripMap.values()].map((t) => t.roadId);
-    const roadMap = await this.loadRoads(roadIds);
 
-    return Promise.all(
-      companyTrips.map(async (ct) => {
-        const trip = tripMap.get(ct.tripId) ?? null;
-        const road = trip ? (roadMap.get(trip.roadId) ?? null) : null;
-        const availableSeats = ct.totalSeat - ct.totalSeatBooked;
-        return {
-          ...ct,
-          availableSeats,
-          company: companyMap.get(ct.companyId) ?? null,
-          trip,
-          road,
-          vehicle: vehicleMap.get(ct.vehicleId) ?? null,
-          driver: driverMap.get(ct.driverId) ?? null,
-        };
-      }),
-    );
-  }
-
-  async enrichCompanyTripDetail(companyTrip: TbCompanyTrip) {
-    const occupiedSeatIds = await this.getOccupiedSeatIds(companyTrip.id);
-    const seats = await this.seatRepo.find({
-      where: { vehicleId: companyTrip.vehicleId },
-      order: { id: 'ASC' },
+    return trips.map((trip) => {
+      const vehicle = vehicleMap.get(trip.vehicleId) ?? null;
+      const totalSeat = vehicle?.seatCount ?? 0;
+      return {
+        id: trip.id,
+        pricePerSeat: Number(trip.seatPrice),
+        totalSeat,
+        totalSeatBooked: trip.bookedSeats ?? 0,
+        availableSeats: Math.max(0, totalSeat - (trip.bookedSeats ?? 0)),
+        company: companyMap.get(trip.companyId) ?? null,
+        trip,
+        road: roadMap.get(trip.roadId) ?? null,
+        vehicle,
+        driver: driverMap.get(trip.driverId) ?? null,
+      };
     });
-    const [company, trip, vehicle, driver] = await Promise.all([
-      this.companyRepo.findOne({ where: { id: companyTrip.companyId } }),
-      this.tripRepo.findOne({ where: { id: companyTrip.tripId } }),
-      this.vehicleRepo.findOne({ where: { id: companyTrip.vehicleId } }),
-      this.driverRepo.findOne({ where: { id: companyTrip.driverId } }),
-    ]);
-    const road = trip
-      ? await this.roadRepo.findOne({ where: { id: trip.roadId } })
-      : null;
-
-    const seatDetails = seats.map((seat) => ({
-      ...seat,
-      isOccupied: occupiedSeatIds.includes(seat.id),
-    }));
-
-    return {
-      ...companyTrip,
-      availableSeats: companyTrip.totalSeat - companyTrip.totalSeatBooked,
-      occupiedSeatIds,
-      company,
-      trip,
-      road,
-      vehicle,
-      driver,
-      seats: seatDetails,
-    };
   }
 
   async enrichTickets(tickets: TbTicket[]) {
     if (tickets.length === 0) {
       return [];
     }
-    const companyTripIds = [...new Set(tickets.map((t) => t.companyTripId))];
-    const companyTrips = await this.companyTripRepo.find({
-      where: { id: In(companyTripIds) },
-    });
+    const tripIds = [...new Set(tickets.map((t) => t.tripId))];
+    const trips =
+      tripIds.length > 0
+        ? await this.tripRepo.find({ where: { id: In(tripIds) } })
+        : [];
     const scheduleMap = new Map(
-      (await this.enrichCompanyTrips(companyTrips)).map((s) => [s.id, s]),
+      (await this.enrichTripsForClient(trips)).map((s) => [s.id, s]),
     );
     return tickets.map((ticket) => ({
       ...ticket,
-      schedule: scheduleMap.get(ticket.companyTripId) ?? null,
+      schedule: scheduleMap.get(ticket.tripId) ?? null,
     }));
   }
 
   async enrichTicketDetail(ticket: TbTicket) {
-    const schedule = await this.companyTripRepo.findOne({
-      where: { id: ticket.companyTripId },
+    const schedule = await this.tripRepo.findOne({
+      where: { id: ticket.tripId },
     });
     const scheduleDetail = schedule
-      ? await this.enrichCompanyTripDetail(schedule)
+      ? (await this.enrichTripsForClient([schedule]))[0]
       : null;
     const seatIds = ticket.seatIds ?? [];
     const seats =
@@ -252,12 +214,13 @@ export class ClientEnrichmentService {
     if (bookings.length === 0) {
       return [];
     }
-    const companyTripIds = [...new Set(bookings.map((b) => b.companyTripId))];
-    const companyTrips = await this.companyTripRepo.find({
-      where: { id: In(companyTripIds) },
-    });
+    const tripIds = [...new Set(bookings.map((b) => b.tripId))];
+    const trips =
+      tripIds.length > 0
+        ? await this.tripRepo.find({ where: { id: In(tripIds) } })
+        : [];
     const scheduleMap = new Map(
-      (await this.enrichCompanyTrips(companyTrips)).map((s) => [s.id, s]),
+      (await this.enrichTripsForClient(trips)).map((s) => [s.id, s]),
     );
 
     const ticketIds = [
@@ -292,7 +255,7 @@ export class ClientEnrichmentService {
       return {
         ...booking,
         status: resolveClientBookingStatus(booking, ticket, payment),
-        schedule: scheduleMap.get(booking.companyTripId) ?? null,
+        schedule: scheduleMap.get(booking.tripId) ?? null,
         ticket,
         payment,
       };
@@ -300,11 +263,11 @@ export class ClientEnrichmentService {
   }
 
   async enrichBookingDetail(booking: TbBooking) {
-    const schedule = await this.companyTripRepo.findOne({
-      where: { id: booking.companyTripId },
+    const schedule = await this.tripRepo.findOne({
+      where: { id: booking.tripId },
     });
     const scheduleDetail = schedule
-      ? await this.enrichCompanyTripDetail(schedule)
+      ? (await this.enrichTripsForClient([schedule]))[0]
       : null;
     const seatIds = booking.seatIds ?? [];
     const seats =

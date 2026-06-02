@@ -13,14 +13,12 @@ import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
 import { TbBooking } from '../../entities/sales/booking.entity';
 import { TbPayment } from '../../entities/sales/payment.entity';
 import { TbTicket } from '../../entities/ticket.entity';
-import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
 import { TbSeat } from '../../entities/seat.entity';
 import { PaymentRepository } from '../../repositories/sales/payment.repository';
 import { BookingRepository } from '../../repositories/sales/booking.repository';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { CompanyAccessService } from '../company-access.service';
 import { PaymentService } from '../sales/payment.service';
 import { ConfirmPaymentDto } from '../../dtos/sales/sales.dto';
@@ -37,7 +35,6 @@ export class CMSBookingService {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly bookingRepository: BookingRepository,
-    private readonly companyTripRepository: CompanyTripRepository,
     private readonly companyAccess: CompanyAccessService,
     private readonly paymentService: PaymentService,
     @InjectRepository(TbTrip)
@@ -126,23 +123,7 @@ export class CMSBookingService {
         : [];
     const bookingMap = new Map(bookings.map((b) => [b.id, b]));
 
-    const companyTripIds = [
-      ...new Set(payments.map((p) => p.companyTripId)),
-    ];
-    const companyTrips = await Promise.all(
-      companyTripIds.map((id) => this.companyTripRepository.findById(id)),
-    );
-    const companyTripMap = new Map(
-      companyTrips
-        .filter((ct): ct is TbCompanyTrip => ct != null)
-        .map((ct) => [ct.id, ct]),
-    );
-
-    const tripIds = [
-      ...new Set(
-        [...companyTripMap.values()].map((ct) => ct.tripId),
-      ),
-    ];
+    const tripIds = [...new Set(payments.map((p) => p.tripId))];
     const trips =
       tripIds.length > 0
         ? await this.tripRepo.find({ where: { id: In(tripIds) } })
@@ -156,11 +137,7 @@ export class CMSBookingService {
         : [];
     const roadMap = new Map(roads.map((r) => [r.id, r]));
 
-    const vehicleIds = [
-      ...new Set(
-        [...companyTripMap.values()].map((ct) => ct.vehicleId),
-      ),
-    ];
+    const vehicleIds = [...new Set(trips.map((t) => t.vehicleId))];
     const vehicles =
       vehicleIds.length > 0
         ? await this.vehicleRepo.find({ where: { id: In(vehicleIds) } })
@@ -184,12 +161,9 @@ export class CMSBookingService {
       const booking = ticket?.bookingId
         ? (bookingMap.get(ticket.bookingId) ?? null)
         : null;
-      const companyTrip = companyTripMap.get(payment.companyTripId) ?? null;
-      const trip = companyTrip ? (tripMap.get(companyTrip.tripId) ?? null) : null;
+      const trip = tripMap.get(payment.tripId) ?? null;
       const road = trip ? (roadMap.get(trip.roadId) ?? null) : null;
-      const vehicle = companyTrip
-        ? (vehicleMap.get(companyTrip.vehicleId) ?? null)
-        : null;
+      const vehicle = trip ? (vehicleMap.get(trip.vehicleId) ?? null) : null;
 
       const seatLabels = (ticket?.seatIds ?? [])
         .map((id) => seatMap.get(id)?.name ?? seatMap.get(id)?.code)

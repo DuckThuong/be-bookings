@@ -44,13 +44,13 @@ export class BookingController {
   findAll(
     @User() user: UserDecoratorDtoResponse,
     @Query('companyId') companyId?: string,
-    @Query('companyTripId') companyTripId?: string,
+    @Query('tripId') tripId?: string,
     @Query('customerId') customerId?: string,
     @Query('status') status?: string,
   ) {
     return this.bookingService.findAll(user, {
       companyId: companyId ? parseInt(companyId, 10) : undefined,
-      companyTripId: companyTripId ? parseInt(companyTripId, 10) : undefined,
+      tripId: tripId ? parseInt(tripId, 10) : undefined,
       customerId,
       status,
     });

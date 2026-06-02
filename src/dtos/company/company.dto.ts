@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EntityStatus } from '../../assets/constants/company.constants';
+import { VehicleLayoutConfig } from '../../common/seat-layout/seat-layout';
 
 export class CreateCompanyDto {
   @ApiProperty({ example: 'Nhà xe Phương Trang' })
@@ -222,6 +223,9 @@ export class CreateVehicleDto {
 
   @ApiProperty({ example: 40 })
   seatCount: number;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  layoutConfig?: VehicleLayoutConfig | null;
 }
 
 export class UpdateVehicleDto {
@@ -248,6 +252,9 @@ export class UpdateVehicleDto {
 
   @ApiPropertyOptional({ example: 40 })
   seatCount?: number;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  layoutConfig?: VehicleLayoutConfig | null;
 }
 
 export class CreateDriverDto {
@@ -294,61 +301,6 @@ export class UpdateDriverDto {
 
   @ApiPropertyOptional()
   email?: string;
-
-  @ApiPropertyOptional()
-  description?: string;
-
-  @ApiPropertyOptional({ enum: EntityStatus })
-  status?: string;
-}
-
-export class CreateCompanyTripDto {
-  @ApiProperty({ example: 1, description: 'ID nhà xe' })
-  companyId: number;
-
-  @ApiProperty({ example: 1, description: 'ID chuyến mẫu (tb_trip)' })
-  tripId: number;
-
-  @ApiProperty({ example: 1, description: 'ID phương tiện' })
-  vehicleId: number;
-
-  @ApiProperty({ example: 1, description: 'ID tài xế' })
-  driverId: number;
-
-  @ApiProperty({ example: 40 })
-  totalSeat: number;
-
-  @ApiPropertyOptional({ example: 0 })
-  totalSeatBooked?: number;
-
-  @ApiProperty({ example: 350000 })
-  pricePerSeat: number;
-
-  @ApiPropertyOptional()
-  description?: string;
-
-  @ApiPropertyOptional({ enum: EntityStatus })
-  status?: string;
-}
-
-export class UpdateCompanyTripDto {
-  @ApiPropertyOptional()
-  tripId?: number;
-
-  @ApiPropertyOptional()
-  vehicleId?: number;
-
-  @ApiPropertyOptional()
-  driverId?: number;
-
-  @ApiPropertyOptional()
-  totalSeat?: number;
-
-  @ApiPropertyOptional()
-  totalSeatBooked?: number;
-
-  @ApiPropertyOptional()
-  pricePerSeat?: number;
 
   @ApiPropertyOptional()
   description?: string;
@@ -413,6 +365,5 @@ export class CompanyOverviewDto {
   tripCount: number;
   vehicleCount: number;
   driverCount: number;
-  companyTripCount: number;
   seatCount: number;
 }

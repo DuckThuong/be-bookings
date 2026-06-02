@@ -1,82 +1,71 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CompanyTripStatRepository } from '../../repositories/sales/company-trip-stat.repository';
+import { TripStatRepository } from '../../repositories/sales/trip-stat.repository';
 import { PaymentRepository } from '../../repositories/sales/payment.repository';
 import { TicketRepository } from '../../repositories/ticket.repository';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
+import { TripRepository } from '../../repositories/trip.repository';
 import { SalesErrorMessage } from '../../assets/messages/sales.message';
 import { PaymentStatus } from '../../assets/constants/sales.constants';
 import { TicketStatus } from '../../assets/constants/ticket.constants';
-import { UpsertCompanyTripStatDto } from '../../dtos/sales/sales.dto';
+import { UpsertTripStatDto } from '../../dtos/sales/sales.dto';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
 import { CompanyAccessService } from '../company-access.service';
 
 @Injectable()
-export class CompanyTripStatService {
+export class TripStatService {
   constructor(
-    private readonly companyTripStatRepository: CompanyTripStatRepository,
+    private readonly tripStatRepository: TripStatRepository,
     private readonly paymentRepository: PaymentRepository,
     private readonly ticketRepository: TicketRepository,
-    private readonly companyTripRepository: CompanyTripRepository,
+    private readonly tripRepository: TripRepository,
     private readonly companyAccess: CompanyAccessService,
   ) {}
 
-  async upsert(
-    user: UserDecoratorDtoResponse,
-    payload: UpsertCompanyTripStatDto,
-  ) {
+  async upsert(user: UserDecoratorDtoResponse, payload: UpsertTripStatDto) {
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
-    await this.companyAccess.assertCompanyTripBelongsToCompany(
+    await this.companyAccess.assertTripBelongsToCompany(
       payload.companyId,
-      payload.companyTripId,
+      payload.tripId,
     );
 
-    const existing =
-      await this.companyTripStatRepository.findByTripAndDate(
-        payload.companyTripId,
-        payload.statDate,
-      );
+    const existing = await this.tripStatRepository.findByTripAndDate(
+      payload.tripId,
+      payload.statDate,
+    );
 
     if (existing) {
-      await this.companyTripStatRepository.update(existing.id, payload);
-      return this.companyTripStatRepository.findById(existing.id);
+      await this.tripStatRepository.update(existing.id, payload);
+      return this.tripStatRepository.findById(existing.id);
     }
 
-    return this.companyTripStatRepository.save(payload);
+    return this.tripStatRepository.save(payload);
   }
 
   async findByCompany(user: UserDecoratorDtoResponse, companyId: number) {
     await this.companyAccess.assertCompanyAccess(user, companyId);
-    return this.companyTripStatRepository.findByCompany(companyId);
+    return this.tripStatRepository.findByCompany(companyId);
   }
 
-  async findByCompanyTrip(
-    user: UserDecoratorDtoResponse,
-    companyTripId: number,
-  ) {
-    const trip = await this.companyTripRepository.findById(companyTripId);
+  async findByTrip(user: UserDecoratorDtoResponse, tripId: number) {
+    const trip = await this.tripRepository.findById(tripId);
     if (!trip) {
       throw new NotFoundException(SalesErrorMessage.STAT_NOT_FOUND);
     }
     await this.companyAccess.assertCompanyAccess(user, trip.companyId);
-    return this.companyTripStatRepository.findByCompanyTrip(companyTripId);
+    return this.tripStatRepository.findByTrip(tripId);
   }
 
   async recompute(
     user: UserDecoratorDtoResponse,
-    companyTripId: number,
+    tripId: number,
     statDate: string,
   ) {
-    const companyTrip = await this.companyTripRepository.findById(
-      companyTripId,
-    );
-    if (!companyTrip) {
+    const trip = await this.tripRepository.findById(tripId);
+    if (!trip) {
       throw new NotFoundException(SalesErrorMessage.STAT_NOT_FOUND);
     }
-    await this.companyAccess.assertCompanyAccess(user, companyTrip.companyId);
+    await this.companyAccess.assertCompanyAccess(user, trip.companyId);
 
-    const tickets = await this.ticketRepository.findByFilter({
-      companyTripId,
-    });
+    const tickets = await this.ticketRepository.findByFilter({ tripId });
     const paidTickets = tickets.filter((t) => t.status === TicketStatus.PAID);
 
     const grossRevenue = paidTickets.reduce(
@@ -90,19 +79,14 @@ export class CompanyTripStatService {
     const seatSold = paidTickets.reduce((s, t) => s + t.totalSeat, 0);
 
     const payments = await this.paymentRepository.findByFilter({
-      companyTripId,
+      tripId,
       status: PaymentStatus.SUCCESS,
     });
     const netRevenue = payments.reduce((s, p) => s + Number(p.amount), 0);
 
-    const occupancyRate =
-      companyTrip.totalSeat > 0
-        ? (seatSold / companyTrip.totalSeat) * 100
-        : 0;
-
     return this.upsert(user, {
-      companyTripId,
-      companyId: companyTrip.companyId,
+      tripId,
+      companyId: trip.companyId,
       statDate,
       ticketCount: paidTickets.length,
       seatSold,
@@ -112,7 +96,7 @@ export class CompanyTripStatService {
       refundTotal: 0,
       cancelledCount: tickets.filter((t) => t.status === TicketStatus.CANCELLED)
         .length,
-      occupancyRate,
+      occupancyRate: 0,
     });
   }
 }

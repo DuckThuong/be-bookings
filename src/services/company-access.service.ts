@@ -11,14 +11,12 @@ import { TbRoad } from '../entities/road.entity';
 import { TbTrip } from '../entities/trip.entity';
 import { TbVehicle } from '../entities/vehicle.entity';
 import { TbDriver } from '../entities/driver.entity';
-import { TbCompanyTrip } from '../entities/company/company-trip.entity';
 import { TbSeat } from '../entities/seat.entity';
 import { CompanyRepository } from '../repositories/company.repository';
 import { RoadRepository } from '../repositories/road.repository';
 import { TripRepository } from '../repositories/trip.repository';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { DriverRepository } from '../repositories/driver.repository';
-import { CompanyTripRepository } from '../repositories/company-trip.repository';
 import { SeatRepository } from '../repositories/seat.repository';
 import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
@@ -35,7 +33,6 @@ export class CompanyAccessService {
     private readonly tripRepository: TripRepository,
     private readonly vehicleRepository: VehicleRepository,
     private readonly driverRepository: DriverRepository,
-    private readonly companyTripRepository: CompanyTripRepository,
     private readonly seatRepository: SeatRepository,
   ) {}
 
@@ -169,18 +166,6 @@ export class CompanyAccessService {
       );
     }
     return driver;
-  }
-
-  async assertCompanyTripBelongsToCompany(
-    companyId: number,
-    companyTripId: number,
-  ): Promise<TbCompanyTrip> {
-    const companyTrip =
-      await this.companyTripRepository.findById(companyTripId);
-    if (!companyTrip || companyTrip.companyId !== companyId) {
-      throw new NotFoundException(CompanyErrorMessage.COMPANY_TRIP_NOT_FOUND);
-    }
-    return companyTrip;
   }
 
   async assertSeatBelongsToCompany(

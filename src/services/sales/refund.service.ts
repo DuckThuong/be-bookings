@@ -8,7 +8,7 @@ import { TbRefund } from '../../entities/sales/refund.entity';
 import { RefundRepository } from '../../repositories/sales/refund.repository';
 import { PaymentRepository } from '../../repositories/sales/payment.repository';
 import { TicketRepository } from '../../repositories/ticket.repository';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
+import { TripRepository } from '../../repositories/trip.repository';
 import {
   PaymentStatus,
   RefundStatus,
@@ -28,7 +28,7 @@ export class RefundService {
     private readonly refundRepository: RefundRepository,
     private readonly paymentRepository: PaymentRepository,
     private readonly ticketRepository: TicketRepository,
-    private readonly companyTripRepository: CompanyTripRepository,
+    private readonly tripRepository: TripRepository,
     private readonly companyAccess: CompanyAccessService,
   ) {}
 
@@ -60,7 +60,7 @@ export class RefundService {
       code: generateEntityCode(SALES_CODE_PREFIX.REFUND),
       paymentId: payment.id,
       ticketId: payment.ticketId,
-      companyTripId: payment.companyTripId,
+      tripId: payment.tripId,
       companyId: payment.companyId,
       amount: payload.amount,
       reason: payload.reason ?? undefined,
@@ -109,21 +109,7 @@ export class RefundService {
       status: TicketStatus.REFUNDED,
     });
 
-    const companyTrip = await this.companyTripRepository.findById(
-      refund.companyTripId,
-    );
-    if (companyTrip) {
-      await this.companyTripRepository.update(companyTrip.id, {
-        totalSeatBooked: Math.max(
-          0,
-          companyTrip.totalSeatBooked - ticket.totalSeat,
-        ),
-        totalPrice: Math.max(
-          0,
-          Number(companyTrip.totalPrice) - Number(refund.amount),
-        ),
-      });
-    }
+    await this.tripRepository.decrementBookedSeats(ticket.tripId, ticket.totalSeat);
 
     return this.refundRepository.findById(id);
   }

@@ -13,6 +13,8 @@ import {
   CLIENT_BOOKING_META,
   CLIENT_BOOKING_VEHICLE_DISPLAY,
   PAYMENT_METHOD_LABELS,
+  type ClientCatalogPoint,
+  type ClientCatalogVehicle,
 } from '../../assets/config/client-booking.config';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
 import {
@@ -49,10 +51,13 @@ import {
   toClientBookingStatusFe,
 } from '../../common/helpers/client-booking-status.helper';
 import { CompanyAccessService } from '../company-access.service';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
 import { ClientBookingPricingService } from './client-booking-pricing.service';
 import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
+import {
+  buildVehicleLayout,
+  resolveVehicleLayoutConfig,
+} from '../../common/seat-layout/seat-layout';
 
 @Injectable()
 export class ClientBookingsService {
@@ -64,7 +69,6 @@ export class ClientBookingsService {
     private readonly ticketRepository: TicketRepository,
     private readonly paymentRepository: PaymentRepository,
     private readonly companyAccess: CompanyAccessService,
-    private readonly companyTripRepository: CompanyTripRepository,
     @InjectRepository(TbInfoUser)
     private readonly infoUserRepo: Repository<TbInfoUser>,
   ) {}
@@ -77,17 +81,18 @@ export class ClientBookingsService {
     const ctx = await this.tripResolver.resolve(tripId.trim());
 
     if (user.role !== UserRole.USER) {
-      await this.companyAccess.assertCompanyAccess(
-        user,
-        ctx.companyTrip.companyId,
-      );
+      await this.companyAccess.assertCompanyAccess(user, ctx.trip.companyId);
     }
 
     const defaultVehicleType = this.tripResolver.inferVehicleType(
       ctx.vehicle.seatCount,
       ctx.vehicle.type,
+      ctx.vehicle.layoutConfig,
     );
-    const defaultFloor = query.floor ?? 1;
+    const defaultFloor = this.clampFloor(
+      query.floor ?? 1,
+      this.resolveVehicleFloors(ctx),
+    );
     const tripDto = this.tripResolver.buildTripDto(ctx);
     const displayDate = this.resolveDisplayDate(query.date, tripDto.date);
 
@@ -96,13 +101,15 @@ export class ClientBookingsService {
       this.buildVehicleLayouts(ctx),
     ]);
 
-    const pickupPoints = this.filterPointsByLocation(
+    const pickupPoints = this.resolvePointOptions(
       CLIENT_BOOKING_CATALOG.pickupPoints,
       ctx.road.startPoint,
+      'pickup',
     );
-    const dropoffPoints = this.filterPointsByLocation(
+    const dropoffPoints = this.resolvePointOptions(
       CLIENT_BOOKING_CATALOG.dropoffPoints,
       ctx.road.endPoint,
+      'dropoff',
     );
 
     const unitPrice = ctx.unitPrice;
@@ -126,7 +133,6 @@ export class ClientBookingsService {
         breadcrumb: [...CLIENT_BOOKING_BREADCRUMB],
         trip: {
           tripId: tripDto.tripId,
-          companyTripId: ctx.companyTrip.id,
           from: tripDto.from,
           to: tripDto.to,
           operatorCode: tripDto.operatorCode,
@@ -158,7 +164,7 @@ export class ClientBookingsService {
         name: ctx.company.companyName,
         rating: 4.8,
         reviewCount: '2.1k',
-        routeLabel: `${ctx.road.startPoint} → ${ctx.road.endPoint}`,
+        routeLabel: `${ctx.road.startPoint} -> ${ctx.road.endPoint}`,
         amenities: [...CLIENT_BOOKING_CATALOG.operatorAmenities],
       },
       catalog: {
@@ -185,11 +191,11 @@ export class ClientBookingsService {
     await this.assertBookingOwner(user, booking);
     await this.assertHoldNotExpired(booking);
 
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
 
     if (payload.tripId?.trim()) {
       const requested = await this.tripResolver.resolve(payload.tripId.trim());
-      if (requested.companyTrip.id !== booking.companyTripId) {
+      if (requested.trip.id !== booking.tripId) {
         throw new HttpException(
           ClientErrorMessage.TRIP_MISMATCH,
           HttpStatus.BAD_REQUEST,
@@ -197,18 +203,20 @@ export class ClientBookingsService {
       }
     }
 
-    const vehicleType = booking.vehicleType ?? payload.vehicleType;
-    const floor = booking.floor ?? payload.floor ?? 1;
-    if (booking.vehicleType && booking.vehicleType !== payload.vehicleType) {
-      throw new HttpException(
-        ClientErrorMessage.HOLD_VEHICLE_MISMATCH,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    const vehicleType = this.resolveVehicleType(ctx);
+    const vehicleFloors = this.resolveVehicleFloors(ctx);
+    const payloadFloor =
+      payload.floor != null
+        ? this.clampFloor(payload.floor, vehicleFloors)
+        : undefined;
+    const floor = this.clampFloor(
+      booking.floor ?? payloadFloor ?? 1,
+      vehicleFloors,
+    );
     if (
       booking.floor != null &&
-      payload.floor != null &&
-      booking.floor !== payload.floor
+      payloadFloor != null &&
+      this.clampFloor(booking.floor, vehicleFloors) !== payloadFloor
     ) {
       throw new HttpException(
         ClientErrorMessage.HOLD_VEHICLE_MISMATCH,
@@ -278,16 +286,16 @@ export class ClientBookingsService {
     if (user.role !== UserRole.USER) {
       await this.companyAccess.assertCompanyAccess(
         user,
-        ctx.companyTrip.companyId,
+        ctx.trip.companyId,
       );
     }
 
-    const floor = payload.floor ?? 1;
-    const seatMap = await this.seatMapService.buildSeatMap(
-      ctx,
-      payload.vehicleType,
-      floor,
+    const vehicleType = this.resolveVehicleType(ctx);
+    const floor = this.clampFloor(
+      payload.floor ?? 1,
+      this.resolveVehicleFloors(ctx),
     );
+    const seatMap = await this.seatMapService.buildSeatMap(ctx, floor);
 
     let numericSeatIds: number[];
     try {
@@ -308,20 +316,20 @@ export class ClientBookingsService {
 
     const conflictSeats: string[] = [];
     for (const row of seatMap.rows) {
-      for (const seat of row.seats) {
-        if (!seat) continue;
-        if (payload.seatIds.includes(seat.id) && seat.status === 'vip') {
+      for (const cell of row.cells) {
+        if (cell.type !== 'seat') continue;
+        if (payload.seatIds.includes(cell.id) && cell.status === 'vip') {
           throw new HttpException(
             {
               statusCode: HttpStatus.CONFLICT,
               message: ClientErrorMessage.VIP_SEAT_NOT_SELECTABLE,
-              conflictSeats: [seat.id],
+              conflictSeats: [cell.id],
             },
             HttpStatus.CONFLICT,
           );
         }
-        if (payload.seatIds.includes(seat.id) && seat.status === 'booked') {
-          conflictSeats.push(seat.id);
+        if (payload.seatIds.includes(cell.id) && cell.status === 'booked') {
+          conflictSeats.push(cell.id);
         }
       }
     }
@@ -338,7 +346,7 @@ export class ClientBookingsService {
     }
 
     const remaining =
-      ctx.companyTrip.totalSeat - ctx.companyTrip.totalSeatBooked;
+      ctx.vehicle.seatCount - (ctx.trip.bookedSeats ?? 0);
     if (payload.seatIds.length > remaining) {
       throw new HttpException(
         ClientErrorMessage.NOT_ENOUGH_SEATS,
@@ -364,8 +372,7 @@ export class ClientBookingsService {
 
     const booking = await this.bookingRepository.save({
       code: generateEntityCode(SALES_CODE_PREFIX.BOOKING),
-      companyId: ctx.companyTrip.companyId,
-      companyTripId: ctx.companyTrip.id,
+      companyId: ctx.trip.companyId,
       tripId: ctx.trip.id,
       customerId,
       seatIds: numericSeatIds,
@@ -379,7 +386,7 @@ export class ClientBookingsService {
       promoCode: pricing.promoCode ?? undefined,
       addons: normalizedAddons,
       passenger: payload.passenger ?? null,
-      vehicleType: payload.vehicleType,
+      vehicleType,
       floor,
       status: BookingStatus.HOLD,
       holdExpiresAt,
@@ -404,7 +411,7 @@ export class ClientBookingsService {
     await this.assertBookingOwner(user, booking);
     await this.bookingRepository.update(booking.id, { passenger });
     const updated = await this.bookingRepository.findById(booking.id);
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
     return this.toBookingDraft(updated!, ctx);
   }
 
@@ -443,7 +450,7 @@ export class ClientBookingsService {
 
     await this.assertHoldNotExpired(booking);
 
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
 
     let ticket = booking.ticketId
       ? await this.ticketRepository.findById(booking.ticketId)
@@ -496,7 +503,7 @@ export class ClientBookingsService {
       payment = await this.paymentRepository.save({
         code: generateEntityCode(SALES_CODE_PREFIX.PAYMENT),
         ticketId: ticket.id,
-        companyTripId: booking.companyTripId,
+        tripId: booking.tripId,
         companyId: booking.companyId,
         customerId: booking.customerId,
         amount: booking.totalPrice,
@@ -552,7 +559,7 @@ export class ClientBookingsService {
 
     const payment = pickRepresentativePayment(payments);
 
-    const ctx = await this.tripResolver.resolve(String(booking.companyTripId));
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
 
     return this.toFeBookingSuccessResponse(
       await this.buildBookingResult(
@@ -574,7 +581,6 @@ export class ClientBookingsService {
     const ticket = await this.ticketRepository.save({
       code: generateEntityCode(CODE_PREFIX.TICKET),
       companyId: booking.companyId,
-      companyTripId: booking.companyTripId,
       tripId: booking.tripId,
       customerId: booking.customerId,
       pricePerSeat: booking.pricePerSeat,
@@ -612,8 +618,9 @@ export class ClientBookingsService {
     const dropoff = CLIENT_BOOKING_CATALOG.dropoffPoints.find(
       (p) => p.value === booking.passenger?.dropoffPoint,
     );
+    const vehicleType = this.resolveVehicleType(ctx);
     const vehicle = CLIENT_BOOKING_CATALOG.vehicles.find(
-      (v) => v.type === booking.vehicleType,
+      (v) => v.type === vehicleType,
     );
     const hasInsurance = (booking.addons ?? []).some(
       (a) => a.id === 'insurance',
@@ -637,7 +644,7 @@ export class ClientBookingsService {
       },
       ticket: {
         operatorShortName: ctx.company.code,
-        busType: vehicle?.label ?? booking.vehicleType ?? '',
+        busType: vehicle?.label ?? vehicleType,
         rating: 4.8,
         hasInsurance,
         departStation: pickup?.label ?? trip.from,
@@ -675,7 +682,7 @@ export class ClientBookingsService {
           icon: 'ti-message',
           colorClass: 'blue',
           title: 'Thanh toán đã ghi nhận',
-          desc: 'Yêu cầu thanh toán đã gửi — chờ nhà xe đối soát và xác nhận vé.',
+          desc: 'Yêu cầu thanh toán đã gửi - chờ nhà xe đối soát và xác nhận vé.',
         },
       ];
     }
@@ -766,11 +773,7 @@ export class ClientBookingsService {
     booking: TbBooking,
     ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
   ) {
-    const map = await this.seatMapService.buildSeatMap(
-      ctx,
-      booking.vehicleType ?? '16',
-      booking.floor ?? 1,
-    );
+    const map = await this.seatMapService.buildSeatMap(ctx, booking.floor ?? 1);
     return (booking.seatIds ?? []).map((id) => ({
       id: map.seatIdToDisplayId.get(id) ?? String(id),
       label: map.seatIdToDisplayId.get(id) ?? String(id),
@@ -805,7 +808,7 @@ export class ClientBookingsService {
     return {
       holdId: booking.code,
       tripId: trip.tripId,
-      vehicleType: booking.vehicleType,
+      vehicleType: this.resolveVehicleType(ctx),
       floor: booking.floor ?? 1,
       seatIds: seats.map((s) => s.id),
       addons: booking.addons ?? [],
@@ -909,57 +912,171 @@ export class ClientBookingsService {
           Array<{
             row: number;
             full?: boolean;
-            seats: Array<{ id: string; status: string } | null>;
+            cells: Array<
+              | { type: 'seat'; id: string; label: string; status: string }
+              | { type: 'aisle' }
+              | { type: 'empty' }
+            >;
           }>
         >;
       }
     > = {};
 
-    for (const vehicle of CLIENT_BOOKING_CATALOG.vehicles) {
-      const display = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type];
-      const layouts: Record<
-        string,
-        Array<{
-          row: number;
-          full?: boolean;
-          seats: Array<{ id: string; status: string } | null>;
-        }>
-      > = {};
+    const vehicleType = this.resolveVehicleType(ctx);
+    const vehicle = this.resolveVehicleCatalog(vehicleType);
+    const layouts: Record<
+      string,
+      Array<{
+        row: number;
+        cells: Array<
+          | { type: 'seat'; id: string; label: string; status: string }
+          | { type: 'aisle' }
+          | { type: 'empty' }
+        >;
+      }>
+    > = {};
 
-      for (let floor = 1; floor <= vehicle.floors; floor++) {
-        const seatMap = await this.seatMapService.buildSeatMap(
-          ctx,
-          vehicle.type,
-          floor,
-        );
-        layouts[String(floor)] = seatMap.rows.map((row) => ({
-          row: row.row,
-          full: row.full,
-          seats: row.seats.map((seat) =>
-            seat ? { id: seat.id, status: seat.status } : null,
-          ),
-        }));
-      }
-
-      vehicles[vehicle.type] = {
-        label: vehicle.label,
-        icon: display?.icon ?? 'ti-bus',
-        mapTitle: display?.mapTitle ?? vehicle.label,
-        mapSub: display?.mapSub ?? '',
-        floors: vehicle.floors,
-        isSleeper: vehicle.isSleeper,
-        layouts,
-      };
+    const layoutConfig = this.resolveLayoutConfig(ctx);
+    const builtLayout = buildVehicleLayout(layoutConfig);
+    const floorCount = layoutConfig.floorCount;
+    for (let floor = 1; floor <= floorCount; floor++) {
+      const seatMap = await this.seatMapService.buildSeatMap(ctx, floor);
+      layouts[String(floor)] = seatMap.rows.map((row) => ({
+        row: row.row,
+        cells: row.cells,
+      }));
     }
+    const display = this.buildVehicleDisplay(
+      vehicle,
+      layoutConfig.preset,
+      floorCount,
+      builtLayout.seatCount,
+    );
+
+    vehicles[vehicle.type] = {
+      label: display.label,
+      icon: display?.icon ?? 'ti-bus',
+      mapTitle: display?.mapTitle ?? display.label,
+      mapSub: display?.mapSub ?? '',
+      floors: floorCount,
+      isSleeper: display.isSleeper,
+      layouts,
+    };
 
     return vehicles;
   }
 
-  private filterPointsByLocation<
-    T extends { value: string; label: string; city: string },
-  >(points: readonly T[], location: string): T[] {
+  private resolveVehicleType(
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ): string {
+    return this.tripResolver.inferVehicleType(
+      ctx.vehicle.seatCount,
+      ctx.vehicle.type,
+      ctx.vehicle.layoutConfig,
+    );
+  }
+
+  private resolveVehicleCatalog(vehicleType: string): ClientCatalogVehicle {
+    return (
+      CLIENT_BOOKING_CATALOG.vehicles.find((item) => item.type === vehicleType) ??
+      CLIENT_BOOKING_CATALOG.vehicles[0]
+    );
+  }
+
+  private resolveVehicleFloors(
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ): number {
+    return this.resolveLayoutConfig(ctx).floorCount;
+  }
+
+  private clampFloor(floor: number, floorCount: number): number {
+    const requested = Math.max(1, Math.floor(Number(floor) || 1));
+    return Math.min(requested, Math.max(1, floorCount));
+  }
+
+  private resolveLayoutConfig(
+    ctx: Awaited<ReturnType<ClientBookingTripResolverService['resolve']>>,
+  ) {
+    return resolveVehicleLayoutConfig(ctx.vehicle.layoutConfig, {
+      seatCount: ctx.vehicle.seatCount,
+      vehicleType: ctx.vehicle.type,
+    });
+  }
+
+  private buildVehicleDisplay(
+    vehicle: ClientCatalogVehicle,
+    preset: string,
+    floorCount: number,
+    seatCount: number,
+  ): ClientCatalogVehicle & {
+    icon: string;
+    mapTitle: string;
+    mapSub: string;
+  } {
+    const icon = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type]?.icon ?? 'ti-bus';
+    const isSleeper = preset === 'SLEEPER_38';
+
+    if (preset === 'CUSTOM_SIMPLE') {
+      const label = `Xe ${seatCount} chỗ`;
+      return {
+        ...vehicle,
+        label,
+        floors: floorCount,
+        isSleeper: false,
+        icon,
+        mapTitle: label,
+        mapSub: `Sơ đồ ${seatCount} chỗ, ${floorCount} tầng.`,
+      };
+    }
+
+    const display = CLIENT_BOOKING_VEHICLE_DISPLAY[vehicle.type];
+    const label =
+      preset === 'SLEEPER_38'
+        ? `Giường nằm ${seatCount}`
+        : preset === 'COACH'
+          ? `Ghế ngồi ${seatCount}`
+          : `Xe ${seatCount} chỗ`;
+
+    return {
+      ...vehicle,
+      label,
+      floors: floorCount,
+      isSleeper,
+      icon,
+      mapTitle:
+        display?.mapTitle ??
+        `${label}${floorCount > 1 ? ` - ${floorCount} tầng` : ''}`,
+      mapSub:
+        display?.mapSub ??
+        `Sơ đồ ${seatCount} chỗ, ${floorCount} tầng.`,
+    };
+  }
+
+  private resolvePointOptions(
+    points: readonly ClientCatalogPoint[],
+    location: string,
+    fallbackPrefix: string,
+  ): ClientCatalogPoint[] {
+    const matched = this.filterPointsByLocation(points, location);
+    if (matched.length > 0) return matched;
+
+    const label = location.trim();
+    const valueBase = this.slugifyPointValue(label || fallbackPrefix);
+    return [
+      {
+        value: `${fallbackPrefix}-${valueBase}`,
+        label: label || fallbackPrefix,
+        city: label || fallbackPrefix,
+      },
+    ];
+  }
+
+  private filterPointsByLocation(
+    points: readonly ClientCatalogPoint[],
+    location: string,
+  ): ClientCatalogPoint[] {
     const normalized = location.trim().toLowerCase();
-    if (!normalized) return [...points];
+    if (!normalized) return [];
 
     const matched = points.filter(
       (point) =>
@@ -967,7 +1084,18 @@ export class ClientBookingsService {
         normalized.includes(point.label.toLowerCase()),
     );
 
-    return matched.length > 0 ? matched : [...points];
+    return matched;
+  }
+
+  private slugifyPointValue(value: string): string {
+    const normalized = value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    return normalized || 'point';
   }
 
   private resolveDisplayDate(dateQuery?: string, fallbackIso?: string): string {

@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
+  IsObject,
   IsNumber,
   IsOptional,
   IsString,
@@ -12,6 +13,11 @@ import {
 } from 'class-validator';
 import { EntityStatus } from '../../assets/constants/company.constants';
 import { CmsVehicleValidationMessage } from '../../assets/messages/cms-vehical.message';
+import {
+  VehicleLayoutConfig,
+  VEHICLE_LAYOUT_PRESETS,
+  VehicleLayoutPreset,
+} from '../../common/seat-layout/seat-layout';
 
 export class CmsVehicleFormPayloadDto {
   @ApiPropertyOptional({ example: 1 })
@@ -78,6 +84,17 @@ export class CmsVehicleFormPayloadDto {
   @Min(1, { message: CmsVehicleValidationMessage.SEAT_COUNT_MIN })
   @Max(100, { message: CmsVehicleValidationMessage.SEAT_COUNT_MAX })
   seatCount?: number;
+
+  @ApiPropertyOptional({ enum: VEHICLE_LAYOUT_PRESETS })
+  @IsOptional()
+  @IsString()
+  @IsIn(VEHICLE_LAYOUT_PRESETS)
+  layoutPreset?: VehicleLayoutPreset;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  @IsOptional()
+  @IsObject()
+  layoutConfig?: Partial<VehicleLayoutConfig>;
 }
 
 export class CreateVehiclePayloadDto extends CmsVehicleFormPayloadDto {}
@@ -123,6 +140,12 @@ export class CmsVehicleEntityDto {
 
   @ApiProperty({ example: 34 })
   seatCount: number;
+
+  @ApiPropertyOptional({ enum: VEHICLE_LAYOUT_PRESETS })
+  layoutPreset?: VehicleLayoutPreset;
+
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  layoutConfig?: VehicleLayoutConfig | null;
 }
 
 export class VehicleResponseDto extends CmsVehicleEntityDto {}

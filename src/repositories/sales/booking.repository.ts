@@ -20,16 +20,14 @@ export class BookingRepository {
 
   findByFilter(filter: {
     companyId?: number;
-    companyTripId?: number;
+    tripId?: number;
     customerId?: string;
     status?: string;
   }) {
     return this.repo.find({
       where: {
         ...(filter.companyId !== undefined && { companyId: filter.companyId }),
-        ...(filter.companyTripId !== undefined && {
-          companyTripId: filter.companyTripId,
-        }),
+        ...(filter.tripId !== undefined && { tripId: filter.tripId }),
         ...(filter.customerId && { customerId: filter.customerId }),
         ...(filter.status && { status: filter.status }),
       },

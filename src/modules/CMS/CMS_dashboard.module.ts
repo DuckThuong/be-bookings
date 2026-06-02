@@ -15,7 +15,6 @@ import { TbBasicUser } from '../../entities/user/basic-user.entity';
 import { TbBooking } from '../../entities/sales/booking.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
-import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
       TbBooking,
       TbTrip,
       TbRoad,
-      TbCompanyTrip,
     ]),
     AuthModule,
     CompanyModule,

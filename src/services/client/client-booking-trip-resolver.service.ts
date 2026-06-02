@@ -1,19 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { TbCompany } from '../../entities/company/company.entity';
 import { TbRoad } from '../../entities/road.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
 import { TripRepository } from '../../repositories/trip.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClientErrorMessage } from '../../assets/messages/client.message';
 import { EntityStatus } from '../../assets/constants/company.constants';
+import {
+  layoutPresetToClientVehicleType,
+  resolveVehicleLayoutConfig,
+} from '../../common/seat-layout/seat-layout';
 
 export interface ResolvedTripContext {
-  companyTrip: TbCompanyTrip;
   trip: TbTrip;
   road: TbRoad;
   company: TbCompany;
@@ -25,7 +26,6 @@ export interface ResolvedTripContext {
 @Injectable()
 export class ClientBookingTripResolverService {
   constructor(
-    private readonly companyTripRepository: CompanyTripRepository,
     private readonly tripRepository: TripRepository,
     @InjectRepository(TbRoad)
     private readonly roadRepo: Repository<TbRoad>,
@@ -40,11 +40,11 @@ export class ClientBookingTripResolverService {
     const asNumber = Number(trimmed);
 
     if (!Number.isNaN(asNumber) && String(asNumber) === trimmed) {
-      const companyTrip = await this.companyTripRepository.findById(asNumber);
-      if (!companyTrip || companyTrip.status !== EntityStatus.ACTIVE) {
-        throw new NotFoundException(ClientErrorMessage.COMPANY_TRIP_NOT_FOUND);
+      const trip = await this.tripRepository.findById(asNumber);
+      if (!trip || trip.status !== EntityStatus.ACTIVE) {
+        throw new NotFoundException(ClientErrorMessage.TRIP_NOT_FOUND);
       }
-      return this.loadContext(companyTrip, trimmed);
+      return this.loadContext(trip, trimmed);
     }
 
     const trip = await this.tripRepository.findByCode(trimmed);
@@ -52,18 +52,11 @@ export class ClientBookingTripResolverService {
       throw new NotFoundException(ClientErrorMessage.TRIP_NOT_FOUND);
     }
 
-    const companyTrips = await this.companyTripRepository.findActiveByTripId(
-      trip.id,
-    );
-    if (companyTrips.length === 0) {
-      throw new NotFoundException(ClientErrorMessage.COMPANY_TRIP_NOT_FOUND);
-    }
-
-    return this.loadContext(companyTrips[0], trip.code);
+    return this.loadContext(trip, trip.code);
   }
 
   buildTripDto(ctx: ResolvedTripContext) {
-    const { trip, road, company, companyTrip } = ctx;
+    const { trip, road, company } = ctx;
     return {
       tripId: ctx.tripIdFe,
       from: road.startPoint,
@@ -76,13 +69,27 @@ export class ClientBookingTripResolverService {
       date: new Date().toISOString().slice(0, 10),
       durationLabel: road.standardDuration ? `~${road.standardDuration}` : '',
       unitPrice: ctx.unitPrice,
-      companyTripId: companyTrip.id,
-      companyId: companyTrip.companyId,
+      companyId: trip.companyId,
       tripDbId: trip.id,
     };
   }
 
-  inferVehicleType(seatCount: number, vehicleTypeRaw?: string): string {
+  inferVehicleType(
+    seatCount: number,
+    vehicleTypeRaw?: string,
+    layoutConfigRaw?: unknown,
+  ): string {
+    const layoutPreset = resolveVehicleLayoutConfig(layoutConfigRaw, {
+      seatCount,
+      vehicleType: vehicleTypeRaw,
+    }).preset;
+    if (layoutPreset) {
+      return layoutPresetToClientVehicleType(
+        layoutPreset,
+        seatCount,
+        vehicleTypeRaw,
+      );
+    }
     const normalized = vehicleTypeRaw?.trim();
     if (normalized && ['16', '36', '45'].includes(normalized)) {
       return normalized;
@@ -93,32 +100,26 @@ export class ClientBookingTripResolverService {
   }
 
   private async loadContext(
-    companyTrip: TbCompanyTrip,
+    trip: TbTrip,
     tripIdFe: string,
   ): Promise<ResolvedTripContext> {
-    const trip = await this.tripRepository.findById(companyTrip.tripId);
-    if (!trip) {
+    const [road, company, vehicle] = await Promise.all([
+      this.roadRepo.findOne({ where: { id: trip.roadId } }),
+      this.companyRepo.findOne({ where: { id: trip.companyId } }),
+      this.vehicleRepo.findOne({ where: { id: trip.vehicleId } }),
+    ]);
+
+    if (!road || !company || !vehicle) {
       throw new NotFoundException(ClientErrorMessage.TRIP_NOT_FOUND);
     }
 
-    const [road, company, vehicle] = await Promise.all([
-      this.roadRepo.findOne({ where: { id: trip.roadId } }),
-      this.companyRepo.findOne({ where: { id: companyTrip.companyId } }),
-      this.vehicleRepo.findOne({ where: { id: companyTrip.vehicleId } }),
-    ]);
-
-    if (!road || !company) {
-      throw new NotFoundException(ClientErrorMessage.COMPANY_TRIP_NOT_FOUND);
-    }
-
     return {
-      companyTrip,
       trip,
       road,
       company,
-      vehicle: vehicle!,
-      tripIdFe: trip.code || tripIdFe,
-      unitPrice: Number(companyTrip.pricePerSeat),
+      vehicle,
+      tripIdFe: String(trip.id || tripIdFe),
+      unitPrice: Number(trip.seatPrice),
     };
   }
 

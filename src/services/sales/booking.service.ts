@@ -35,9 +35,9 @@ export class BookingService {
   ): Promise<TbBooking> {
     this.assertCustomerAccess(user, payload.customerId);
     await this.companyAccess.assertCompanyAccess(user, payload.companyId);
-    await this.companyAccess.assertCompanyTripBelongsToCompany(
+    await this.companyAccess.assertTripBelongsToCompany(
       payload.companyId,
-      payload.companyTripId,
+      payload.tripId,
     );
 
     const discount = payload.discountAmount ?? 0;
@@ -46,7 +46,6 @@ export class BookingService {
     return this.bookingRepository.save({
       code: generateEntityCode(SALES_CODE_PREFIX.BOOKING),
       companyId: payload.companyId,
-      companyTripId: payload.companyTripId,
       tripId: payload.tripId,
       customerId: payload.customerId,
       seatIds: payload.seatIds,
@@ -65,7 +64,7 @@ export class BookingService {
     user: UserDecoratorDtoResponse,
     filter: {
       companyId?: number;
-      companyTripId?: number;
+      tripId?: number;
       customerId?: string;
       status?: string;
     },
@@ -113,7 +112,6 @@ export class BookingService {
     const ticket = await this.ticketRepository.save({
       code: generateEntityCode(CODE_PREFIX.TICKET),
       companyId: booking.companyId,
-      companyTripId: booking.companyTripId,
       tripId: booking.tripId,
       customerId: booking.customerId,
       pricePerSeat: booking.pricePerSeat,
