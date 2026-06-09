@@ -4,6 +4,7 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export type CmsCustomerTier = 'vip' | 'than-thiet' | 'pho-thong';
 export type CmsCustomerStatus = 'active' | 'at-risk' | 'inactive';
+export type CustomerRank = 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
 
 export class CmsCustomerListQueryDto {
   @ApiPropertyOptional({
@@ -73,6 +74,9 @@ export class CmsCustomerListItemDto {
 
   @ApiProperty({ enum: ['vip', 'than-thiet', 'pho-thong'] })
   tier: CmsCustomerTier;
+
+  @ApiProperty({ enum: ['Bronze', 'Silver', 'Gold', 'Platinum'] })
+  rank: CustomerRank;
 
   @ApiProperty()
   bookingCount: number;

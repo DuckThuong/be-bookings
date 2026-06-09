@@ -11,6 +11,33 @@ export class CustomerListItemDto extends UserInformationResponseDto {
   @ApiProperty({ example: 1500000, description: 'Tổng tiền đã thanh toán' })
   totalPaid: number;
 
+  @ApiProperty({ example: 'Bronze', description: 'Hạng thành viên hiện tại' })
+  rank: string;
+
+  @ApiProperty({
+    example: 1500000,
+    description: 'Số tiền đã chi tiêu tích lũy cho rank',
+  })
+  spentAmount: number;
+
+  @ApiPropertyOptional({
+    example: 'Silver',
+    description: 'Hạng tiếp theo nếu đạt ngưỡng',
+  })
+  nextRank?: string;
+
+  @ApiPropertyOptional({
+    example: 5000000,
+    description: 'Ngưỡng chi tiêu cần đạt để lên hạng tiếp theo',
+  })
+  nextRankThreshold?: number;
+
+  @ApiPropertyOptional({
+    example: 30,
+    description: 'Tiến độ % lên hạng tiếp theo',
+  })
+  rankProgressPercent?: number;
+
   @ApiPropertyOptional({ example: '2026-05-20' })
   lastBookingAt?: string;
 }

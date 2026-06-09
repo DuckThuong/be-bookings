@@ -110,6 +110,7 @@ export class CMSCustomerService {
       profile.userCode,
       recentTrips,
     );
+    const rank = this.resolveRank(activity.totalPaid);
     const tier = this.resolveTier(activity.bookingCount, activity.totalPaid);
     const status = this.resolveStatus(activity.lastActivityAt);
     const lastBooking = activity.lastActivityAt
@@ -123,6 +124,7 @@ export class CMSCustomerService {
       phone: profile.userPhone || '—',
       email: profile.userEmail || '—',
       tier,
+      rank,
       bookingCount: activity.bookingCount,
       totalSpent: activity.totalPaid,
       lastBooking,

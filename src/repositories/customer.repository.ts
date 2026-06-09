@@ -8,6 +8,13 @@ import { TbRefund } from '../entities/sales/refund.entity';
 import { PaymentStatus } from '../assets/constants/sales.constants';
 import { TicketStatus } from '../assets/constants/ticket.constants';
 
+export const CUSTOMER_RANKS = [
+  { name: 'Bronze', threshold: 0 },
+  { name: 'Silver', threshold: 1000000 },
+  { name: 'Gold', threshold: 5000000 },
+  { name: 'Platinum', threshold: 15000000 },
+] as const;
+
 export interface CustomerActivityRow {
   customerId: string;
   ticketCount: number;
@@ -120,6 +127,13 @@ export class CustomerRepository {
       where: { customerId, status: TicketStatus.PENDING },
     });
 
+    const completedBookingTotal = await this.bookingRepo
+      .createQueryBuilder('b')
+      .select('COALESCE(SUM(b.totalPrice), 0)', 'total')
+      .where('b.customerId = :customerId', { customerId })
+      .andWhere('b.status = :status', { status: 'CONVERTED' })
+      .getRawOne<{ total: string }>();
+
     const paidResult = await this.paymentRepo
       .createQueryBuilder('p')
       .select('COALESCE(SUM(p.amount), 0)', 'total')
@@ -136,13 +150,17 @@ export class CustomerRepository {
       where: { customerId },
       order: { createdAt: 'DESC' },
     });
+    const lastBooking = await this.bookingRepo.findOne({
+      where: { customerId },
+      order: { createdAt: 'DESC' },
+    });
 
     return {
       customerId,
       ticketCount,
       bookingCount,
-      totalPaid: Number(paidResult?.total ?? 0),
-      lastActivityAt: lastTicket?.createdAt ?? null,
+      totalPaid: Number(paidResult?.total ?? completedBookingTotal?.total ?? 0),
+      lastActivityAt: lastTicket?.createdAt ?? lastBooking?.createdAt ?? null,
       pendingTicketCount,
       refundCount,
     };

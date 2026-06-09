@@ -20,6 +20,13 @@ import {
 } from '../dtos/user/common.dto';
 import { UserInformationResponseDto } from '../dtos/user/user.dto';
 
+const RANKS = [
+  { name: 'Bronze', threshold: 0 },
+  { name: 'Silver', threshold: 1_000_000 },
+  { name: 'Gold', threshold: 5_000_000 },
+  { name: 'Platinum', threshold: 15_000_000 },
+] as const;
+
 @Injectable()
 export class CustomerService {
   constructor(
@@ -162,11 +169,17 @@ export class CustomerService {
       lastActivityAt: Date | null;
     },
   ): CustomerListItemDto {
+    const rankInfo = this.getRankInfo(activity.totalPaid);
     return {
       ...profile,
       ticketCount: activity.ticketCount,
       bookingCount: activity.bookingCount,
       totalPaid: activity.totalPaid,
+      rank: rankInfo.rank,
+      spentAmount: activity.totalPaid,
+      nextRank: rankInfo.nextRank,
+      nextRankThreshold: rankInfo.nextRankThreshold,
+      rankProgressPercent: rankInfo.rankProgressPercent,
       lastBookingAt: activity.lastActivityAt
         ? activity.lastActivityAt.toISOString()
         : undefined,
@@ -255,5 +268,35 @@ export class CustomerService {
     }
 
     throw new ForbiddenException(CustomerErrorMessage.FORBIDDEN);
+  }
+
+  private getRankInfo(totalSpent: number) {
+    const currentIndex = [...RANKS]
+      .reverse()
+      .findIndex((rank) => totalSpent >= rank.threshold);
+    const rank =
+      currentIndex === -1
+        ? RANKS[0]
+        : RANKS[RANKS.length - 1 - currentIndex];
+
+    const nextRank = RANKS.find((item) => item.threshold > rank.threshold);
+    const nextRankThreshold = nextRank?.threshold;
+    const rankProgressPercent = nextRankThreshold
+      ? Math.min(
+          100,
+          Math.round(
+            ((totalSpent - rank.threshold) /
+              (nextRankThreshold - rank.threshold)) *
+              100,
+          ),
+        )
+      : 100;
+
+    return {
+      rank: rank.name,
+      nextRank: nextRank?.name,
+      nextRankThreshold,
+      rankProgressPercent,
+    };
   }
 }
