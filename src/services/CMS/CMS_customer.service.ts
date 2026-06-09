@@ -49,9 +49,7 @@ export class CMSCustomerService {
     user: UserDecoratorDtoResponse,
     query: CmsCustomerListQueryDto,
   ): Promise<CmsCustomerListResponseDto> {
-    const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user
-    );
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
 
     const customerIds =
       await this.customerRepository.findDistinctCustomerIdsByCompany(companyId);
@@ -59,9 +57,7 @@ export class CMSCustomerService {
       await this.userRepository.findUsersByUserCodes(customerIds);
 
     const items = await Promise.all(
-      profiles.map((profile) =>
-        this.buildCustomerItem(companyId, profile),
-      ),
+      profiles.map((profile) => this.buildCustomerItem(companyId, profile)),
     );
 
     const filtered = this.applyFilters(items, query);
@@ -76,11 +72,9 @@ export class CMSCustomerService {
 
   async getDetail(
     user: UserDecoratorDtoResponse,
-    userCode: string
+    userCode: string,
   ): Promise<CmsCustomerListItemDto | null> {
-    const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user
-    );
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
 
     const customerIds =
       await this.customerRepository.findDistinctCustomerIdsByCompany(companyId);
@@ -110,7 +104,7 @@ export class CMSCustomerService {
       profile.userCode,
       recentTrips,
     );
-    const rank = this.resolveRank(activity.totalPaid);
+    const rank = this.getRankInfo(activity.totalPaid);
     const tier = this.resolveTier(activity.bookingCount, activity.totalPaid);
     const status = this.resolveStatus(activity.lastActivityAt);
     const lastBooking = activity.lastActivityAt
@@ -254,6 +248,19 @@ export class CMSCustomerService {
     return bestRoute;
   }
 
+  private getRankInfo(totalPaid: number) {
+    if (totalPaid >= 15_000_000) {
+      return 'Platinum';
+    }
+    if (totalPaid >= 5_000_000) {
+      return 'Gold';
+    }
+    if (totalPaid >= 1_000_000) {
+      return 'Silver';
+    }
+    return 'Bronze';
+  }
+
   private resolveTier(
     bookingCount: number,
     totalPaid: number,
@@ -271,8 +278,7 @@ export class CMSCustomerService {
     if (!lastActivityAt) {
       return 'inactive';
     }
-    const daysSince =
-      (Date.now() - lastActivityAt.getTime()) / MS_PER_DAY;
+    const daysSince = (Date.now() - lastActivityAt.getTime()) / MS_PER_DAY;
     if (daysSince > 90) {
       return 'inactive';
     }
@@ -323,9 +329,7 @@ export class CMSCustomerService {
     if (tier === 'than-thiet') {
       return `Khách thân thiết, ưu tiên tuyến ${preferredRoute}.`;
     }
-    return preferredRoute !== '—'
-      ? `Tuyến ưa thích: ${preferredRoute}.`
-      : '';
+    return preferredRoute !== '—' ? `Tuyến ưa thích: ${preferredRoute}.` : '';
   }
 
   private applyFilters(

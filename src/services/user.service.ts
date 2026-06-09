@@ -118,7 +118,9 @@ export class UserService {
   ): void {
     if (
       payload.userRole !== undefined &&
-      ![UserRole.ADMIN, UserRole.OWNER, UserRole.USER].includes(payload.userRole)
+      ![UserRole.ADMIN, UserRole.OWNER, UserRole.USER].includes(
+        payload.userRole,
+      )
     ) {
       throw new HttpException(
         ErrorUserMessage.USER_ROLE_NOT_VALID.toString(),

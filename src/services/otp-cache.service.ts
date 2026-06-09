@@ -18,7 +18,10 @@ export class OtpCacheService {
     });
   }
 
-  verify(email: string, otp: string): 'valid' | 'not_found' | 'expired' | 'invalid' {
+  verify(
+    email: string,
+    otp: string,
+  ): 'valid' | 'not_found' | 'expired' | 'invalid' {
     const key = email.toLowerCase().trim();
     const entry = this.store.get(key);
     if (!entry) {

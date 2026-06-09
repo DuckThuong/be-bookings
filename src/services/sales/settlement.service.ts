@@ -47,15 +47,12 @@ export class SettlementService {
   ) {
     await this.companyAccess.assertCompanyAccess(user, companyId);
 
-    const totalSales = await this.paymentRepository.sumSuccessByCompany(
-      companyId,
-    );
-    const refundTotal = await this.refundRepository.sumSuccessByCompany(
-      companyId,
-    );
-    const commissions = await this.commissionRepository.findByCompany(
-      companyId,
-    );
+    const totalSales =
+      await this.paymentRepository.sumSuccessByCompany(companyId);
+    const refundTotal =
+      await this.refundRepository.sumSuccessByCompany(companyId);
+    const commissions =
+      await this.commissionRepository.findByCompany(companyId);
     const totalCommission = commissions.reduce(
       (sum, c) => sum + Number(c.commissionAmount),
       0,

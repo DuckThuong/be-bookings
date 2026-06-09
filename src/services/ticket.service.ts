@@ -11,10 +11,7 @@ import { TicketStatus } from '../assets/constants/ticket.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { generateEntityCode } from '../common/helpers/common.helper';
 import { CreateTicketDto, UpdateTicketDto } from '../dtos/transport/ticket.dto';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { CompanyAccessService } from './company-access.service';
 
 @Injectable()
@@ -75,10 +72,7 @@ export class TicketService {
     return this.ticketRepository.findByFilter(filter);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbTicket> {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbTicket> {
     const ticket = await this.ticketRepository.findById(id);
     if (!ticket) {
       throw new NotFoundException(CompanyErrorMessage.TICKET_NOT_FOUND);

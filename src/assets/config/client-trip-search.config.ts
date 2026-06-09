@@ -13,18 +13,9 @@ export type ClientTripFilterKey =
   | 'wifi'
   | 'ac';
 
-export type ClientTripSortKey =
-  | 'price'
-  | 'departure'
-  | 'duration'
-  | 'rating';
+export type ClientTripSortKey = 'price' | 'departure' | 'duration' | 'rating';
 
-export type ClientTripBadgeType =
-  | 'green'
-  | 'amber'
-  | 'blue'
-  | 'gray'
-  | 'red';
+export type ClientTripBadgeType = 'green' | 'amber' | 'blue' | 'gray' | 'red';
 
 export interface ClientTripAmenity {
   icon: string;

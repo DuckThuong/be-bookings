@@ -109,7 +109,10 @@ export class RefundService {
       status: TicketStatus.REFUNDED,
     });
 
-    await this.tripRepository.decrementBookedSeats(ticket.tripId, ticket.totalSeat);
+    await this.tripRepository.decrementBookedSeats(
+      ticket.tripId,
+      ticket.totalSeat,
+    );
 
     return this.refundRepository.findById(id);
   }

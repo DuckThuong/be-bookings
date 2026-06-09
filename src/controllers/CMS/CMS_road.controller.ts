@@ -10,14 +10,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import { CMSRoadService } from '../../services/CMS/CMS_road.service';
 import {
@@ -38,8 +40,7 @@ export class CMSRoadController {
 
   @Get()
   @ApiOperation({
-    summary:
-      'Danh sách tuyến CMS (tuyến + chuyến + xe + tài xế)',
+    summary: 'Danh sách tuyến CMS (tuyến + chuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsRoadListResponseDto })
   findAll(
@@ -51,8 +52,7 @@ export class CMSRoadController {
 
   @Get(':id')
   @ApiOperation({
-    summary:
-      'Chi tiết tuyến CMS theo ID (tuyến + chuyến + xe + tài xế)',
+    summary: 'Chi tiết tuyến CMS theo ID (tuyến + chuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsRoadDetailResponseDto })
   findOne(

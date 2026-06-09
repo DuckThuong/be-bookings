@@ -208,8 +208,6 @@ export class ClientTripItemDto {
   amenities: ClientTripAmenityDto[];
 }
 
-
-
 export class ClientTripSearchCriteriaDto {
   @ApiProperty()
   from: string;

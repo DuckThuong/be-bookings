@@ -91,7 +91,11 @@ export class TripOnlySource1762026000000 implements MigrationInterface {
             { name: 'totalPrice', type: 'decimal', precision: 12, scale: 2 },
             { name: 'pricePerSeat', type: 'decimal', precision: 12, scale: 2 },
             { name: 'status', type: 'varchar', length: '255' },
-            { name: 'created_at', type: 'datetime', default: 'CURRENT_TIMESTAMP' },
+            {
+              name: 'created_at',
+              type: 'datetime',
+              default: 'CURRENT_TIMESTAMP',
+            },
             {
               name: 'updated_at',
               type: 'datetime',
@@ -110,7 +114,9 @@ export class TripOnlySource1762026000000 implements MigrationInterface {
 
     if (await queryRunner.hasTable('tb_trip_stat')) {
       await queryRunner.renameTable('tb_trip_stat', 'tb_company_trip_stat');
-      if (!(await queryRunner.hasColumn('tb_company_trip_stat', 'companyTripId'))) {
+      if (
+        !(await queryRunner.hasColumn('tb_company_trip_stat', 'companyTripId'))
+      ) {
         await queryRunner.addColumn(
           'tb_company_trip_stat',
           new TableColumn({
@@ -120,7 +126,11 @@ export class TripOnlySource1762026000000 implements MigrationInterface {
           }),
         );
       }
-      await this.dropColumnIfExists(queryRunner, 'tb_company_trip_stat', 'tripId');
+      await this.dropColumnIfExists(
+        queryRunner,
+        'tb_company_trip_stat',
+        'tripId',
+      );
     }
 
     await this.dropColumnIfExists(queryRunner, 'tb_payment', 'tripId');
@@ -246,13 +256,47 @@ export class TripOnlySource1762026000000 implements MigrationInterface {
             { name: 'statDate', type: 'date' },
             { name: 'ticketCount', type: 'int', default: 0 },
             { name: 'seatSold', type: 'int', default: 0 },
-            { name: 'grossRevenue', type: 'decimal', precision: 14, scale: 2, default: 0 },
-            { name: 'discountTotal', type: 'decimal', precision: 14, scale: 2, default: 0 },
-            { name: 'netRevenue', type: 'decimal', precision: 14, scale: 2, default: 0 },
-            { name: 'refundTotal', type: 'decimal', precision: 14, scale: 2, default: 0 },
+            {
+              name: 'grossRevenue',
+              type: 'decimal',
+              precision: 14,
+              scale: 2,
+              default: 0,
+            },
+            {
+              name: 'discountTotal',
+              type: 'decimal',
+              precision: 14,
+              scale: 2,
+              default: 0,
+            },
+            {
+              name: 'netRevenue',
+              type: 'decimal',
+              precision: 14,
+              scale: 2,
+              default: 0,
+            },
+            {
+              name: 'refundTotal',
+              type: 'decimal',
+              precision: 14,
+              scale: 2,
+              default: 0,
+            },
             { name: 'cancelledCount', type: 'int', default: 0 },
-            { name: 'occupancyRate', type: 'decimal', precision: 5, scale: 2, default: 0 },
-            { name: 'created_at', type: 'datetime', default: 'CURRENT_TIMESTAMP' },
+            {
+              name: 'occupancyRate',
+              type: 'decimal',
+              precision: 5,
+              scale: 2,
+              default: 0,
+            },
+            {
+              name: 'created_at',
+              type: 'datetime',
+              default: 'CURRENT_TIMESTAMP',
+            },
             {
               name: 'updated_at',
               type: 'datetime',
@@ -265,7 +309,9 @@ export class TripOnlySource1762026000000 implements MigrationInterface {
     }
   }
 
-  private async rebuildTripBookedSeats(queryRunner: QueryRunner): Promise<void> {
+  private async rebuildTripBookedSeats(
+    queryRunner: QueryRunner,
+  ): Promise<void> {
     await queryRunner.query(`
       UPDATE tb_trip t
       LEFT JOIN (

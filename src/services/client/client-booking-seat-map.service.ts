@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { Injectable } from '@nestjs/common';
 import { EntityStatus } from '../../assets/constants/company.constants';
 import { TbSeat } from '../../entities/seat.entity';
@@ -156,9 +155,7 @@ export class ClientBookingSeatMapService {
   }
 
   private sortSeatsByOrdinalAsc(seats: TbSeat[]): TbSeat[] {
-    return [...seats].sort(
-      (a, b) => this.getOrdinal(a) - this.getOrdinal(b),
-    );
+    return [...seats].sort((a, b) => this.getOrdinal(a) - this.getOrdinal(b));
   }
 
   private mapSeatStatus(seat: TbSeat, occupiedSet: Set<number>): FeSeatStatus {

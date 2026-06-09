@@ -10,14 +10,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import { CMSTripService } from '../../services/CMS/CMS_trip.service';
 import {
@@ -38,8 +40,7 @@ export class CMSTripController {
 
   @Get()
   @ApiOperation({
-    summary:
-      'Danh sách chuyến CMS (chuyến + tuyến + xe + tài xế)',
+    summary: 'Danh sách chuyến CMS (chuyến + tuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsTripListResponseDto })
   findAll(
@@ -51,8 +52,7 @@ export class CMSTripController {
 
   @Get(':id')
   @ApiOperation({
-    summary:
-      'Chi tiết chuyến CMS theo ID (chuyến + tuyến + xe + tài xế)',
+    summary: 'Chi tiết chuyến CMS theo ID (chuyến + tuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsTripDetailResponseDto })
   findOne(

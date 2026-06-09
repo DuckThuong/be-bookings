@@ -12,10 +12,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import { PromotionUsageService } from '../../services/sales/promotion-usage.service';
 import { CreatePromotionUsageDto } from '../../dtos/sales/sales.dto';
@@ -26,9 +23,7 @@ import { CreatePromotionUsageDto } from '../../dtos/sales/sales.dto';
 @Roles(UserRole.ADMIN, UserRole.OWNER)
 @ApiBearerAuth('JWT-auth')
 export class PromotionUsageController {
-  constructor(
-    private readonly promotionUsageService: PromotionUsageService,
-  ) {}
+  constructor(private readonly promotionUsageService: PromotionUsageService) {}
 
   @Post()
   @ApiOperation({ summary: 'Ghi nhận sử dụng mã khuyến mãi' })

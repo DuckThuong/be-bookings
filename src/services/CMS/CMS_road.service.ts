@@ -50,9 +50,7 @@ export class CMSRoadService {
     user: UserDecoratorDtoResponse,
   ): Promise<RoadResponseDto> {
     try {
-      const companyId = await this.companyAccess.resolveCompanyIdForUser(
-        user
-      );
+      const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
       const [startPoint, endPoint] = payload.name.split(/\s*-\s*/);
       const road = await this.roadService.create(user, {
         companyId,

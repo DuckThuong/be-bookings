@@ -47,17 +47,17 @@ export class CreateRoadDto {
 
   @ApiProperty({ example: 764.5 })
   length: number;
-  
+
   @ApiProperty({ example: 'Hà Nội' })
   startPoint: string;
 
   @ApiProperty({ example: 'Đà Nẵng' })
   endPoint: string;
 
-  @ApiProperty({example: 'BigC Thăng Long'})
+  @ApiProperty({ example: 'BigC Thăng Long' })
   pickUpPoint: string;
 
-  @ApiProperty({example: 'BigC Đà Nẵng'})
+  @ApiProperty({ example: 'BigC Đà Nẵng' })
   dropOffPoint: string;
 
   @ApiPropertyOptional({ enum: EntityStatus })

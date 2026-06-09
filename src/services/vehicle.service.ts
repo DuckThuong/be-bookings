@@ -8,10 +8,7 @@ import { TbVehicle } from '../entities/vehicle.entity';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
-import {
-  parsePositiveInt,
-  validString,
-} from '../common/helpers/common.helper';
+import { parsePositiveInt, validString } from '../common/helpers/common.helper';
 import {
   CreateVehicleDto,
   UpdateVehicleDto,
@@ -30,9 +27,8 @@ export class VehicleService {
     user: UserDecoratorDtoResponse,
     payload: CreateVehicleDto,
   ): Promise<TbVehicle> {
-    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
-      user
-    );
+    const resolvedCompanyId =
+      await this.companyAccess.resolveCompanyIdForUser(user);
     if (!validString(payload.code)) {
       throw new HttpException(
         CompanyErrorMessage.INVALID_REFERENCE,
@@ -65,9 +61,8 @@ export class VehicleService {
   }
 
   async findAll(user: UserDecoratorDtoResponse): Promise<TbVehicle[]> {
-    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
-      user,
-    );
+    const resolvedCompanyId =
+      await this.companyAccess.resolveCompanyIdForUser(user);
     return this.vehicleRepository.findByCompany(resolvedCompanyId);
   }
 

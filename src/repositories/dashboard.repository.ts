@@ -342,10 +342,7 @@ export class DashboardRepository {
       .createQueryBuilder('p')
       .innerJoin('tb_trip', 't', 't.id = p.tripId')
       .innerJoin('tb_road', 'r', 'r.id = t.roadId')
-      .select(
-        "CONCAT(r.startPoint, ' → ', r.endPoint)",
-        'route',
-      )
+      .select("CONCAT(r.startPoint, ' → ', r.endPoint)", 'route')
       .addSelect('COUNT(p.id)', 'trips')
       .addSelect('COALESCE(SUM(p.amount), 0)', 'revenue')
       .where('p.companyId = :companyId', { companyId })

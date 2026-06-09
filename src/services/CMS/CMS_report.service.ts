@@ -103,11 +103,11 @@ export class CMSReportService {
         type: 'finance' as CmsReportType,
         period: `01/${month}/${year} - ${this.lastDayOfMonth(Number(year), Number(month))}/${month}/${year}`,
         createdBy: 'Kế toán tổng hợp',
-        createdAt: this.formatDateTime(
-          list[list.length - 1]?.createdAt ?? now,
-        ),
+        createdAt: this.formatDateTime(list[list.length - 1]?.createdAt ?? now),
         status: (isCurrentMonth ? 'processing' : 'ready') as CmsReportStatus,
-        fileSize: isCurrentMonth ? 'Đang tạo' : this.estimateFileSize(list.length),
+        fileSize: isCurrentMonth
+          ? 'Đang tạo'
+          : this.estimateFileSize(list.length),
         description: `Tổng hợp ${list.length} giao dịch thành công, doanh thu ${total.toLocaleString('vi-VN')}₫.`,
       };
     });
@@ -198,7 +198,10 @@ export class CMSReportService {
     };
   }
 
-  private applyFilters(items: CmsReportItemDto[], query: CmsReportListQueryDto) {
+  private applyFilters(
+    items: CmsReportItemDto[],
+    query: CmsReportListQueryDto,
+  ) {
     let result = items;
     const keyword = query.search?.trim().toLowerCase();
     if (keyword) {

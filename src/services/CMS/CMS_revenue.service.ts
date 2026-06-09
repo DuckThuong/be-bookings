@@ -41,9 +41,7 @@ export class CMSRevenueService {
 
     const payments = await this.revenueRepository.findPayments(scope, filter);
     const [refunds, trend, routeOptions, vehicleOptions] = await Promise.all([
-      this.revenueRepository.findRefundsByPaymentIds(
-        payments.map((p) => p.id),
-      ),
+      this.revenueRepository.findRefundsByPaymentIds(payments.map((p) => p.id)),
       this.revenueRepository.getTrend(scope, 6, filter),
       this.revenueRepository.getRouteOptions(scope),
       this.revenueRepository.getVehicleOptions(scope),
@@ -210,9 +208,7 @@ export class CMSRevenueService {
   }
 
   private async attachRouteGrowth(
-    scope: Awaited<
-      ReturnType<CompanyAccessService['resolveDashboardScope']>
-    >,
+    scope: Awaited<ReturnType<CompanyAccessService['resolveDashboardScope']>>,
     rows: CmsRevenueRouteRowDto[],
     comparisonFilter: RevenueListFilter | undefined,
     refundByPayment: Map<number, TbRefund[]>,
@@ -231,12 +227,14 @@ export class CMSRevenueService {
     );
     const previousByRoute = this.aggregateByRoute(previousTxns);
     const previousMap = new Map(
-      previousByRoute.map((row) => [`${row.route}::${row.vehicle}`, row.revenue]),
+      previousByRoute.map((row) => [
+        `${row.route}::${row.vehicle}`,
+        row.revenue,
+      ]),
     );
 
     return rows.map((row) => {
-      const prev =
-        previousMap.get(`${row.route}::${row.vehicle}`) ?? 0;
+      const prev = previousMap.get(`${row.route}::${row.vehicle}`) ?? 0;
       const growth =
         prev > 0
           ? Math.round(((row.revenue - prev) / prev) * 1000) / 10

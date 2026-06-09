@@ -74,9 +74,8 @@ export class TripService {
   }
 
   async findAll(user: UserDecoratorDtoResponse): Promise<TbTrip[]> {
-    const resolvedCompanyId = await this.companyAccess.resolveCompanyIdForUser(
-      user
-    );
+    const resolvedCompanyId =
+      await this.companyAccess.resolveCompanyIdForUser(user);
     await this.companyAccess.assertCompanyAccess(user, resolvedCompanyId);
     const roads = await this.roadRepository.findByCompany(resolvedCompanyId);
     return this.tripRepository.findByRoadIds(roads.map((r) => r.id));
@@ -94,10 +93,7 @@ export class TripService {
     return this.tripRepository.findByRoadId(roadId);
   }
 
-  async findOne(
-    user: UserDecoratorDtoResponse,
-    id: number,
-  ): Promise<TbTrip> {
+  async findOne(user: UserDecoratorDtoResponse, id: number): Promise<TbTrip> {
     const trip = await this.tripRepository.findById(id);
     if (!trip) {
       throw new NotFoundException(CompanyErrorMessage.TRIP_NOT_FOUND);

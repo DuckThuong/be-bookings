@@ -14,7 +14,8 @@ export class CmsDashboardQueryDto {
   period?: '7N' | '1T' | '3T' | '1N';
 
   @ApiPropertyOptional({
-    description: 'Admin có thể lọc theo nhà xe; owner bị bỏ qua (luôn nhà xe của mình)',
+    description:
+      'Admin có thể lọc theo nhà xe; owner bị bỏ qua (luôn nhà xe của mình)',
   })
   @IsOptional()
   @Type(() => Number)

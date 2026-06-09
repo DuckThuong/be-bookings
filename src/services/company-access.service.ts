@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
   BadRequestException,
   ForbiddenException,
@@ -22,7 +21,7 @@ import { EntityStatus } from '../assets/constants/company.constants';
 import { CompanyErrorMessage } from '../assets/messages/company.message';
 import { CmsTripValidationMessage } from '../assets/messages/cms-trip.message';
 import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
-import { CmsRoadValidationMessage } from "../assets/messages/cms-road.message";
+import { CmsRoadValidationMessage } from '../assets/messages/cms-road.message';
 import { DashboardScope } from '../common/helpers/dashboard-scope.helper';
 
 @Injectable()

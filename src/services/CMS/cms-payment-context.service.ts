@@ -96,10 +96,7 @@ export class CmsPaymentContextService {
     };
   }
 
-  resolveRouteLabel(
-    payment: TbPayment,
-    context: CmsPaymentContext,
-  ): string {
+  resolveRouteLabel(payment: TbPayment, context: CmsPaymentContext): string {
     const trip = context.tripMap.get(payment.tripId) ?? null;
     const road = trip ? context.roadMap.get(trip.roadId) : null;
     if (road?.startPoint && road?.endPoint) {
@@ -108,10 +105,7 @@ export class CmsPaymentContextService {
     return trip?.name ?? '—';
   }
 
-  resolveVehicleCode(
-    payment: TbPayment,
-    context: CmsPaymentContext,
-  ): string {
+  resolveVehicleCode(payment: TbPayment, context: CmsPaymentContext): string {
     const trip = context.tripMap.get(payment.tripId);
     if (!trip) return '—';
     return context.vehicleMap.get(trip.vehicleId)?.code ?? '—';

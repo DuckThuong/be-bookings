@@ -294,7 +294,9 @@ export class CMSVehicleService {
     }
 
     const labels = activeTrips
-      .map((trip) => this.buildTripScheduleLabel(trip, roadMap.get(trip.roadId)))
+      .map((trip) =>
+        this.buildTripScheduleLabel(trip, roadMap.get(trip.roadId)),
+      )
       .filter(Boolean) as string[];
 
     if (labels.length === 0) {

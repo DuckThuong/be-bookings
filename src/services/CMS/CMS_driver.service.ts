@@ -27,7 +27,7 @@ export class CMSDriverService {
   }
 
   async getAllDrivers(
-    user: UserDecoratorDtoResponse
+    user: UserDecoratorDtoResponse,
   ): Promise<CmsDriverListResponseDto> {
     const drivers = await this.driverService.findAll(user);
     const items = drivers.map((driver) => this.toResponse(driver));
@@ -58,7 +58,9 @@ export class CMSDriverService {
             ? { totalTurn: payload.totalTurn }
             : {}),
         } as Partial<TbDriver>);
-        return this.toResponse(await this.driverService.findOne(user, driver.id));
+        return this.toResponse(
+          await this.driverService.findOne(user, driver.id),
+        );
       }
 
       return this.toResponse(driver);

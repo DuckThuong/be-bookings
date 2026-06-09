@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TbCompany } from '../../entities/company/company.entity';
 import { TbRoad } from '../../entities/road.entity';

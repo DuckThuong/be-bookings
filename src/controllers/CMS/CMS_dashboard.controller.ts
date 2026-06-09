@@ -3,10 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import {
   CmsDashboardOverviewDto,
@@ -24,8 +21,7 @@ export class CMSDashboardController {
 
   @Get('overview')
   @ApiOperation({
-    summary:
-      'Tổng quan dashboard (admin: toàn hệ thống, owner: theo nhà xe)',
+    summary: 'Tổng quan dashboard (admin: toàn hệ thống, owner: theo nhà xe)',
   })
   getOverview(
     @User() user: UserDecoratorDtoResponse,

@@ -17,13 +17,20 @@ export interface DashboardDateRange {
 }
 
 export function resolveDashboardPeriod(period?: string): DashboardPeriod {
-  if (period === '7N' || period === '1T' || period === '3T' || period === '1N') {
+  if (
+    period === '7N' ||
+    period === '1T' ||
+    period === '3T' ||
+    period === '1N'
+  ) {
     return period;
   }
   return '1N';
 }
 
-export function getDashboardDateRange(period: DashboardPeriod): DashboardDateRange {
+export function getDashboardDateRange(
+  period: DashboardPeriod,
+): DashboardDateRange {
   const to = new Date();
   const from = new Date(to);
 

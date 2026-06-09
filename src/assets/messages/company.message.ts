@@ -9,11 +9,14 @@ export class CompanyErrorMessage {
   static readonly SEAT_NOT_FOUND = 'Không tìm thấy ghế';
   static readonly FORBIDDEN = 'Bạn không có quyền thao tác nhà xe này';
   static readonly COMPANY_NAME_REQUIRED = 'Tên nhà xe không được để trống';
-  static readonly ROAD_NOT_BELONG_COMPANY = 'Tuyến đường không thuộc nhà xe này';
+  static readonly ROAD_NOT_BELONG_COMPANY =
+    'Tuyến đường không thuộc nhà xe này';
   static readonly TRIP_NOT_BELONG_COMPANY = 'Chuyến xe không thuộc nhà xe này';
-  static readonly VEHICLE_NOT_BELONG_COMPANY = 'Phương tiện không thuộc nhà xe này';
+  static readonly VEHICLE_NOT_BELONG_COMPANY =
+    'Phương tiện không thuộc nhà xe này';
   static readonly DRIVER_NOT_BELONG_COMPANY = 'Tài xế không thuộc nhà xe này';
-  static readonly DRIVER_VEHICLE_MISMATCH = 'Tài xế không thuộc phương tiện của nhà xe';
+  static readonly DRIVER_VEHICLE_MISMATCH =
+    'Tài xế không thuộc phương tiện của nhà xe';
   static readonly COMPANY_ALREADY_EXISTS = 'Bạn đã đăng ký nhà xe';
   static readonly CODE_CONFLICT = 'Mã đã tồn tại';
   static readonly INVALID_ROAD_ID = 'ID tuyến đường không hợp lệ';

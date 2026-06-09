@@ -53,9 +53,7 @@ export class CMSBookingService {
     user: UserDecoratorDtoResponse,
     query: CmsBookingListQueryDto,
   ): Promise<CmsBookingListResponseDto> {
-    const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user
-    );
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
 
     const payments = await this.paymentRepository.findByFilter({
       companyId,
@@ -177,7 +175,11 @@ export class CMSBookingService {
 
       return {
         key: String(payment.id),
-        id: ticket?.code ? `#${ticket.code}` : booking?.code ? `#${booking.code}` : `#PAY-${payment.id}`,
+        id: ticket?.code
+          ? `#${ticket.code}`
+          : booking?.code
+            ? `#${booking.code}`
+            : `#PAY-${payment.id}`,
         paymentId: payment.id,
         bookingId: booking?.id,
         ticketId: ticket?.id,
@@ -193,7 +195,10 @@ export class CMSBookingService {
         status: resolveCmsBookingUiStatus(payment, ticket, booking),
         bookedAt: this.formatDateTime(payment.createdAt),
         note: '',
-        pickup: PICKUP_LABELS[passenger?.pickupPoint ?? ''] ?? passenger?.pickupPoint ?? '—',
+        pickup:
+          PICKUP_LABELS[passenger?.pickupPoint ?? ''] ??
+          passenger?.pickupPoint ??
+          '—',
         dropoff:
           DROPOFF_LABELS[passenger?.dropoffPoint ?? ''] ??
           passenger?.dropoffPoint ??

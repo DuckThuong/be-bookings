@@ -22,9 +22,7 @@ export class DriverService {
     user: UserDecoratorDtoResponse,
     payload: CreateDriverDto,
   ): Promise<TbDriver> {
-    const companyId = await this.companyAccess.resolveCompanyIdForUser(
-      user
-    );
+    const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
 
     return this.driverRepository.save({
       companyId,

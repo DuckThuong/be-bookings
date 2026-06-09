@@ -24,10 +24,7 @@ import {
   ConfirmPaymentDto,
   CreatePaymentDto,
 } from '../../dtos/sales/sales.dto';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { CompanyAccessService } from '../company-access.service';
 
 @Injectable()
@@ -68,8 +65,7 @@ export class PaymentService {
       method: payload.method,
       status: payload.status ?? PaymentStatus.PENDING,
       transactionRef: payload.transactionRef ?? undefined,
-      paidAt:
-        payload.status === PaymentStatus.SUCCESS ? new Date() : undefined,
+      paidAt: payload.status === PaymentStatus.SUCCESS ? new Date() : undefined,
     });
   }
 
@@ -132,7 +128,9 @@ export class PaymentService {
       transactionRef: payload.transactionRef ?? payment.transactionRef,
     });
 
-    await this.ticketRepository.update(ticket.id, { status: TicketStatus.PAID });
+    await this.ticketRepository.update(ticket.id, {
+      status: TicketStatus.PAID,
+    });
 
     if (ticket.bookingId) {
       await this.bookingRepository.update(ticket.bookingId, {
@@ -148,8 +146,7 @@ export class PaymentService {
     let commission: TbCommission | null = null;
     if (payload.commissionRate !== undefined && payload.commissionRate > 0) {
       const ticketAmount = Number(payment.amount);
-      const commissionAmount =
-        (ticketAmount * payload.commissionRate) / 100;
+      const commissionAmount = (ticketAmount * payload.commissionRate) / 100;
       commission = await this.commissionRepository.save({
         paymentId: id,
         companyId: payment.companyId,

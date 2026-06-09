@@ -15,13 +15,7 @@ import { TbRoad } from '../../entities/road.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      TbPayment,
-      TbTicket,
-      TbBooking,
-      TbTrip,
-      TbRoad,
-    ]),
+    TypeOrmModule.forFeature([TbPayment, TbTicket, TbBooking, TbTrip, TbRoad]),
     AuthModule,
     CompanyModule,
     CustomerModule,

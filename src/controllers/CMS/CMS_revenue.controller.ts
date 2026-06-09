@@ -3,10 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import {
   CmsRevenuePageResponseDto,
@@ -24,8 +21,7 @@ export class CMSRevenueController {
 
   @Get()
   @ApiOperation({
-    summary:
-      'Trang doanh thu CMS (admin: toàn hệ thống, owner: theo nhà xe)',
+    summary: 'Trang doanh thu CMS (admin: toàn hệ thống, owner: theo nhà xe)',
   })
   getPage(
     @User() user: UserDecoratorDtoResponse,

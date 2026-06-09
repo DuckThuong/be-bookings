@@ -14,10 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/jwt/jwt.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { User } from '../user.decorator';
 import { RoadService } from '../services/road.service';
 import { CreateRoadDto, UpdateRoadDto } from '../dtos/company/company.dto';
@@ -33,15 +30,16 @@ export class RoadController {
 
   @Post()
   @ApiOperation({ summary: 'Tạo tuyến đường' })
-  create(@User() user: UserDecoratorDtoResponse, @Body() payload: CreateRoadDto) {
+  create(
+    @User() user: UserDecoratorDtoResponse,
+    @Body() payload: CreateRoadDto,
+  ) {
     return this.roadService.create(user, payload);
   }
 
   @Get()
   @ApiOperation({ summary: 'Danh sách tuyến theo nhà xe' })
-  findAll(
-    @User() user: UserDecoratorDtoResponse,
-  ) {
+  findAll(@User() user: UserDecoratorDtoResponse) {
     return this.roadService.findAll(user);
   }
 

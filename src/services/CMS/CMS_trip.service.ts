@@ -120,14 +120,10 @@ export class CMSTripService {
 
     const roadIds = [...new Set(trips.map((trip) => trip.roadId))];
     const driverIds = [
-      ...new Set(
-        trips.map((trip) => trip.driverId).filter((id) => id > 0),
-      ),
+      ...new Set(trips.map((trip) => trip.driverId).filter((id) => id > 0)),
     ];
     const vehicleIds = [
-      ...new Set(
-        trips.map((trip) => trip.vehicleId).filter((id) => id > 0),
-      ),
+      ...new Set(trips.map((trip) => trip.vehicleId).filter((id) => id > 0)),
     ];
 
     const roads =
@@ -145,7 +141,9 @@ export class CMSTripService {
 
     const roadMap = new Map(roads.map((road) => [road.id, road]));
     const driverMap = new Map(drivers.map((driver) => [driver.id, driver]));
-    const vehicleMap = new Map(vehicles.map((vehicle) => [vehicle.id, vehicle]));
+    const vehicleMap = new Map(
+      vehicles.map((vehicle) => [vehicle.id, vehicle]),
+    );
 
     return trips.map((trip) => {
       const road = roadMap.get(trip.roadId);

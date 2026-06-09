@@ -25,5 +25,6 @@ export class ClientErrorMessage {
   static readonly VIP_SEAT_NOT_SELECTABLE = 'Ghế VIP cần liên hệ nhà xe';
   static readonly HOLD_NOT_FOUND = 'Không tìm thấy phiên giữ chỗ';
   static readonly PASSENGER_REQUIRED = 'Vui lòng nhập thông tin hành khách';
-  static readonly PAYMENT_METHOD_INVALID = 'Phương thức thanh toán không hợp lệ';
+  static readonly PAYMENT_METHOD_INVALID =
+    'Phương thức thanh toán không hợp lệ';
 }

@@ -102,10 +102,7 @@ export class RevenueRepository {
   async getRouteOptions(scope: DashboardScope) {
     const qb = this.roadRepo
       .createQueryBuilder('r')
-      .select(
-        "CONCAT(r.startPoint, ' → ', r.endPoint)",
-        'route',
-      )
+      .select("CONCAT(r.startPoint, ' → ', r.endPoint)", 'route')
       .distinct(true)
       .orderBy('route', 'ASC');
     if (scope.companyId != null) {

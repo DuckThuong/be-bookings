@@ -7,8 +7,7 @@ export class CmsRoadValidationMessage {
     'Tên tuyến không được vượt quá 255 ký tự';
 
   static readonly ROAD_CODE_INVALID = 'Mã tuyến không hợp lệ';
-  static readonly ROAD_CODE_TOO_LONG =
-    'Mã tuyến không được vượt quá 24 ký tự';
+  static readonly ROAD_CODE_TOO_LONG = 'Mã tuyến không được vượt quá 24 ký tự';
 
   static readonly LENGTH_INVALID = 'Chiều dài tuyến phải là số >= 0';
   static readonly START_POINT_EMPTY = 'Điểm xuất phát không được để trống';
@@ -54,8 +53,7 @@ export class CmsRoadValidationMessage {
   static readonly TRIPS_PER_DAY_INVALID =
     'Số chuyến mỗi ngày phải là số nguyên >= 0';
 
-  static readonly AVERAGE_OCCUPANCY_INVALID =
-    'Tỉ lệ lấp đầy phải từ 0 đến 100';
+  static readonly AVERAGE_OCCUPANCY_INVALID = 'Tỉ lệ lấp đầy phải từ 0 đến 100';
 
   static readonly ESTIMATED_REVENUE_INVALID =
     'Doanh thu ước tính phải là số >= 0';

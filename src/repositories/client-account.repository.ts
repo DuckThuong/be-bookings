@@ -56,7 +56,9 @@ export class ClientAccountRepository {
   ) {}
 
   findTickets(filter: AccountTicketFilter) {
-    const qb = this.ticketRepo.createQueryBuilder('t').orderBy('t.createdAt', 'DESC');
+    const qb = this.ticketRepo
+      .createQueryBuilder('t')
+      .orderBy('t.createdAt', 'DESC');
     this.applyAccountScope(qb, 't', filter);
     if (filter.status) {
       qb.andWhere('t.status = :status', { status: filter.status });
@@ -73,7 +75,9 @@ export class ClientAccountRepository {
   }
 
   findInvoices(filter: AccountInvoiceFilter) {
-    const qb = this.paymentRepo.createQueryBuilder('p').orderBy('p.createdAt', 'DESC');
+    const qb = this.paymentRepo
+      .createQueryBuilder('p')
+      .orderBy('p.createdAt', 'DESC');
     this.applyAccountScope(qb, 'p', filter);
     if (filter.status) {
       qb.andWhere('p.status = :status', { status: filter.status });
@@ -94,7 +98,9 @@ export class ClientAccountRepository {
   }
 
   findBookings(filter: AccountBookingFilter) {
-    const qb = this.bookingRepo.createQueryBuilder('b').orderBy('b.createdAt', 'DESC');
+    const qb = this.bookingRepo
+      .createQueryBuilder('b')
+      .orderBy('b.createdAt', 'DESC');
     this.applyAccountScope(qb, 'b', filter);
     if (filter.status) {
       qb.andWhere('b.status = :status', { status: filter.status });
@@ -161,7 +167,9 @@ export class ClientAccountRepository {
     toDate?: string,
   ) {
     if (fromDate) {
-      qb.andWhere(`${column} >= :fromDate`, { fromDate: `${fromDate} 00:00:00` });
+      qb.andWhere(`${column} >= :fromDate`, {
+        fromDate: `${fromDate} 00:00:00`,
+      });
     }
     if (toDate) {
       qb.andWhere(`${column} <= :toDate`, { toDate: `${toDate} 23:59:59` });

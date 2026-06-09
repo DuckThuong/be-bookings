@@ -14,10 +14,7 @@ import {
   CustomerFilterQueryDto,
   CustomerListItemDto,
 } from '../dtos/customer/customer.dto';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../dtos/user/common.dto';
 import { UserInformationResponseDto } from '../dtos/user/user.dto';
 
 const RANKS = [
@@ -52,7 +49,7 @@ export class CustomerService {
     query: CustomerFilterQueryDto,
   ): Promise<CustomerListItemDto[]> {
     let customerIds: string[] = [];
-    let companyId: number | undefined = query.companyId;
+    const companyId: number | undefined = query.companyId;
 
     if (user.role === UserRole.OWNER) {
       if (!companyId) {
@@ -85,7 +82,7 @@ export class CustomerService {
     const list = await Promise.all(
       profiles.map(async (profile) => {
         const activity = await this.customerRepository.getActivityByCompany(
-          companyId!,
+          companyId,
           profile.userCode,
         );
         return this.toListItem(profile, activity);
@@ -275,9 +272,7 @@ export class CustomerService {
       .reverse()
       .findIndex((rank) => totalSpent >= rank.threshold);
     const rank =
-      currentIndex === -1
-        ? RANKS[0]
-        : RANKS[RANKS.length - 1 - currentIndex];
+      currentIndex === -1 ? RANKS[0] : RANKS[RANKS.length - 1 - currentIndex];
 
     const nextRank = RANKS.find((item) => item.threshold > rank.threshold);
     const nextRankThreshold = nextRank?.threshold;

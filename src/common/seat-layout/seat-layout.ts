@@ -143,10 +143,7 @@ export function normalizeVehicleLayoutConfig(
       : {}),
     ...(source?.lastRowSeatCount !== undefined
       ? {
-          lastRowSeatCount: toInt(
-            source.lastRowSeatCount,
-            'lastRowSeatCount',
-          ),
+          lastRowSeatCount: toInt(source.lastRowSeatCount, 'lastRowSeatCount'),
         }
       : {}),
     seatType: normalizeSeatType(input?.seatType ?? fallback?.seatType),
@@ -157,7 +154,9 @@ export function normalizeVehicleLayoutConfig(
   return config;
 }
 
-export function buildVehicleLayout(config: VehicleLayoutConfig): BuiltVehicleLayout {
+export function buildVehicleLayout(
+  config: VehicleLayoutConfig,
+): BuiltVehicleLayout {
   validateLayoutConfig(config);
 
   const floors: LayoutFloor[] = [];

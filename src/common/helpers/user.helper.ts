@@ -25,8 +25,12 @@ export function mergeUserInformationList(
   basicUsers: TbBasicUser[],
   infoUsers: TbInfoUser[],
 ): UserInformationResponseDto[] {
-  const basicByUserCode = new Map(basicUsers.map((basic) => [basic.userCode, basic]));
-  const infoByUserCode = new Map(infoUsers.map((info) => [info.userCode, info]));
+  const basicByUserCode = new Map(
+    basicUsers.map((basic) => [basic.userCode, basic]),
+  );
+  const infoByUserCode = new Map(
+    infoUsers.map((info) => [info.userCode, info]),
+  );
 
   return [...basicByUserCode.keys()]
     .filter((userCode) => infoByUserCode.has(userCode))

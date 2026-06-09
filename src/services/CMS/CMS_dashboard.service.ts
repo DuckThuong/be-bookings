@@ -143,11 +143,7 @@ export class CMSDashboardService {
         weekRange.to,
       ),
       this.dashboardRepository.getVehicleTypeBreakdown(scope),
-      this.dashboardRepository.getTopCompanies(
-        scope,
-        range.from,
-        range.to,
-      ),
+      this.dashboardRepository.getTopCompanies(scope, range.from, range.to),
       scope.companyId != null
         ? this.dashboardRepository.getTopRoutesForCompany(
             scope.companyId,
@@ -174,9 +170,8 @@ export class CMSDashboardService {
       revenue: { total: revenueTotal, ...metrics.revenue },
     });
 
-    const bookingStatusDistribution = await this.buildStatusDistribution(
-      statusPayments,
-    );
+    const bookingStatusDistribution =
+      await this.buildStatusDistribution(statusPayments);
     const recentBookings = await this.buildRecentBookings(recentPayments);
     const recentActivities = this.buildRecentActivities(
       recentPayments,
@@ -218,7 +213,10 @@ export class CMSDashboardService {
     },
   ): CmsDashboardStatCardDto[] {
     const isCompany = scope.companyId != null;
-    const userTrend = formatTrendPercent(data.users.current, data.users.previous);
+    const userTrend = formatTrendPercent(
+      data.users.current,
+      data.users.previous,
+    );
     const providerTrend = formatTrendPercent(
       data.providers.current,
       data.providers.previous,
@@ -336,12 +334,14 @@ export class CMSDashboardService {
     }
 
     const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
-    return (Object.keys(counts) as DashboardBookingUiStatus[]).map((status) => ({
-      name: STATUS_LABELS[status],
-      value: total > 0 ? Math.round((counts[status] / total) * 100) : 0,
-      color: STATUS_COLORS[status],
-      status,
-    }));
+    return (Object.keys(counts) as DashboardBookingUiStatus[]).map(
+      (status) => ({
+        name: STATUS_LABELS[status],
+        value: total > 0 ? Math.round((counts[status] / total) * 100) : 0,
+        color: STATUS_COLORS[status],
+        status,
+      }),
+    );
   }
 
   private buildTopProviders(
@@ -361,10 +361,7 @@ export class CMSDashboardService {
         name: item.name,
         trips: item.trips,
         revenue: formatVndShortMillion(item.revenue),
-        pct:
-          maxRevenue > 0
-            ? Math.round((item.revenue / maxRevenue) * 100)
-            : 0,
+        pct: maxRevenue > 0 ? Math.round((item.revenue / maxRevenue) * 100) : 0,
       }));
     }
 
@@ -374,8 +371,7 @@ export class CMSDashboardService {
       name: item.route,
       trips: item.trips,
       revenue: formatVndShortMillion(item.revenue),
-      pct:
-        maxRevenue > 0 ? Math.round((item.revenue / maxRevenue) * 100) : 0,
+      pct: maxRevenue > 0 ? Math.round((item.revenue / maxRevenue) * 100) : 0,
     }));
   }
 

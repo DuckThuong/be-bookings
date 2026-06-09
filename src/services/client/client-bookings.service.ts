@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
   ForbiddenException,
   HttpException,
@@ -284,10 +283,7 @@ export class ClientBookingsService {
     }
 
     if (user.role !== UserRole.USER) {
-      await this.companyAccess.assertCompanyAccess(
-        user,
-        ctx.trip.companyId,
-      );
+      await this.companyAccess.assertCompanyAccess(user, ctx.trip.companyId);
     }
 
     const vehicleType = this.resolveVehicleType(ctx);
@@ -345,8 +341,7 @@ export class ClientBookingsService {
       );
     }
 
-    const remaining =
-      ctx.vehicle.seatCount - (ctx.trip.bookedSeats ?? 0);
+    const remaining = ctx.vehicle.seatCount - (ctx.trip.bookedSeats ?? 0);
     if (payload.seatIds.length > remaining) {
       throw new HttpException(
         ClientErrorMessage.NOT_ENOUGH_SEATS,
@@ -978,8 +973,9 @@ export class ClientBookingsService {
 
   private resolveVehicleCatalog(vehicleType: string): ClientCatalogVehicle {
     return (
-      CLIENT_BOOKING_CATALOG.vehicles.find((item) => item.type === vehicleType) ??
-      CLIENT_BOOKING_CATALOG.vehicles[0]
+      CLIENT_BOOKING_CATALOG.vehicles.find(
+        (item) => item.type === vehicleType,
+      ) ?? CLIENT_BOOKING_CATALOG.vehicles[0]
     );
   }
 
@@ -1046,9 +1042,7 @@ export class ClientBookingsService {
       mapTitle:
         display?.mapTitle ??
         `${label}${floorCount > 1 ? ` - ${floorCount} tầng` : ''}`,
-      mapSub:
-        display?.mapSub ??
-        `Sơ đồ ${seatCount} chỗ, ${floorCount} tầng.`,
+      mapSub: display?.mapSub ?? `Sơ đồ ${seatCount} chỗ, ${floorCount} tầng.`,
     };
   }
 

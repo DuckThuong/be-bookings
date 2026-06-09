@@ -10,10 +10,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/jwt/jwt.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import {
-  UserDecoratorDtoResponse,
-  UserRole,
-} from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { User } from '../../user.decorator';
 import {
   CmsCustomerListQueryDto,
@@ -45,10 +42,7 @@ export class CMSCustomerController {
     @Param('userCode') userCode: string,
     @Query('companyId') companyId?: string,
   ) {
-    const detail = await this.cmsCustomerService.getDetail(
-      user,
-      userCode
-    );
+    const detail = await this.cmsCustomerService.getDetail(user, userCode);
     if (!detail) {
       throw new NotFoundException('Không tìm thấy khách hàng');
     }

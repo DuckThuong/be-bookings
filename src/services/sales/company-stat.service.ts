@@ -78,15 +78,12 @@ export class CompanyStatService {
       0,
     );
     const seatSold = paidTickets.reduce((s, t) => s + t.totalSeat, 0);
-    const netRevenue = await this.paymentRepository.sumSuccessByCompany(
-      companyId,
-    );
-    const refundTotal = await this.refundRepository.sumSuccessByCompany(
-      companyId,
-    );
+    const netRevenue =
+      await this.paymentRepository.sumSuccessByCompany(companyId);
+    const refundTotal =
+      await this.refundRepository.sumSuccessByCompany(companyId);
     const ticketCount = paidTickets.length;
-    const avgTicketValue =
-      ticketCount > 0 ? netRevenue / ticketCount : 0;
+    const avgTicketValue = ticketCount > 0 ? netRevenue / ticketCount : 0;
 
     const payload: UpsertCompanyStatDto = {
       companyId,

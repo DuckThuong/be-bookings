@@ -14,11 +14,13 @@ export class CmsDriverValidationMessage {
 
   static readonly LICENSE_EMPTY = 'Loại bằng lái không được để trống';
   static readonly LICENSE_INVALID = 'Loại bằng lái không hợp lệ';
-  static readonly LICENSE_TOO_LONG = 'Loại bằng lái không được vượt quá 50 ký tự';
+  static readonly LICENSE_TOO_LONG =
+    'Loại bằng lái không được vượt quá 50 ký tự';
 
   static readonly LICENSE_NUM_EMPTY = 'Số bằng lái không được để trống';
   static readonly LICENSE_NUM_INVALID = 'Số bằng lái không hợp lệ';
-  static readonly LICENSE_NUM_TOO_LONG = 'Số bằng lái không được vượt quá 50 ký tự';
+  static readonly LICENSE_NUM_TOO_LONG =
+    'Số bằng lái không được vượt quá 50 ký tự';
 
   static readonly PHONE_EMPTY = 'Số điện thoại không được để trống';
   static readonly PHONE_INVALID = 'Số điện thoại không hợp lệ';
