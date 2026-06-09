@@ -55,9 +55,6 @@ export class SeatSelectionTripDto {
   tripId: string;
 
   @ApiProperty()
-  companyTripId: number;
-
-  @ApiProperty()
   from: string;
 
   @ApiProperty()
@@ -142,25 +139,48 @@ export class SeatSelectionOperatorDto {
 }
 
 export class SeatSelectionSeatCellDto {
+  @ApiProperty({ enum: ['seat'] })
+  type: 'seat';
+
   @ApiProperty()
   id: string;
 
+  @ApiProperty()
+  label: string;
+
   @ApiProperty({ enum: ['available', 'booked', 'vip'] })
   status: 'available' | 'booked' | 'vip';
+}
+
+export class SeatSelectionAisleCellDto {
+  @ApiProperty({ enum: ['aisle'] })
+  type: 'aisle';
+}
+
+export class SeatSelectionEmptyCellDto {
+  @ApiProperty({ enum: ['empty'] })
+  type: 'empty';
 }
 
 export class SeatSelectionRowDto {
   @ApiProperty()
   row: number;
 
-  @ApiPropertyOptional()
-  full?: boolean;
-
   @ApiProperty({
     type: 'array',
-    items: { oneOf: [{ $ref: '' }], nullable: true },
+    items: {
+      oneOf: [
+        { $ref: '#/components/schemas/SeatSelectionSeatCellDto' },
+        { $ref: '#/components/schemas/SeatSelectionAisleCellDto' },
+        { $ref: '#/components/schemas/SeatSelectionEmptyCellDto' },
+      ],
+    },
   })
-  seats: (SeatSelectionSeatCellDto | null)[];
+  cells: (
+    | SeatSelectionSeatCellDto
+    | SeatSelectionAisleCellDto
+    | SeatSelectionEmptyCellDto
+  )[];
 }
 
 export class SeatSelectionVehicleDto {

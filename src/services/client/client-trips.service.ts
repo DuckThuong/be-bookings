@@ -19,7 +19,7 @@ import { TbCompany } from '../../entities/company/company.entity';
 import { TbRoad } from '../../entities/road.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
-import { CompanyTripRepository } from '../../repositories/company-trip.repository';
+import { TripRepository } from '../../repositories/trip.repository';
 import { ClientEnrichmentService } from '../client-enrichment.service';
 import {
   ClientSearchTripsQueryDto,
@@ -34,7 +34,7 @@ interface OperatorMeta {
   logoColor?: string;
 }
 
-interface EnrichedCompanyTrip {
+interface EnrichedTrip {
   id: number;
   pricePerSeat: number;
   totalSeat: number;
@@ -51,7 +51,7 @@ export class ClientTripsService {
   private operatorMetaCache: Map<string, OperatorMeta> | null = null;
 
   constructor(
-    private readonly companyTripRepository: CompanyTripRepository,
+    private readonly tripRepository: TripRepository,
     private readonly enrichmentService: ClientEnrichmentService,
     private readonly tripResolver: ClientBookingTripResolverService,
     @InjectRepository(TbMasterData)
@@ -71,16 +71,14 @@ export class ClientTripsService {
     const filters = this.normalizeFilters(query.filters);
     const date = query.date?.trim() || this.formatDate(new Date());
 
-    const companyTrips = await this.companyTripRepository.searchActiveForClient(
-      {
-        fromCity: query.fromCity,
-        toCity: query.toCity,
-      },
-    );
+    const sourceTrips = await this.tripRepository.searchActiveForClient({
+      fromCity: query.fromCity,
+      toCity: query.toCity,
+    });
 
-    const enriched = (await this.enrichmentService.enrichCompanyTrips(
-      companyTrips,
-    )) as EnrichedCompanyTrip[];
+    const enriched = (await this.enrichmentService.enrichTripsForClient(
+      sourceTrips,
+    )) as EnrichedTrip[];
 
     const mapped = enriched
       .filter((row) => this.isBookable(row, passengers))
@@ -131,7 +129,7 @@ export class ClientTripsService {
     return Array.from(new Set(filters));
   }
 
-  private isBookable(row: EnrichedCompanyTrip, passengers: number): boolean {
+  private isBookable(row: EnrichedTrip, passengers: number): boolean {
     if (!row.trip || !row.road || !row.company || !row.vehicle) {
       return false;
     }
@@ -139,7 +137,7 @@ export class ClientTripsService {
   }
 
   private matchesSeatType(
-    row: EnrichedCompanyTrip,
+    row: EnrichedTrip,
     seatType: ClientTripSeatType,
   ): boolean {
     if (seatType === 'all' || !row.vehicle) {
@@ -153,7 +151,7 @@ export class ClientTripsService {
   }
 
   private matchesTimeFilters(
-    row: EnrichedCompanyTrip,
+    row: EnrichedTrip,
     filters: ClientTripFilterKey[],
   ): boolean {
     if (filters.includes('all')) {
@@ -230,7 +228,7 @@ export class ClientTripsService {
   }
 
   private toTripItem(
-    row: EnrichedCompanyTrip,
+    row: EnrichedTrip,
     ctx: { fromCity?: string; toCity?: string },
   ): ClientTripItemDto {
     const trip = row.trip!;

@@ -4,7 +4,6 @@ import { In, Repository } from 'typeorm';
 import { TbPayment } from '../../entities/sales/payment.entity';
 import { TbTicket } from '../../entities/ticket.entity';
 import { TbBooking } from '../../entities/sales/booking.entity';
-import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
@@ -13,7 +12,6 @@ import { BookingRepository } from '../../repositories/sales/booking.repository';
 export type CmsPaymentContext = {
   ticketMap: Map<number, TbTicket>;
   bookingMap: Map<number, TbBooking>;
-  companyTripMap: Map<number, TbCompanyTrip>;
   tripMap: Map<number, TbTrip>;
   roadMap: Map<number, TbRoad>;
   vehicleMap: Map<number, TbVehicle>;
@@ -25,8 +23,6 @@ export class CmsPaymentContextService {
     private readonly bookingRepository: BookingRepository,
     @InjectRepository(TbTicket)
     private readonly ticketRepo: Repository<TbTicket>,
-    @InjectRepository(TbCompanyTrip)
-    private readonly companyTripRepo: Repository<TbCompanyTrip>,
     @InjectRepository(TbTrip)
     private readonly tripRepo: Repository<TbTrip>,
     @InjectRepository(TbRoad)
@@ -40,7 +36,6 @@ export class CmsPaymentContextService {
       return {
         ticketMap: new Map(),
         bookingMap: new Map(),
-        companyTripMap: new Map(),
         tripMap: new Map(),
         roadMap: new Map(),
         vehicleMap: new Map(),
@@ -71,14 +66,7 @@ export class CmsPaymentContextService {
         : [];
     const bookingMap = new Map(bookings.map((b) => [b.id, b]));
 
-    const companyTripIds = [...new Set(payments.map((p) => p.companyTripId))];
-    const companyTrips =
-      companyTripIds.length > 0
-        ? await this.companyTripRepo.find({ where: { id: In(companyTripIds) } })
-        : [];
-    const companyTripMap = new Map(companyTrips.map((ct) => [ct.id, ct]));
-
-    const tripIds = [...new Set(companyTrips.map((ct) => ct.tripId))];
+    const tripIds = [...new Set(payments.map((p) => p.tripId))];
     const trips =
       tripIds.length > 0
         ? await this.tripRepo.find({ where: { id: In(tripIds) } })
@@ -92,7 +80,7 @@ export class CmsPaymentContextService {
         : [];
     const roadMap = new Map(roads.map((r) => [r.id, r]));
 
-    const vehicleIds = [...new Set(companyTrips.map((ct) => ct.vehicleId))];
+    const vehicleIds = [...new Set(trips.map((t) => t.vehicleId))];
     const vehicles =
       vehicleIds.length > 0
         ? await this.vehicleRepo.find({ where: { id: In(vehicleIds) } })
@@ -102,7 +90,6 @@ export class CmsPaymentContextService {
     return {
       ticketMap,
       bookingMap,
-      companyTripMap,
       tripMap,
       roadMap,
       vehicleMap,
@@ -113,10 +100,7 @@ export class CmsPaymentContextService {
     payment: TbPayment,
     context: CmsPaymentContext,
   ): string {
-    const companyTrip = context.companyTripMap.get(payment.companyTripId);
-    const trip = companyTrip
-      ? context.tripMap.get(companyTrip.tripId)
-      : null;
+    const trip = context.tripMap.get(payment.tripId) ?? null;
     const road = trip ? context.roadMap.get(trip.roadId) : null;
     if (road?.startPoint && road?.endPoint) {
       return `${road.startPoint} → ${road.endPoint}`;
@@ -128,8 +112,8 @@ export class CmsPaymentContextService {
     payment: TbPayment,
     context: CmsPaymentContext,
   ): string {
-    const companyTrip = context.companyTripMap.get(payment.companyTripId);
-    if (!companyTrip) return '—';
-    return context.vehicleMap.get(companyTrip.vehicleId)?.code ?? '—';
+    const trip = context.tripMap.get(payment.tripId);
+    if (!trip) return '—';
+    return context.vehicleMap.get(trip.vehicleId)?.code ?? '—';
   }
 }

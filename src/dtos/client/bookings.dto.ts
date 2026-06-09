@@ -83,9 +83,11 @@ export class CreateHoldDto {
   @IsString()
   tripId: string;
 
-  @ApiProperty({ enum: ['16', '36', '45'] })
+  @ApiPropertyOptional({ enum: ['16', '36', '45'] })
+  @IsOptional()
   @IsString()
-  vehicleType: string;
+  @IsIn(['16', '36', '45'])
+  vehicleType?: string;
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
@@ -209,10 +211,11 @@ export class CreateClientBookingDto {
   @IsString()
   tripId: string;
 
-  @ApiProperty({ enum: ['16', '36', '45'] })
+  @ApiPropertyOptional({ enum: ['16', '36', '45'] })
+  @IsOptional()
   @IsString()
   @IsIn(['16', '36', '45'])
-  vehicleType: string;
+  vehicleType?: string;
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()

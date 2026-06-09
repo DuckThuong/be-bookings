@@ -6,8 +6,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('tb_company_trip_stat')
-export class TbCompanyTripStat {
+@Entity('tb_trip_stat')
+export class TbTripStat {
   @PrimaryGeneratedColumn('increment', {
     comment: 'Primary key',
     type: 'int',
@@ -17,33 +17,33 @@ export class TbCompanyTripStat {
 
   @Column({
     type: 'int',
-    comment: 'ID chuyến nhà xe (tb_company_trip)',
+    comment: 'Trip ID (tb_trip)',
   })
-  companyTripId: number;
+  tripId: number;
 
   @Column({
     type: 'int',
-    comment: 'ID công ty (tb_company)',
+    comment: 'Company ID (tb_company)',
   })
   companyId: number;
 
   @Column({
     type: 'date',
-    comment: 'Ngày thống kê',
+    comment: 'Stat date',
   })
   statDate: string;
 
   @Column({
     type: 'int',
     default: 0,
-    comment: 'Số vé đã thanh toán',
+    comment: 'Paid ticket count',
   })
   ticketCount: number;
 
   @Column({
     type: 'int',
     default: 0,
-    comment: 'Tổng số ghế bán',
+    comment: 'Total sold seats',
   })
   seatSold: number;
 
@@ -52,7 +52,7 @@ export class TbCompanyTripStat {
     precision: 14,
     scale: 2,
     default: 0,
-    comment: 'Doanh thu gộp (trước giảm giá)',
+    comment: 'Gross revenue',
   })
   grossRevenue: number;
 
@@ -61,7 +61,7 @@ export class TbCompanyTripStat {
     precision: 14,
     scale: 2,
     default: 0,
-    comment: 'Tổng tiền giảm giá',
+    comment: 'Total discount amount',
   })
   discountTotal: number;
 
@@ -70,7 +70,7 @@ export class TbCompanyTripStat {
     precision: 14,
     scale: 2,
     default: 0,
-    comment: 'Doanh thu ròng (đã thu - hoàn)',
+    comment: 'Net revenue',
   })
   netRevenue: number;
 
@@ -79,14 +79,14 @@ export class TbCompanyTripStat {
     precision: 14,
     scale: 2,
     default: 0,
-    comment: 'Tổng tiền hoàn',
+    comment: 'Total refund amount',
   })
   refundTotal: number;
 
   @Column({
     type: 'int',
     default: 0,
-    comment: 'Số vé hủy',
+    comment: 'Cancelled ticket count',
   })
   cancelledCount: number;
 
@@ -95,19 +95,19 @@ export class TbCompanyTripStat {
     precision: 5,
     scale: 2,
     default: 0,
-    comment: 'Tỷ lệ lấp đầy ghế (%)',
+    comment: 'Occupancy rate (%)',
   })
   occupancyRate: number;
 
   @CreateDateColumn({
     name: 'created_at',
-    comment: 'Ngày tạo',
+    comment: 'Created date',
   })
   createdAt: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    comment: 'Ngày cập nhật',
+    comment: 'Updated date',
   })
   updatedAt: Date;
 }

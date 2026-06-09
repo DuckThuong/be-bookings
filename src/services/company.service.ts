@@ -11,7 +11,6 @@ import { RoadRepository } from '../repositories/road.repository';
 import { TripRepository } from '../repositories/trip.repository';
 import { VehicleRepository } from '../repositories/vehicle.repository';
 import { DriverRepository } from '../repositories/driver.repository';
-import { CompanyTripRepository } from '../repositories/company-trip.repository';
 import { SeatRepository } from '../repositories/seat.repository';
 import {
   CODE_PREFIX,
@@ -38,7 +37,6 @@ export class CompanyService {
     private readonly tripRepository: TripRepository,
     private readonly vehicleRepository: VehicleRepository,
     private readonly driverRepository: DriverRepository,
-    private readonly companyTripRepository: CompanyTripRepository,
     private readonly seatRepository: SeatRepository,
     private readonly companyAccess: CompanyAccessService,
   ) {}
@@ -157,13 +155,12 @@ export class CompanyService {
     const roadIds = roads.map((r) => r.id);
     const vehicles = await this.vehicleRepository.findIdsByCompany(companyId);
 
-    const [roadCount, tripCount, vehicleCount, driverCount, companyTripCount, seatCount] =
+    const [roadCount, tripCount, vehicleCount, driverCount, seatCount] =
       await Promise.all([
         this.roadRepository.countActiveByCompany(companyId),
         this.tripRepository.countActiveByRoadIds(roadIds),
         this.vehicleRepository.countActiveByCompany(companyId),
         this.driverRepository.countActiveByCompany(companyId),
-        this.companyTripRepository.countActiveByCompany(companyId),
         this.seatRepository.countByVehicleIds(vehicles.map((v) => v.id)),
       ]);
 
@@ -172,7 +169,6 @@ export class CompanyService {
       tripCount,
       vehicleCount,
       driverCount,
-      companyTripCount,
       seatCount,
     };
   }

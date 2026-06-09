@@ -12,7 +12,6 @@ import { TbPayment } from '../../entities/sales/payment.entity';
 import { TbRefund } from '../../entities/sales/refund.entity';
 import { TbTicket } from '../../entities/ticket.entity';
 import { TbBooking } from '../../entities/sales/booking.entity';
-import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
@@ -24,7 +23,6 @@ import { TbVehicle } from '../../entities/vehicle.entity';
       TbRefund,
       TbTicket,
       TbBooking,
-      TbCompanyTrip,
       TbTrip,
       TbRoad,
       TbVehicle,

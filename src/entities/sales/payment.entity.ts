@@ -30,9 +30,9 @@ export class TbPayment {
 
   @Column({
     type: 'int',
-    comment: 'ID chuyến nhà xe (tb_company_trip)',
+    comment: 'ID chuyến (tb_trip)',
   })
-  companyTripId: number;
+  tripId: number;
 
   @Column({
     type: 'int',

@@ -4,46 +4,93 @@ import { EntityStatus } from '../../assets/constants/company.constants';
 import { TbSeat } from '../../entities/seat.entity';
 import { SeatRepository } from '../../repositories/seat.repository';
 import { ClientEnrichmentService } from '../client-enrichment.service';
-import { ResolvedTripContext } from './client-booking-trip-resolver.service';
-
-const SEATS_PER_ROW = 5;
-const AISLE_INDEX = 2;
+import {
+  ClientBookingTripResolverService,
+  ResolvedTripContext,
+} from './client-booking-trip-resolver.service';
+import {
+  buildVehicleLayout,
+  layoutPresetToClientVehicleType,
+  resolveVehicleLayoutConfig,
+} from '../../common/seat-layout/seat-layout';
 
 export type FeSeatStatus = 'available' | 'booked' | 'vip';
+export type FeSeatCell =
+  | {
+      type: 'seat';
+      id: string;
+      label: string;
+      status: FeSeatStatus;
+    }
+  | { type: 'aisle' }
+  | { type: 'empty' };
 
 @Injectable()
 export class ClientBookingSeatMapService {
   constructor(
     private readonly enrichment: ClientEnrichmentService,
     private readonly seatRepository: SeatRepository,
+    private readonly tripResolver: ClientBookingTripResolverService,
   ) {}
 
-  async buildSeatMap(
-    ctx: ResolvedTripContext,
-    vehicleType: string,
-    floor: number,
-  ) {
-    const occupiedIds = await this.enrichment.getOccupiedSeatIds(
-      ctx.companyTrip.id,
+  async buildSeatMap(ctx: ResolvedTripContext, floor: number) {
+    const layoutConfig = resolveVehicleLayoutConfig(ctx.vehicle.layoutConfig, {
+      seatCount: ctx.vehicle.seatCount,
+      vehicleType: ctx.vehicle.type,
+    });
+    const layout = buildVehicleLayout(layoutConfig);
+    const vehicleType = layoutPresetToClientVehicleType(
+      layoutConfig.preset,
+      ctx.vehicle.seatCount,
+      ctx.vehicle.type,
     );
+    const normalizedFloor = this.normalizeFloor(layoutConfig.floorCount, floor);
+    const occupiedIds = await this.enrichment.getOccupiedSeatIds(ctx.trip.id);
     const occupiedSet = new Set(occupiedIds);
     const allSeats = await this.seatRepository.findByVehicle(
-      ctx.companyTrip.vehicleId,
+      ctx.trip.vehicleId,
     );
-    const activeSeats = allSeats.filter(
-      (s) => s.status === EntityStatus.ACTIVE,
+    const activeSeats = this.sortSeatsByOrdinalAsc(
+      allSeats.filter((s) => s.status === EntityStatus.ACTIVE),
+    ).slice(0, layout.seatCount);
+    const seatsByOrdinal = new Map(
+      activeSeats.map((seat) => [this.getOrdinal(seat), seat]),
     );
-    const floorSeats = this.filterByFloor(activeSeats, vehicleType, floor);
-
-    const rows = this.buildRows(floorSeats, occupiedSet);
+    const floors = layout.floors.map((layoutFloor) => ({
+      floor: layoutFloor.floor,
+      label: layoutFloor.label,
+      rows: layoutFloor.rows.map((row) => ({
+        row: row.row,
+        cells: row.cells.map((cell): FeSeatCell => {
+          if (cell.type !== 'seat') {
+            return { type: cell.type };
+          }
+          const seat = seatsByOrdinal.get(cell.ordinal);
+          if (!seat) {
+            return { type: 'empty' };
+          }
+          const displayId = this.formatDisplaySeatId(seat);
+          return {
+            type: 'seat',
+            id: displayId,
+            label: displayId,
+            status: this.mapSeatStatus(seat, occupiedSet),
+          };
+        }),
+      })),
+    }));
+    const selectedFloor =
+      floors.find((item) => item.floor === normalizedFloor) ?? floors[0];
 
     return {
       tripId: ctx.tripIdFe,
       vehicleType,
-      floor,
-      rows,
-      seatCodeToId: this.mapCodesToIds(floorSeats),
-      seatIdToDisplayId: this.mapIdsToDisplay(floorSeats),
+      seatCount: layout.seatCount,
+      floor: normalizedFloor,
+      floors,
+      rows: selectedFloor?.rows ?? [],
+      seatCodeToId: this.mapCodesToIds(activeSeats),
+      seatIdToDisplayId: this.mapIdsToDisplay(activeSeats),
     };
   }
 
@@ -64,6 +111,10 @@ export class ClientBookingSeatMapService {
   }
 
   formatDisplaySeatId(seat: TbSeat): string {
+    const name = seat.name?.trim();
+    if (name && /^[A-Z]\d{2,}$/i.test(name)) {
+      return name.toUpperCase();
+    }
     const prefix = (seat.type ?? 'S').trim().charAt(0).toUpperCase() || 'S';
     return `${prefix}${this.getOrdinal(seat)}`;
   }
@@ -98,75 +149,16 @@ export class ClientBookingSeatMapService {
     return map;
   }
 
-  private filterByFloor(
-    seats: TbSeat[],
-    vehicleType: string,
-    floor: number,
-  ): TbSeat[] {
-    const sorted = [...seats].sort(
-      (a, b) => this.getOrdinal(a) - this.getOrdinal(b),
-    );
-    if (vehicleType !== '36' || floor === 1) {
-      if (vehicleType === '36' && floor === 1) {
-        const half = Math.ceil(sorted.length / 2);
-        return sorted.slice(0, half);
-      }
-      return sorted;
-    }
-    const half = Math.ceil(sorted.length / 2);
-    return sorted.slice(half);
+  private normalizeFloor(floorCount: number, floor: number): number {
+    const requested = Math.max(1, Math.floor(Number(floor) || 1));
+    const maxFloor = Math.max(1, floorCount);
+    return Math.min(requested, maxFloor);
   }
 
-  private buildRows(seats: TbSeat[], occupiedSet: Set<number>) {
-    const sorted = [...seats].sort(
+  private sortSeatsByOrdinalAsc(seats: TbSeat[]): TbSeat[] {
+    return [...seats].sort(
       (a, b) => this.getOrdinal(a) - this.getOrdinal(b),
     );
-    const rows: {
-      row: number;
-      full?: boolean;
-      seats: Array<{
-        id: string;
-        label: string;
-        status: FeSeatStatus;
-      } | null>;
-    }[] = [];
-
-    let rowNum = 1;
-    for (let i = 0; i < sorted.length; i += SEATS_PER_ROW) {
-      const chunk = sorted.slice(i, i + SEATS_PER_ROW);
-      const rowSeats: Array<{
-        id: string;
-        label: string;
-        status: FeSeatStatus;
-      } | null> = [];
-
-      for (let col = 0; col < SEATS_PER_ROW; col++) {
-        if (col === AISLE_INDEX && chunk.length < SEATS_PER_ROW) {
-          rowSeats.push(null);
-          continue;
-        }
-        const seatIndex = col > AISLE_INDEX ? col - 1 : col;
-        const seat = chunk[seatIndex];
-        if (!seat) {
-          rowSeats.push(null);
-          continue;
-        }
-        const displayId = this.formatDisplaySeatId(seat);
-        rowSeats.push({
-          id: displayId,
-          label: displayId,
-          status: this.mapSeatStatus(seat, occupiedSet),
-        });
-      }
-
-      rows.push({
-        row: rowNum++,
-        full: chunk.length >= SEATS_PER_ROW,
-        seats: rowSeats,
-      });
-    }
-
-    return rows;
   }
 
   private mapSeatStatus(seat: TbSeat, occupiedSet: Set<number>): FeSeatStatus {

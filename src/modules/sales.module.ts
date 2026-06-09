@@ -4,7 +4,7 @@ import { TbPayment } from '../entities/sales/payment.entity';
 import { TbRefund } from '../entities/sales/refund.entity';
 import { TbBooking } from '../entities/sales/booking.entity';
 import { TbCompanyStat } from '../entities/sales/company-stat.entity';
-import { TbCompanyTripStat } from '../entities/sales/company-trip-stat.entity';
+import { TbTripStat } from '../entities/sales/trip-stat.entity';
 import { TbCommission } from '../entities/sales/commission.entity';
 import { TbSettlement } from '../entities/sales/settlement.entity';
 import { TbPromotionUsage } from '../entities/sales/promotion-usage.entity';
@@ -14,7 +14,7 @@ import { RefundController } from '../controllers/sales/refund.controller';
 import { CommissionController } from '../controllers/sales/commission.controller';
 import { SettlementController } from '../controllers/sales/settlement.controller';
 import { CompanyStatController } from '../controllers/sales/company-stat.controller';
-import { CompanyTripStatController } from '../controllers/sales/company-trip-stat.controller';
+import { TripStatController } from '../controllers/sales/trip-stat.controller';
 import { PromotionUsageController } from '../controllers/sales/promotion-usage.controller';
 import { BookingService } from '../services/sales/booking.service';
 import { PaymentService } from '../services/sales/payment.service';
@@ -22,7 +22,7 @@ import { RefundService } from '../services/sales/refund.service';
 import { CommissionService } from '../services/sales/commission.service';
 import { SettlementService } from '../services/sales/settlement.service';
 import { CompanyStatService } from '../services/sales/company-stat.service';
-import { CompanyTripStatService } from '../services/sales/company-trip-stat.service';
+import { TripStatService } from '../services/sales/trip-stat.service';
 import { PromotionUsageService } from '../services/sales/promotion-usage.service';
 import { PaymentRepository } from '../repositories/sales/payment.repository';
 import { RefundRepository } from '../repositories/sales/refund.repository';
@@ -30,7 +30,7 @@ import { BookingRepository } from '../repositories/sales/booking.repository';
 import { CommissionRepository } from '../repositories/sales/commission.repository';
 import { SettlementRepository } from '../repositories/sales/settlement.repository';
 import { CompanyStatRepository } from '../repositories/sales/company-stat.repository';
-import { CompanyTripStatRepository } from '../repositories/sales/company-trip-stat.repository';
+import { TripStatRepository } from '../repositories/sales/trip-stat.repository';
 import { PromotionUsageRepository } from '../repositories/sales/promotion-usage.repository';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CompanyModule } from './company.module';
@@ -43,7 +43,7 @@ import { AuthModule } from './auth.module';
       TbRefund,
       TbBooking,
       TbCompanyStat,
-      TbCompanyTripStat,
+      TbTripStat,
       TbCommission,
       TbSettlement,
       TbPromotionUsage,
@@ -58,7 +58,7 @@ import { AuthModule } from './auth.module';
     CommissionController,
     SettlementController,
     CompanyStatController,
-    CompanyTripStatController,
+    TripStatController,
     PromotionUsageController,
   ],
   providers: [
@@ -68,7 +68,7 @@ import { AuthModule } from './auth.module';
     CommissionService,
     SettlementService,
     CompanyStatService,
-    CompanyTripStatService,
+    TripStatService,
     PromotionUsageService,
     PaymentRepository,
     RefundRepository,
@@ -76,7 +76,7 @@ import { AuthModule } from './auth.module';
     CommissionRepository,
     SettlementRepository,
     CompanyStatRepository,
-    CompanyTripStatRepository,
+    TripStatRepository,
     PromotionUsageRepository,
     RolesGuard,
   ],

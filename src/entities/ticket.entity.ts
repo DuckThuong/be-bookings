@@ -24,13 +24,7 @@ export class TbTicket {
 
   @Column({
     type: 'int',
-    comment: 'ID chuyến nhà xe (tb_company_trip)',
-  })
-  companyTripId: number;
-
-  @Column({
-    type: 'int',
-    comment: 'ID chuyến mẫu (tb_trip)',
+    comment: 'ID chuyến (tb_trip)',
   })
   tripId: number;
 

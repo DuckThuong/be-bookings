@@ -11,6 +11,7 @@ export class CmsTripValidationMessage {
     'Không tìm thấy tuyến theo mã hoặc tên đã nhập';
   static readonly ROUTE_NOT_BELONG_COMPANY =
     'Tuyến không thuộc nhà xe của bạn';
+  static readonly ROAD_INACTIVE = 'Tuyến đang không hoạt động';
 
   static readonly VEHICLE_EMPTY = 'Mã xe (vehicle) không được để trống';
   static readonly VEHICLE_INVALID = 'Mã xe không hợp lệ';
@@ -18,6 +19,7 @@ export class CmsTripValidationMessage {
   static readonly VEHICLE_NOT_FOUND = 'Không tìm thấy xe theo mã đã nhập';
   static readonly VEHICLE_NOT_BELONG_COMPANY =
     'Xe không thuộc nhà xe của bạn';
+  static readonly VEHICLE_INACTIVE = 'Xe đang không hoạt động';
 
   static readonly DRIVER_EMPTY = 'Mã tài xế (driver) không được để trống';
   static readonly DRIVER_INVALID = 'Mã tài xế không hợp lệ';
@@ -27,6 +29,7 @@ export class CmsTripValidationMessage {
     'Không tìm thấy tài xế theo mã đã nhập';
   static readonly DRIVER_NOT_BELONG_COMPANY =
     'Tài xế không thuộc nhà xe của bạn';
+  static readonly DRIVER_INACTIVE = 'Tài xế đang không hoạt động';
 
   static readonly DEPARTURE_EMPTY = 'Giờ khởi hành không được để trống';
   static readonly DEPARTURE_INVALID = 'Giờ khởi hành không hợp lệ';
@@ -63,7 +66,7 @@ export class CmsTripValidationMessage {
   static readonly TRIP_ID_INVALID = 'ID chuyến phải là số nguyên dương';
 
   static readonly COMPANY_TRIP_SYNC_FAILED =
-    'Không thể đồng bộ chuyến khai thác (company_trip)';
+    'Không thể đồng bộ chuyến';
 }
 
 export class CmsTripSuccessMessage {

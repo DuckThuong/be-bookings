@@ -34,7 +34,6 @@ import { TbCompany } from '../../entities/company/company.entity';
 import { TbTicket } from '../../entities/ticket.entity';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
-import { TbCompanyTrip } from '../../entities/company/company-trip.entity';
 import { BookingRepository } from '../../repositories/sales/booking.repository';
 import { DashboardRepository } from '../../repositories/dashboard.repository';
 import { CompanyAccessService } from '../company-access.service';
@@ -107,8 +106,6 @@ export class CMSDashboardService {
     private readonly tripRepo: Repository<TbTrip>,
     @InjectRepository(TbRoad)
     private readonly roadRepo: Repository<TbRoad>,
-    @InjectRepository(TbCompanyTrip)
-    private readonly companyTripRepo: Repository<TbCompanyTrip>,
     @InjectRepository(TbCompany)
     private readonly companyRepo: Repository<TbCompany>,
   ) {}
@@ -420,10 +417,7 @@ export class CMSDashboardService {
       const booking = ticket?.bookingId
         ? (context.bookingMap.get(ticket.bookingId) ?? null)
         : null;
-      const companyTrip = context.companyTripMap.get(payment.companyTripId);
-      const trip = companyTrip
-        ? (context.tripMap.get(companyTrip.tripId) ?? null)
-        : null;
+      const trip = context.tripMap.get(payment.tripId) ?? null;
       const road = trip ? (context.roadMap.get(trip.roadId) ?? null) : null;
       const company = companyMap.get(payment.companyId);
 
@@ -477,14 +471,7 @@ export class CMSDashboardService {
         : [];
     const bookingMap = new Map(bookings.map((b) => [b.id, b]));
 
-    const companyTripIds = [...new Set(payments.map((p) => p.companyTripId))];
-    const companyTrips =
-      companyTripIds.length > 0
-        ? await this.companyTripRepo.find({ where: { id: In(companyTripIds) } })
-        : [];
-    const companyTripMap = new Map(companyTrips.map((ct) => [ct.id, ct]));
-
-    const tripIds = [...new Set(companyTrips.map((ct) => ct.tripId))];
+    const tripIds = [...new Set(payments.map((p) => p.tripId))];
     const trips =
       tripIds.length > 0
         ? await this.tripRepo.find({ where: { id: In(tripIds) } })
@@ -498,6 +485,6 @@ export class CMSDashboardService {
         : [];
     const roadMap = new Map(roads.map((r) => [r.id, r]));
 
-    return { ticketMap, bookingMap, companyTripMap, tripMap, roadMap };
+    return { ticketMap, bookingMap, tripMap, roadMap };
   }
 }

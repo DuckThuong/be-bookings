@@ -39,7 +39,7 @@ export class CMSTripController {
   @Get()
   @ApiOperation({
     summary:
-      'Danh sách chuyến mẫu CMS (chuyến + tuyến + xe + tài xế + company_trip)',
+      'Danh sách chuyến CMS (chuyến + tuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsTripListResponseDto })
   findAll(
@@ -52,7 +52,7 @@ export class CMSTripController {
   @Get(':id')
   @ApiOperation({
     summary:
-      'Chi tiết chuyến mẫu CMS theo ID (chuyến + tuyến + xe + tài xế + company_trip)',
+      'Chi tiết chuyến CMS theo ID (chuyến + tuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsTripDetailResponseDto })
   findOne(

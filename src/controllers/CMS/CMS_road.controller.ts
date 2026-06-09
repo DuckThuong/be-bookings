@@ -39,7 +39,7 @@ export class CMSRoadController {
   @Get()
   @ApiOperation({
     summary:
-      'Danh sách tuyến CMS (tuyến + chuyến mẫu + xe + tài xế + company_trip)',
+      'Danh sách tuyến CMS (tuyến + chuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsRoadListResponseDto })
   findAll(
@@ -52,7 +52,7 @@ export class CMSRoadController {
   @Get(':id')
   @ApiOperation({
     summary:
-      'Chi tiết tuyến CMS theo ID (tuyến + chuyến mẫu + xe + tài xế + company_trip)',
+      'Chi tiết tuyến CMS theo ID (tuyến + chuyến + xe + tài xế)',
   })
   @ApiResponse({ status: 200, type: CmsRoadDetailResponseDto })
   findOne(

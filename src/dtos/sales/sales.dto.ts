@@ -10,9 +10,6 @@ export class CreateBookingDto {
   companyId: number;
 
   @ApiProperty({ example: 1 })
-  companyTripId: number;
-
-  @ApiProperty({ example: 1 })
   tripId: number;
 
   @ApiProperty({ example: 'USR001' })
@@ -165,9 +162,9 @@ export class UpsertCompanyStatDto {
   avgTicketValue?: number;
 }
 
-export class UpsertCompanyTripStatDto {
+export class UpsertTripStatDto {
   @ApiProperty({ example: 1 })
-  companyTripId: number;
+  tripId: number;
 
   @ApiProperty({ example: 1 })
   companyId: number;
@@ -222,7 +219,7 @@ export class SalesFilterQueryDto {
   companyId?: number;
 
   @ApiPropertyOptional({ example: 1 })
-  companyTripId?: number;
+  tripId?: number;
 
   @ApiPropertyOptional()
   customerId?: string;
