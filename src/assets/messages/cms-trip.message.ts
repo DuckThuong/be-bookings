@@ -50,7 +50,7 @@ export class CmsTripValidationMessage {
   static readonly TRIP_STATUS_EMPTY = 'Trạng thái chuyến không được để trống';
   static readonly TRIP_STATUS_INVALID = 'Trạng thái chuyến không hợp lệ';
   static readonly TRIP_STATUS_NOT_IN =
-    'Trạng thái chuyến phải là ACTIVE hoặc INACTIVE';
+    'Trạng thái chuyến phải là đang hoạt động hoặc ngừng hoạt động';
 
   static readonly NOTE_INVALID = 'Ghi chú không hợp lệ';
   static readonly NOTE_TOO_LONG = 'Ghi chú không được vượt quá 500 ký tự';

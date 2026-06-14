@@ -33,7 +33,7 @@ export class CmsRoadValidationMessage {
   static readonly ROAD_STATUS_EMPTY = 'Trạng thái tuyến không được để trống';
   static readonly ROAD_STATUS_INVALID = 'Trạng thái tuyến không hợp lệ';
   static readonly ROAD_STATUS_NOT_IN =
-    'Trạng thái tuyến phải là ACTIVE hoặc INACTIVE';
+    'Trạng thái tuyến phải là đang hoạt động hoặc ngừng hoạt động';
 
   static readonly ROAD_ID_INVALID = 'ID tuyến phải là số nguyên dương';
 

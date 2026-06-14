@@ -29,7 +29,7 @@ export class CmsVehicleValidationMessage {
   static readonly VEHICAL_STATUS_INVALID =
     'Trạng thái phương tiện không hợp lệ';
   static readonly VEHICAL_STATUS_NOT_IN =
-    'Trạng thái phương tiện phải là ACTIVE hoặc INACTIVE';
+    'Trạng thái phương tiện phải là đang hoạt động hoặc ngừng hoạt động';
 
   static readonly TRIP_ID_EMPTY = 'ID chuyến mẫu (tripId) không được để trống';
   static readonly TRIP_ID_INVALID =

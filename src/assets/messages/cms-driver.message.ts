@@ -33,7 +33,7 @@ export class CmsDriverValidationMessage {
   static readonly DRIVER_STATUS_EMPTY = 'Trạng thái tài xế không được để trống';
   static readonly DRIVER_STATUS_INVALID = 'Trạng thái tài xế không hợp lệ';
   static readonly DRIVER_STATUS_NOT_IN =
-    'Trạng thái tài xế phải là ACTIVE hoặc INACTIVE';
+    'Trạng thái tài xế phải là đang hoạt động hoặc ngừng hoạt động';
 
   static readonly DESCRIPTION_INVALID = 'Mô tả không hợp lệ';
   static readonly DRIVER_ID_INVALID = 'ID tài xế phải là số nguyên dương';
