@@ -56,6 +56,8 @@ export class ClientTripsService {
     private readonly tripResolver: ClientBookingTripResolverService,
     @InjectRepository(TbMasterData)
     private readonly masterDataRepo: Repository<TbMasterData>,
+    @InjectRepository(TbCompany)
+    private readonly companyRepo: Repository<TbCompany>,
   ) {}
 
   async searchTrips(
@@ -74,7 +76,16 @@ export class ClientTripsService {
     const sourceTrips = await this.tripRepository.searchActiveForClient({
       fromCity: query.fromCity,
       toCity: query.toCity,
+      companyId: query.companyId,
     });
+
+    let companyName: string | undefined;
+    if (query.companyId !== undefined) {
+      const company = await this.companyRepo.findOne({
+        where: { id: query.companyId },
+      });
+      companyName = company?.companyName;
+    }
 
     const enriched = (await this.enrichmentService.enrichTripsForClient(
       sourceTrips,
@@ -104,6 +115,8 @@ export class ClientTripsService {
         date,
         passengers,
         seatType,
+        companyId: query.companyId,
+        companyName,
       },
       meta: {
         resultCount,

@@ -31,6 +31,8 @@ import { ClientTripsController } from '../controllers/client/client-trips.contro
 import { ClientBookingSeatMapService } from '../services/client/client-booking-seat-map.service';
 import { ClientBookingPricingService } from '../services/client/client-booking-pricing.service';
 import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
+import { ClientHomeHighlightsController } from '../controllers/client/client-home-highlights.controller';
+import { ClientHomeHighlightsService } from '../services/client/client-home-highlights.service';
 
 @Module({
   imports: [
@@ -59,6 +61,7 @@ import { ClientBookingTripResolverService } from '../services/client/client-book
     ClientBookingsController,
     ClientPromoController,
     ClientTripsController,
+    ClientHomeHighlightsController,
   ],
   providers: [
     ClientAccountService,
@@ -69,6 +72,7 @@ import { ClientBookingTripResolverService } from '../services/client/client-book
     ClientBookingSeatMapService,
     ClientBookingPricingService,
     ClientTripsService,
+    ClientHomeHighlightsService,
     TripRepository,
     RolesGuard,
   ],

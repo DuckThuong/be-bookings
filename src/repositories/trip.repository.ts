@@ -71,7 +71,11 @@ export class TripRepository {
     });
   }
 
-  searchActiveForClient(params: { fromCity?: string; toCity?: string }) {
+  searchActiveForClient(params: {
+    fromCity?: string;
+    toCity?: string;
+    companyId?: number;
+  }) {
     const qb = this.repo
       .createQueryBuilder('trip')
       .innerJoin('tb_road', 'road', 'road.id = trip.roadId')
@@ -90,6 +94,12 @@ export class TripRepository {
     if (toCity) {
       qb.andWhere('road.endPoint LIKE :toCity', {
         toCity: `%${toCity}%`,
+      });
+    }
+
+    if (params.companyId !== undefined) {
+      qb.andWhere('trip.companyId = :companyId', {
+        companyId: params.companyId,
       });
     }
 

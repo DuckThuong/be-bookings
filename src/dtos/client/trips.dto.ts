@@ -124,6 +124,17 @@ export class ClientSearchTripsQueryDto {
   @Min(1)
   @Max(50)
   pageSize?: number;
+
+  @ApiPropertyOptional({
+    example: 12,
+    description:
+      'Lọc theo nhà xe (companyId). Dùng khi click vào nhà xe nổi bật ở trang chủ.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  companyId?: number;
 }
 
 export class ClientTripRoutePointDto {
@@ -223,6 +234,15 @@ export class ClientTripSearchCriteriaDto {
 
   @ApiProperty({ enum: SEAT_TYPES, example: 'all' })
   seatType: ClientTripSeatType;
+
+  @ApiPropertyOptional({ example: 12, description: 'Lọc theo nhà xe (nếu có)' })
+  companyId?: number;
+
+  @ApiPropertyOptional({
+    example: 'Viet Express',
+    description: 'Tên nhà xe (nếu có)',
+  })
+  companyName?: string;
 }
 
 export class ClientTripSearchMetaDto {
