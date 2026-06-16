@@ -4,6 +4,7 @@ import {
   IsIn,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -361,6 +362,8 @@ export class UpdateUserPayloadDto {
     required: false,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   userName?: string;
 
   @ApiProperty({
@@ -369,6 +372,8 @@ export class UpdateUserPayloadDto {
     required: false,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   userDob?: string;
 
   @ApiProperty({
@@ -378,6 +383,9 @@ export class UpdateUserPayloadDto {
     enum: [1, 2, 3],
     type: Number,
   })
+  @IsOptional()
+  @IsInt()
+  @IsIn([1, 2, 3])
   userGender?: number;
 
   @ApiProperty({
@@ -386,6 +394,8 @@ export class UpdateUserPayloadDto {
     required: false,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   userAvatar?: string;
 
   @ApiProperty({
@@ -394,6 +404,8 @@ export class UpdateUserPayloadDto {
     required: false,
     type: String,
   })
+  @IsOptional()
+  @IsString()
   userPhone?: string;
 
   @ApiProperty({
@@ -402,6 +414,8 @@ export class UpdateUserPayloadDto {
     required: false,
     type: String,
   })
+  @IsOptional()
+  @IsEmail()
   userEmail?: string;
 }
 
@@ -413,6 +427,9 @@ export class AdminUpdateUserPayloadDto extends UpdateUserPayloadDto {
     enum: UserRole,
     type: Number,
   })
+  @IsOptional()
+  @IsInt()
+  @IsIn([UserRole.ADMIN, UserRole.OWNER, UserRole.USER])
   userRole?: UserRole;
 
   @ApiProperty({
@@ -422,6 +439,9 @@ export class AdminUpdateUserPayloadDto extends UpdateUserPayloadDto {
     enum: UserStatus,
     type: Number,
   })
+  @IsOptional()
+  @IsInt()
+  @IsIn([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED])
   userStatus?: UserStatus;
 
   @ApiProperty({
@@ -430,6 +450,7 @@ export class AdminUpdateUserPayloadDto extends UpdateUserPayloadDto {
     required: false,
     type: Boolean,
   })
+  @IsOptional()
   userIsEmailVerified?: boolean;
 }
 
