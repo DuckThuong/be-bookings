@@ -19,6 +19,7 @@ import { CMSCustomerModule } from './modules/CMS/CMS_customer.module';
 import { CMSDashboardModule } from './modules/CMS/CMS_dashboard.module';
 import { CMSRevenueModule } from './modules/CMS/CMS_revenue.module';
 import { CMSReportModule } from './modules/CMS/CMS_report.module';
+import { ChatModule } from './modules/chat.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbVehicle } from './entities/vehicle.entity';
 import { TbTrip } from './entities/trip.entity';
@@ -27,7 +28,11 @@ import { TbCompany } from './entities/company/company.entity';
 import { TbTicket } from './entities/ticket.entity';
 import { TbRoad } from './entities/road.entity';
 import { TbSeat } from './entities/seat.entity';
-
+import { TbChatConversation } from './entities/chat/chat-conversation.entity';
+import { TbChatConversationMember } from './entities/chat/chat-conversation-member.entity';
+import { TbChatMessage } from './entities/chat/chat-message.entity';
+import { TbChatMessageAttachment } from './entities/chat/chat-message-attachment.entity';
+import { TbChatMessageRecipient } from './entities/chat/chat-message-recipient.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -65,6 +70,11 @@ import { TbSeat } from './entities/seat.entity';
           TbVehicle,
           TbRoad,
           TbTicket,
+          TbChatConversation,
+          TbChatConversationMember,
+          TbChatMessage,
+          TbChatMessageAttachment,
+          TbChatMessageRecipient,
         ],
         migrations: [__dirname + '/migrations/**/*.migration.{ts,js}'],
         migrationsRun: false,
@@ -87,6 +97,7 @@ import { TbSeat } from './entities/seat.entity';
     CMSDashboardModule,
     CMSRevenueModule,
     CMSReportModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [],

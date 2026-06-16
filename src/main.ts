@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
 import { setupSwagger } from './swagger.config';
 import 'dotenv/config';
@@ -34,6 +35,9 @@ async function bootstrap() {
   });
 
   setupSwagger(app);
+
+  // Bật Socket.io adapter cho @WebSocketGateway (chat realtime)
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   const port = process.env.PORT || process.env.API_PORT || 8000;
   await app.listen(port, '0.0.0.0');
