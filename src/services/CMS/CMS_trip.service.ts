@@ -11,6 +11,7 @@ import {
   CmsTripDetailResponseDto,
   CmsTripEntityDto,
   CmsTripListResponseDto,
+  UpdateOperationStatusPayloadDto,
 } from '../../dtos/CMS/CMS_trip.dto';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
@@ -64,6 +65,7 @@ export class CMSTripService {
         vehicleId: payload.vehicleId,
         description: payload.description?.trim(),
         status: payload.status,
+        operationStatus: payload.operationStatus ?? 'SCHEDULED',
         departure: payload.departure?.trim() ?? '',
         arrival: payload.arrival?.trim() ?? '',
         seatPrice: payload.seatPrice.trim(),
@@ -87,12 +89,31 @@ export class CMSTripService {
         vehicleId: payload.vehicleId,
         description: payload.description?.trim(),
         status: payload.status,
+        operationStatus: payload.operationStatus,
         departure: payload.departure?.trim() ?? '',
         arrival: payload.arrival?.trim() ?? '',
         seatPrice: payload.seatPrice.trim(),
         bookedSeats: payload.bookedSeats ?? 0,
       });
       return (await this.enrichTrips([trip]))[0];
+    } catch (error) {
+      this.rethrow(error);
+    }
+  }
+
+  async updateOperationStatus(
+    user: UserDecoratorDtoResponse,
+    payload: UpdateOperationStatusPayloadDto,
+  ): Promise<{ message: string; trip: CmsTripEntityDto }> {
+    try {
+      const trip = await this.tripService.update(user, payload.id, {
+        operationStatus: payload.operationStatus,
+      });
+      const enrichedTrip = (await this.enrichTrips([trip]))[0];
+      return {
+        message: CmsTripSuccessMessage.OPERATION_STATUS_UPDATE_SUCCESS,
+        trip: enrichedTrip,
+      };
     } catch (error) {
       this.rethrow(error);
     }
@@ -169,6 +190,7 @@ export class CMSTripService {
         driverId: trip.driverId,
         vehicleId: trip.vehicleId,
         status: trip.status,
+        operationStatus: trip.operationStatus,
         description: trip.description ?? undefined,
         departure: trip.departure ?? '',
         arrival: trip.arrival ?? '',

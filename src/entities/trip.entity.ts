@@ -55,6 +55,14 @@ export class TbTrip {
   status: string;
 
   @Column({
+    type: 'varchar',
+    length: 50,
+    default: 'SCHEDULED',
+    comment: 'Trạng thái vận hành chuyến (SCHEDULED, PREPARING, BOARDING, DEPARTED, APPROACHING, MOVING, ARRIVED, COMPLETED, CANCELLED, DELAYED)',
+  })
+  operationStatus: string;
+
+  @Column({
     type: 'text',
     nullable: true,
     comment: 'Mô tả / ghi chú chuyến',

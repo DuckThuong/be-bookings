@@ -8,10 +8,11 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { TbRoad } from '../../entities/road.entity';
 import { TbDriver } from '../../entities/driver.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
+import { TbTrip } from '../../entities/trip.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TbRoad, TbDriver, TbVehicle]),
+    TypeOrmModule.forFeature([TbRoad, TbDriver, TbVehicle, TbTrip]),
     AuthModule,
     CompanyModule,
   ],

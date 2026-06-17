@@ -60,6 +60,7 @@ export class TripService {
       roadId: payload.roadId,
       description: payload.description ?? undefined,
       status: payload.status ?? EntityStatus.ACTIVE,
+      operationStatus: payload.operationStatus ?? 'SCHEDULED',
       departure: payload.departure ?? '',
       arrival: payload.arrival ?? '',
       seatPrice: payload.seatPrice,

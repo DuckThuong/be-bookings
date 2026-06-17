@@ -9,7 +9,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { EntityStatus } from '../../assets/constants/company.constants';
+import { EntityStatus, TripStatus, VALID_TRIP_STATUSES } from '../../assets/constants/company.constants';
 import { CmsTripValidationMessage } from '../../assets/messages/cms-trip.message';
 import { OptionalCompanyIdQueryDto } from '../transport/common.dto';
 
@@ -60,6 +60,14 @@ export class CmsTripFormPayloadDto {
     message: CmsTripValidationMessage.TRIP_STATUS_NOT_IN,
   })
   status: string;
+
+  @ApiPropertyOptional({ example: TripStatus.SCHEDULED, enum: TripStatus })
+  @IsOptional()
+  @IsString()
+  @IsIn(VALID_TRIP_STATUSES, {
+    message: CmsTripValidationMessage.TRIP_OPERATION_STATUS_INVALID,
+  })
+  operationStatus?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -128,6 +136,9 @@ export class CmsTripEntityDto {
   @ApiProperty({ example: EntityStatus.ACTIVE })
   status: string;
 
+  @ApiPropertyOptional({ example: 'SCHEDULED' })
+  operationStatus?: string;
+
   @ApiPropertyOptional()
   description?: string;
 
@@ -169,4 +180,20 @@ export class CmsTripListResponseDto {
 
   @ApiProperty({ example: 10 })
   total: number;
+}
+
+export class UpdateOperationStatusPayloadDto {
+  @ApiProperty({ example: 1 })
+  @Type(() => Number)
+  @IsInt({ message: CmsTripValidationMessage.TRIP_ID_INVALID })
+  @Min(1, { message: CmsTripValidationMessage.TRIP_ID_INVALID })
+  id: number;
+
+  @ApiProperty({ example: TripStatus.PREPARING, enum: TripStatus })
+  @IsNotEmpty({ message: CmsTripValidationMessage.TRIP_STATUS_EMPTY })
+  @IsString()
+  @IsIn(VALID_TRIP_STATUSES, {
+    message: CmsTripValidationMessage.TRIP_OPERATION_STATUS_INVALID,
+  })
+  operationStatus: string;
 }

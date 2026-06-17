@@ -51,15 +51,17 @@ export class CmsTripValidationMessage {
   static readonly TRIP_STATUS_INVALID = 'Trạng thái chuyến không hợp lệ';
   static readonly TRIP_STATUS_NOT_IN =
     'Trạng thái chuyến phải là đang hoạt động hoặc ngừng hoạt động';
+  static readonly TRIP_OPERATION_STATUS_INVALID =
+    'Trạng thái vận hành chuyến không hợp lệ';
 
   static readonly NOTE_INVALID = 'Ghi chú không hợp lệ';
   static readonly NOTE_TOO_LONG = 'Ghi chú không được vượt quá 500 ký tự';
-
   static readonly TRIP_ID_INVALID = 'ID chuyến phải là số nguyên dương';
-
   static readonly COMPANY_TRIP_SYNC_FAILED = 'Không thể đồng bộ chuyến';
 }
 
 export class CmsTripSuccessMessage {
+  static readonly OPERATION_STATUS_UPDATE_SUCCESS =
+    'Cập nhật trạng thái vận hành chuyến thành công';
   static readonly DELETE_SUCCESS = 'Đã vô hiệu hóa chuyến mẫu';
 }

@@ -104,13 +104,19 @@ export class ClientEnrichmentService {
     return trips.map((trip) => {
       const vehicle = vehicleMap.get(trip.vehicleId) ?? null;
       const totalSeat = vehicle?.seatCount ?? 0;
+      const company = companyMap.get(trip.companyId) ?? null;
       return {
         id: trip.id,
         pricePerSeat: Number(trip.seatPrice),
         totalSeat,
         totalSeatBooked: trip.bookedSeats ?? 0,
         availableSeats: Math.max(0, totalSeat - (trip.bookedSeats ?? 0)),
-        company: companyMap.get(trip.companyId) ?? null,
+        company: company
+          ? {
+              ...company,
+              operatorUserId: company.userLeadId ? parseInt(company.userLeadId, 10) : undefined,
+            }
+          : null,
         trip,
         road: roadMap.get(trip.roadId) ?? null,
         vehicle,
@@ -258,6 +264,7 @@ export class ClientEnrichmentService {
         schedule: scheduleMap.get(booking.tripId) ?? null,
         ticket,
         payment,
+        operationStatus: scheduleMap.get(booking.tripId)?.trip?.operationStatus ?? null,
       };
     });
   }
@@ -296,6 +303,7 @@ export class ClientEnrichmentService {
       ticket,
       payments,
       payment,
+      operationStatus: schedule?.operationStatus ?? null,
     };
   }
 

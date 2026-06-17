@@ -28,6 +28,7 @@ import {
   CmsTripDetailResponseDto,
   CmsTripListResponseDto,
   CmsTripListQueryDto,
+  UpdateOperationStatusPayloadDto,
 } from '../../dtos/CMS/CMS_trip.dto';
 
 @ApiTags('CMS - Trip')
@@ -80,6 +81,16 @@ export class CMSTripController {
     @Body() payload: UpdateTripPayloadDto,
   ) {
     return this.cmsTripService.updateTrip(payload, user);
+  }
+
+  @Patch('operation-status')
+  @Roles(UserRole.OWNER)
+  @ApiOperation({ summary: '[Owner] Cập nhật trạng thái vận hành chuyến' })
+  updateOperationStatus(
+    @User() user: UserDecoratorDtoResponse,
+    @Body() payload: UpdateOperationStatusPayloadDto,
+  ) {
+    return this.cmsTripService.updateOperationStatus(user, payload);
   }
 
   @Delete(':id')

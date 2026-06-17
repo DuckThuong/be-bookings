@@ -154,6 +154,9 @@ export class CreateTripDto {
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
 
+  @ApiPropertyOptional({ example: 'SCHEDULED' })
+  operationStatus?: string;
+
   @ApiPropertyOptional({ example: '08:00' })
   departure?: string;
 
@@ -185,6 +188,9 @@ export class UpdateTripDto {
 
   @ApiPropertyOptional({ enum: EntityStatus })
   status?: string;
+
+  @ApiPropertyOptional({ example: 'SCHEDULED' })
+  operationStatus?: string;
 
   @ApiPropertyOptional()
   departure?: string;
