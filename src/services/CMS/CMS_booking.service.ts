@@ -195,14 +195,8 @@ export class CMSBookingService {
         status: resolveCmsBookingUiStatus(payment, ticket, booking),
         bookedAt: this.formatDateTime(payment.createdAt),
         note: '',
-        pickup:
-          PICKUP_LABELS[passenger?.pickupPoint ?? ''] ??
-          passenger?.pickupPoint ??
-          '—',
-        dropoff:
-          DROPOFF_LABELS[passenger?.dropoffPoint ?? ''] ??
-          passenger?.dropoffPoint ??
-          '—',
+        pickup: passenger?.pickupPoint ?? '—',
+        dropoff: passenger?.dropoffPoint ?? '—',
         paymentMethod: booking?.paymentMethodId ?? payment.method,
       };
     });

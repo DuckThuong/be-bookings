@@ -100,14 +100,12 @@ export class ClientBookingsService {
       this.buildVehicleLayouts(ctx),
     ]);
 
-    const pickupPoints = this.resolvePointOptions(
-      CLIENT_BOOKING_CATALOG.pickupPoints,
-      ctx.road.startPoint,
+    const pickupPoints = this.resolvePointOptionsFromRoad(
+      ctx.road.pickUpPoint,
       'pickup',
     );
-    const dropoffPoints = this.resolvePointOptions(
-      CLIENT_BOOKING_CATALOG.dropoffPoints,
-      ctx.road.endPoint,
+    const dropoffPoints = this.resolvePointOptionsFromRoad(
+      ctx.road.dropOffPoint,
       'dropoff',
     );
 
@@ -146,8 +144,8 @@ export class ClientBookingsService {
         passenger: {
           fullName: infoUser?.userName ?? '',
           phone: user.phone ?? '',
-          pickupPointDefault: pickupPoints[0]?.value ?? '',
-          dropoffPointDefault: dropoffPoints[0]?.value ?? '',
+          pickupPointDefault: pickupPoints[0]?.label ?? pickupPoints[0]?.value ?? '',
+          dropoffPointDefault: dropoffPoints[0]?.label ?? dropoffPoints[0]?.value ?? '',
           pickupPointOptions: pickupPoints.map((p) => ({
             value: p.value,
             label: p.label,
@@ -1079,6 +1077,24 @@ export class ClientBookingsService {
     );
 
     return matched;
+  }
+
+  private resolvePointOptionsFromRoad(
+    roadPoints: string | undefined,
+    prefix: string,
+  ): ClientCatalogPoint[] {
+    if (!roadPoints?.trim()) {
+      return [];
+    }
+
+    const rawPoints = roadPoints.split(/[\n,;]+/).map((p) => p.trim()).filter(Boolean);
+    if (rawPoints.length === 0) return [];
+
+    return rawPoints.map((label, index) => ({
+      value: index === 0 ? `${prefix}-${this.slugifyPointValue(label)}` : `${prefix}-${this.slugifyPointValue(label)}-${index}`,
+      label,
+      city: '',
+    }));
   }
 
   private slugifyPointValue(value: string): string {
