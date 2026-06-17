@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth.module';
 import { MasterDataModule } from './modules/master-data.module';
 import { UserModule } from './modules/user.module';
 import { CompanyModule } from './modules/company.module';
+import { CompanyRegistrationModule } from './modules/company-registration.module';
 import { SalesModule } from './modules/sales.module';
 import { CustomerModule } from './modules/customer.module';
 import { ClientModule } from './modules/client.module';
@@ -85,6 +86,7 @@ import { TbChatMessageRecipient } from './entities/chat/chat-message-recipient.e
     MasterDataModule,
     UserModule,
     CompanyModule,
+    CompanyRegistrationModule,
     SalesModule,
     CustomerModule,
     ClientModule,

@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { ChatRepository } from '../repositories/chat.repository';
 import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
 import {
@@ -56,6 +57,7 @@ export class ChatService {
   constructor(
     private readonly repo: ChatRepository,
     private readonly gateway: ChatGateway,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   // ─── Conversations list ─────────────────────────────────────────────
@@ -145,7 +147,6 @@ export class ChatService {
       );
     }
 
-    // Cập nhật lastMessage trên conversation + unread cho members còn lại
     const preview =
       payload.content ?? (payload.attachments?.length ? '(đính kèm)' : '');
     await this.repo.updateConversation(conv.id, {
@@ -155,7 +156,6 @@ export class ChatService {
     });
     await this.repo.incrementUnread(conv.id, user.id);
 
-    // Insert read-receipt cho tất cả member (trừ sender)
     const members = await this.repo.findMembers(conv.id);
     await this.repo.insertRecipients(
       members
@@ -172,7 +172,11 @@ export class ChatService {
     const dto = await this.mapMessages([created], user.id);
     const message = dto[0];
 
-    // Broadcast socket event
+    this.gateway.emitMessageStatusUpdated(conv.id, {
+      messageId: message.id,
+      status: ChatMessageStatus.SENT,
+      updatedAt: message.createdAt,
+    });
     this.gateway.emitMessageNew(conv.id, message);
     return message;
   }
@@ -192,10 +196,42 @@ export class ChatService {
 
     await this.repo.markRecipientsRead(conv.id, user.id, lastMessageId);
     await this.repo.resetUnread(conv.id, user.id);
+    this.gateway.emitMessageStatusUpdated(conv.id, {
+      messageId: lastMessageId,
+      status: ChatMessageStatus.READ,
+      updatedAt: new Date().toISOString(),
+    });
     this.gateway.emitMessageRead(conv.id, {
       conversationId: conv.id,
       userId: user.id,
       lastMessageId,
+    });
+  }
+
+  public async joinConversation(
+    userId: number,
+    conversationId: number,
+  ): Promise<void> {
+    const conv = await this.repo.findConversationById(conversationId);
+    if (!conv) return;
+
+    const [rows] = await this.repo.listMessages(conversationId, 1, 1);
+    const lastMessage = rows[0];
+    if (!lastMessage) return;
+
+    const recipient = await this.repo.findRecipient(
+      lastMessage.id,
+      conversationId,
+      userId,
+    );
+    if (!recipient || recipient.readAt) return;
+
+    await this.repo.markRecipientsRead(conversationId, userId, lastMessage.id);
+    await this.repo.resetUnread(conversationId, userId);
+    this.gateway.emitMessageStatusUpdated(conversationId, {
+      messageId: lastMessage.id,
+      status: ChatMessageStatus.DELIVERED,
+      updatedAt: new Date().toISOString(),
     });
   }
 

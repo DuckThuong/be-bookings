@@ -1,6 +1,7 @@
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { ModuleRef } from '@nestjs/core';
 import {
   ConnectedSocket,
   MessageBody,
@@ -18,6 +19,7 @@ import {
   ChatPaginatedMessagesDto,
 } from '../dtos/chat.dto';
 import { UserRole } from '../dtos/user/common.dto';
+import { ChatService } from '../services/chat.service';
 
 interface AuthedSocket extends Socket {
   data: {
@@ -47,6 +49,7 @@ export class ChatGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject(ModuleRef) private readonly moduleRef: ModuleRef,
   ) {}
 
   afterInit() {
@@ -84,7 +87,7 @@ export class ChatGateway
 
   // ─── Client → Server ──────────────────────────────────────────────
   @SubscribeMessage('chat.join')
-  onJoin(
+  async onJoin(
     @ConnectedSocket() client: AuthedSocket,
     @MessageBody() payload: { conversationId: number },
   ) {
@@ -93,6 +96,14 @@ export class ChatGateway
     }
     const room = this.room(payload.conversationId);
     void client.join(room);
+
+    try {
+      const service = await this.moduleRef.resolve(ChatService, { id: 0 });
+      await service.joinConversation(client.data.userId, payload.conversationId);
+    } catch (error) {
+      this.logger.warn(`Failed to emit delivered status on join: ${(error as Error).message}`);
+    }
+
     return { success: true, data: { room } };
   }
 
@@ -110,7 +121,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('chat.message.read')
-  onRead(
+  async onRead(
     @ConnectedSocket() client: AuthedSocket,
     @MessageBody()
     payload: { conversationId: number; messageId: number },
@@ -118,15 +129,32 @@ export class ChatGateway
     if (!payload?.conversationId || !payload?.messageId) {
       return { success: false, message: 'invalid payload' };
     }
+
+    const readData = {
+      conversationId: payload.conversationId,
+      userId: client.data.userId,
+      messageId: payload.messageId,
+    };
+
     this.server.to(this.room(payload.conversationId)).emit('chat.message.read', {
       event: 'chat.message.read',
-      data: {
-        conversationId: payload.conversationId,
-        userId: client.data.userId,
-        messageId: payload.messageId,
-      },
+      data: readData,
       meta: { sentAt: new Date().toISOString(), version: 1 },
     });
+
+    this.server
+      .to(this.room(payload.conversationId))
+      .emit('chat.message.status.updated', {
+        event: 'chat.message.status.updated',
+        data: {
+          conversationId: payload.conversationId,
+          messageId: payload.messageId,
+          status: 'DELIVERED',
+          updatedAt: new Date().toISOString(),
+        },
+        meta: { sentAt: new Date().toISOString(), version: 1 },
+      });
+
     return { success: true };
   }
 

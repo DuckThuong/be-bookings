@@ -172,11 +172,7 @@ export class ChatRepository {
   public async createMessage(
     payload: Partial<TbChatMessage>,
   ): Promise<TbChatMessage> {
-    const entity = this.messageRepo.create({
-      type: ChatMessageType.TEXT,
-      status: ChatMessageStatus.SENT,
-      ...payload,
-    });
+    const entity = this.messageRepo.create(payload);
     return this.messageRepo.save(entity);
   }
 
@@ -248,6 +244,16 @@ export class ChatRepository {
         { cid: conversationId, uid: userId, mid: lastMessageId },
       )
       .execute();
+  }
+
+  public async findRecipient(
+    messageId: number,
+    conversationId: number,
+    userId: number,
+  ): Promise<TbChatMessageRecipient | null> {
+    return this.recipientRepo.findOne({
+      where: { messageId, conversationId, userId },
+    });
   }
 
   // ─── User lookups (gộp 2 bảng tb_basic_user + tb_info_user) ─────────
