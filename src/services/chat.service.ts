@@ -63,12 +63,9 @@ export class ChatService {
     user: UserDecoratorDtoResponse,
     _query: ChatListConversationsQueryDto,
   ): Promise<ChatConversationResponseDto[]> {
-    const isStaff = this.isStaff(user);
-    const conversations = isStaff
-      ? await this.repo.listAllConversations()
-      : await this.repo.listConversationsForUser(user.id);
+    const conversations = await this.repo.listConversationsForUser(user.id);
     this.logger.debug(
-      `[listConversations] userId=${user.id} role=${user.role} isStaff=${isStaff} → returned ${conversations.length} convs: ${JSON.stringify(conversations.map((c) => ({ id: c.id, memberA: c.memberAUserId, memberB: c.memberBUserId })))}`,
+      `[listConversations] userId=${user.id} role=${user.role} → returned ${conversations.length} convs: ${JSON.stringify(conversations.map((c) => ({ id: c.id, memberA: c.memberAUserId, memberB: c.memberBUserId })))}`,
     );
     return this.mapConversations(conversations, user.id);
   }
@@ -104,7 +101,9 @@ export class ChatService {
       page,
       limit,
     );
-    this.logger.debug(`[listMessages] → returned ${rows.length} messages, total=${total}`);
+    this.logger.debug(
+      `[listMessages] → returned ${rows.length} messages, total=${total}`,
+    );
     const messages = await this.mapMessages(rows, user.id);
     return {
       data: messages,
@@ -147,7 +146,8 @@ export class ChatService {
     }
 
     // Cập nhật lastMessage trên conversation + unread cho members còn lại
-    const preview = payload.content ?? (payload.attachments?.length ? '(đính kèm)' : '');
+    const preview =
+      payload.content ?? (payload.attachments?.length ? '(đính kèm)' : '');
     await this.repo.updateConversation(conv.id, {
       lastMessagePreview: preview,
       lastMessageAt: created.createdAt,
@@ -205,7 +205,9 @@ export class ChatService {
     payload: ChatCreateConversationDto,
   ): Promise<ChatConversationResponseDto> {
     if (payload.toUserId === user.id) {
-      throw new BadRequestException('Không thể tạo cuộc trò chuyện với chính mình');
+      throw new BadRequestException(
+        'Không thể tạo cuộc trò chuyện với chính mình',
+      );
     }
 
     let targetId = payload.toUserId;
@@ -274,7 +276,8 @@ export class ChatService {
     }
 
     const detail = await this.getConversationDetail(user, conv.id);
-    if (!detail) throw new NotFoundException('Không thể tải cuộc trò chuyện vừa tạo');
+    if (!detail)
+      throw new NotFoundException('Không thể tải cuộc trò chuyện vừa tạo');
     return detail;
   }
 
@@ -310,8 +313,7 @@ export class ChatService {
   ): Promise<void> {
     await this.assertMember(conversationId, user.id);
     const ms = MUTE_PRESET_TO_MS[payload.preset];
-    const mutedUntil =
-      ms == null ? null : new Date(Date.now() + ms);
+    const mutedUntil = ms == null ? null : new Date(Date.now() + ms);
     await this.repo.updateMember(conversationId, user.id, {
       isMuted: true,
       mutedUntil,
@@ -385,7 +387,8 @@ export class ChatService {
     userId: number,
   ): Promise<TbChatConversationMember> {
     const member = await this.repo.findMember(conversationId, userId);
-    if (!member) throw new ForbiddenException('Bạn không thuộc cuộc trò chuyện này');
+    if (!member)
+      throw new ForbiddenException('Bạn không thuộc cuộc trò chuyện này');
     return member;
   }
 
@@ -393,9 +396,13 @@ export class ChatService {
     conv: TbChatConversation,
     user: UserDecoratorDtoResponse,
   ): Promise<void> {
-    if (this.isStaff(user)) return;
-    if (conv.memberAUserId !== user.id && conv.memberBUserId !== user.id) {
-      throw new ForbiddenException('Bạn không có quyền truy cập cuộc trò chuyện này');
+    if (conv.memberAUserId === user.id || conv.memberBUserId === user.id)
+      return;
+    const isMember = await this.repo.findMember(conv.id, user.id);
+    if (!isMember) {
+      throw new ForbiddenException(
+        'Bạn không có quyền truy cập cuộc trò chuyện này',
+      );
     }
   }
 
@@ -403,19 +410,18 @@ export class ChatService {
     conv: TbChatConversation,
     user: UserDecoratorDtoResponse,
   ): Promise<void> {
-    if (this.isStaff(user)) return;
-    if (conv.memberAUserId !== user.id && conv.memberBUserId !== user.id) {
+    // Theo nghiệp vụ: chỉ thành viên mới được gửi tin nhắn.
+    if (conv.memberAUserId === user.id || conv.memberBUserId === user.id)
+      return;
+    const isMember = await this.repo.findMember(conv.id, user.id);
+    if (!isMember) {
       throw new ForbiddenException('Bạn không có quyền gửi tin nhắn');
     }
   }
 
-  private isStaff(user: UserDecoratorDtoResponse): boolean {
-    return user.role === UserRole.ADMIN || user.role === UserRole.OWNER;
-  }
-
   private assertStaff(user: UserDecoratorDtoResponse) {
-    if (!this.isStaff(user)) {
-      throw new ForbiddenException('Chỉ CMS staff mới có quyền thực hiện');
+    if (user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Chỉ quản trị viên mới có quyền thực hiện');
     }
   }
 
@@ -506,7 +512,10 @@ export class ChatService {
         const otherMember = members[0];
         const otherMemberSummary = userMap.get(otherMember.userId);
         displayName =
-          otherMember.nickname ?? otherMemberSummary?.fullName ?? conv.title ?? null;
+          otherMember.nickname ??
+          otherMemberSummary?.fullName ??
+          conv.title ??
+          null;
       }
 
       return {
@@ -526,7 +535,7 @@ export class ChatService {
         priority: conv.priority as unknown as ChatConversationPriority,
         assignedTo:
           conv.assigneeUserId != null
-            ? userMap.get(conv.assigneeUserId)?.fullName ?? null
+            ? (userMap.get(conv.assigneeUserId)?.fullName ?? null)
             : null,
         relatedBookingId: conv.relatedBookingId,
       };

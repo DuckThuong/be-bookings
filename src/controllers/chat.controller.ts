@@ -140,10 +140,10 @@ export class ChatController {
       .then(() => ({ success: true }));
   }
 
-  // ─── CMS-only actions ────────────────────────────────────────────
+  // ─── CMS-only actions (chỉ ADMIN) ───────────────────────────────
   @Patch('conversations/:id/assign')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.OWNER)
+  @Roles(UserRole.ADMIN)
   assignConversation(
     @User() user: UserDecoratorDtoResponse,
     @Param('id', ParseIntPipe) id: number,
@@ -156,7 +156,7 @@ export class ChatController {
 
   @Patch('conversations/:id/status')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.OWNER)
+  @Roles(UserRole.ADMIN)
   updateStatus(
     @User() user: UserDecoratorDtoResponse,
     @Param('id', ParseIntPipe) id: number,
