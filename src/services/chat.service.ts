@@ -67,6 +67,9 @@ export class ChatService {
     const conversations = isStaff
       ? await this.repo.listAllConversations()
       : await this.repo.listConversationsForUser(user.id);
+    this.logger.debug(
+      `[listConversations] userId=${user.id} role=${user.role} isStaff=${isStaff} → returned ${conversations.length} convs: ${JSON.stringify(conversations.map((c) => ({ id: c.id, memberA: c.memberAUserId, memberB: c.memberBUserId })))}`,
+    );
     return this.mapConversations(conversations, user.id);
   }
 
@@ -90,6 +93,9 @@ export class ChatService {
     const conv = await this.repo.findConversationById(conversationId);
     if (!conv) throw new NotFoundException('Cuộc trò chuyện không tồn tại');
     await this.assertCanReadConversation(conv, user);
+    this.logger.debug(
+      `[listMessages] userId=${user.id} conversationId=${conversationId} convMemberA=${conv.memberAUserId} convMemberB=${conv.memberBUserId}`,
+    );
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 50;
@@ -98,6 +104,7 @@ export class ChatService {
       page,
       limit,
     );
+    this.logger.debug(`[listMessages] → returned ${rows.length} messages, total=${total}`);
     const messages = await this.mapMessages(rows, user.id);
     return {
       data: messages,
@@ -200,15 +207,32 @@ export class ChatService {
     if (payload.toUserId === user.id) {
       throw new BadRequestException('Không thể tạo cuộc trò chuyện với chính mình');
     }
-    const target = await this.repo.getUserSummaries([payload.toUserId]);
-    if (!target.length) {
+
+    let targetId = payload.toUserId;
+    let targetSummary = (await this.repo.getUserSummaries([targetId]))[0];
+
+    // Nếu target không tồn tại (hoặc FE không gửi) → fallback lookup 1 staff
+    // (ADMIN, fallback OWNER) làm target. Nghiệp vụ CMS hotline: customer/operator
+    // luôn nhắn tới admin.
+    if (!targetSummary) {
+      const fallback = await this.repo.findAnyStaffUser();
+      if (!fallback) {
+        throw new NotFoundException(
+          'Người dùng đích không tồn tại và chưa có admin/owner nào trong hệ thống',
+        );
+      }
+      targetId = fallback.id;
+      targetSummary = (await this.repo.getUserSummaries([targetId]))[0];
+    }
+
+    if (targetId === undefined || !targetSummary) {
       throw new NotFoundException('Người dùng đích không tồn tại');
     }
 
-    let conv = await this.repo.findConversationBetween(user.id, payload.toUserId);
+    let conv = await this.repo.findConversationBetween(user.id, targetId);
     if (!conv) {
       const memberAUserId = user.id;
-      const memberBUserId = payload.toUserId;
+      const memberBUserId = targetId;
       conv = await this.repo.createConversation({
         type: payload.type,
         status: ChatConversationStatus.OPEN,
@@ -232,7 +256,10 @@ export class ChatService {
       await this.repo.upsertMember({
         conversationId: conv.id,
         userId: memberBUserId,
-        roleInConversation: this.toMemberRole(target[0].role === 'ADMIN' ? 0 : 1, 'partner'),
+        roleInConversation: this.toMemberRole(
+          targetSummary.role === 'ADMIN' ? 0 : 1,
+          'partner',
+        ),
         isPinned: false,
         isMuted: false,
         unreadCount: 0,
@@ -320,10 +347,36 @@ export class ChatService {
   }
 
   public async listOperatorHotlines(): Promise<ChatConversationResponseDto[]> {
-    // Trả về danh sách "operator/admin" mẫu: tất cả user có role OWNER/ADMIN
-    // (FE đang dùng mock này để show quick-reply). Ở production có thể query
-    // theo bảng user kèm company/role filter cụ thể.
-    return [];
+    // Trả về danh sách "operator/admin" thật trong DB: tất cả user có role
+    // ADMIN/OWNER. FE dùng để render quick-reply hotline.
+    const staff = await this.repo.listStaffUsers();
+    if (!staff.length) return [];
+
+    const summaries = await this.repo.getUserSummaries(staff.map((s) => s.id));
+    return summaries.map((s) => ({
+      conversationId: 0,
+      conversationName: s.fullName,
+      conversationAvatar: s.avatarUrl || null,
+      conversationCreatedAt: new Date().toISOString(),
+      lastMessagePreview: null,
+      lastMessageAt: null,
+      unreadCount: 0,
+      type: ChatConversationType.ADMIN,
+      toUser: {
+        userId: s.id,
+        fullName: s.fullName,
+        username: s.username,
+        avatarUrl: s.avatarUrl,
+        email: s.email,
+        phone: s.phone,
+        role: s.role,
+      },
+      participants: [],
+      status: ChatConversationStatus.OPEN,
+      priority: ChatConversationPriority.NORMAL,
+      assignedTo: null,
+      relatedBookingId: null,
+    }));
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────
@@ -404,12 +457,20 @@ export class ChatService {
     return rows.map((conv, idx) => {
       const members = allMembers[idx];
       const myMember = members.find((m) => m.userId === currentUserId);
-      const otherUserId =
-        conv.memberAUserId === currentUserId
+      const isMember =
+        conv.memberAUserId === currentUserId ||
+        conv.memberBUserId === currentUserId;
+      const otherUserId = isMember
+        ? conv.memberAUserId === currentUserId
           ? conv.memberBUserId
-          : conv.memberAUserId;
-      const otherUser = userMap.get(otherUserId);
-      const partnerMember = members.find((m) => m.userId === otherUserId);
+          : conv.memberAUserId
+        : null;
+      const otherUser =
+        otherUserId != null ? userMap.get(otherUserId) : undefined;
+      const partnerMember =
+        otherUserId != null
+          ? members.find((m) => m.userId === otherUserId)
+          : undefined;
 
       const participants: ChatParticipantDto[] = members.map((m) => {
         const summary = userMap.get(m.userId);
@@ -437,9 +498,20 @@ export class ChatService {
           }
         : undefined;
 
+      // Staff/admin không phải member của conversation → không có "toUser" duy nhất.
+      // Đặt conversationName lấy từ member kia (nếu có 1 member khác staff) hoặc title.
+      let displayName =
+        partnerMember?.nickname ?? conv.title ?? toUser?.fullName ?? null;
+      if (!isMember && members.length === 2) {
+        const otherMember = members[0];
+        const otherMemberSummary = userMap.get(otherMember.userId);
+        displayName =
+          otherMember.nickname ?? otherMemberSummary?.fullName ?? conv.title ?? null;
+      }
+
       return {
         conversationId: conv.id,
-        conversationName: partnerMember?.nickname ?? conv.title ?? toUser?.fullName ?? null,
+        conversationName: displayName,
         conversationAvatar: toUser?.avatarUrl ?? null,
         conversationCreatedAt: conv.createdAt.toISOString(),
         lastMessagePreview: conv.lastMessagePreview,

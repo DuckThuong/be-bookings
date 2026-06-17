@@ -14,6 +14,7 @@ import {
 } from '../entities/chat';
 import { TbBasicUser } from '../entities/user/basic-user.entity';
 import { TbInfoUser } from '../entities/user/info-user.entity';
+import { UserRole } from '../dtos/user/common.dto';
 
 @Injectable()
 export class ChatRepository {
@@ -69,13 +70,25 @@ export class ChatRepository {
   public async listConversationsForUser(userId: number) {
     return this.convRepo
       .createQueryBuilder('c')
-      .leftJoinAndSelect(
-        'participants',
+      .innerJoin(
+        'tb_chat_conversation_member',
         'm',
         'm.conversation_id = c.id AND m.user_id = :userId',
         { userId },
       )
-      .orderBy('c.last_message_at', 'DESC', 'NULLS LAST')
+      .addSelect([
+        'm.id',
+        'm.user_id',
+        'm.nickname',
+        'm.is_pinned',
+        'm.is_muted',
+        'm.muted_until',
+        'm.unread_count',
+        'm.last_read_at',
+        'm.role_in_conversation',
+      ])
+      .orderBy('c.last_message_at IS NULL', 'ASC')
+      .addOrderBy('c.last_message_at', 'DESC')
       .addOrderBy('c.id', 'DESC')
       .getMany();
   }
@@ -83,7 +96,8 @@ export class ChatRepository {
   public async listAllConversations() {
     return this.convRepo
       .createQueryBuilder('c')
-      .orderBy('c.last_message_at', 'DESC', 'NULLS LAST')
+      .orderBy('c.last_message_at IS NULL', 'ASC')
+      .addOrderBy('c.last_message_at', 'DESC')
       .addOrderBy('c.id', 'DESC')
       .getMany();
   }
@@ -260,6 +274,32 @@ export class ChatRepository {
         avatarUrl: info?.avatar ?? '',
         role: this.mapRole(b.role),
       };
+    });
+  }
+
+  /**
+   * Tìm 1 user có role ADMIN/OWNER đầu tiên trong DB (ưu tiên ADMIN, fallback OWNER).
+   * Dùng làm target mặc định khi CMS hotline không truyền toUserId hợp lệ.
+   */
+  public async findAnyStaffUser(): Promise<TbBasicUser | null> {
+    const admin = await this.basicUserRepo.findOne({
+      where: { role: UserRole.ADMIN },
+      order: { id: 'ASC' },
+    });
+    if (admin) return admin;
+    return this.basicUserRepo.findOne({
+      where: { role: UserRole.OWNER },
+      order: { id: 'ASC' },
+    });
+  }
+
+  /**
+   * Trả về danh sách staff (ADMIN + OWNER) để CMS hiển thị quick-reply hotline.
+   */
+  public async listStaffUsers(): Promise<TbBasicUser[]> {
+    return this.basicUserRepo.find({
+      where: { role: In([UserRole.ADMIN, UserRole.OWNER]) },
+      order: { role: 'ASC', id: 'ASC' },
     });
   }
 
