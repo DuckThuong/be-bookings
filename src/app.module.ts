@@ -21,6 +21,7 @@ import { CMSDashboardModule } from './modules/CMS/CMS_dashboard.module';
 import { CMSRevenueModule } from './modules/CMS/CMS_revenue.module';
 import { CMSReportModule } from './modules/CMS/CMS_report.module';
 import { ChatModule } from './modules/chat.module';
+import { CloudinaryModule } from './modules/cloudinary.module';
 import { TbMasterData } from './entities/master-data.entity';
 import { TbVehicle } from './entities/vehicle.entity';
 import { TbTrip } from './entities/trip.entity';
@@ -100,6 +101,7 @@ import { TbChatMessageRecipient } from './entities/chat/chat-message-recipient.e
     CMSRevenueModule,
     CMSReportModule,
     ChatModule,
+    CloudinaryModule,
   ],
   controllers: [],
   providers: [],
