@@ -95,6 +95,16 @@ export class ClientBookingsController {
     return this.bookings.confirmPayment(user, holdId, body);
   }
 
+  @Post('hold/:holdId/payment-link')
+  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
+  @ApiOperation({ summary: 'Tạo PayOS payment link từ hold' })
+  createPaymentLink(
+    @User() user: UserDecoratorDtoResponse,
+    @Param('holdId') holdId: string,
+  ) {
+    return this.bookings.createPayOSPaymentLink(user, holdId);
+  }
+
   @Get(':bookingId')
   @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
   @ApiOperation({ summary: 'Chi tiết đặt vé / kết quả' })
@@ -103,5 +113,15 @@ export class ClientBookingsController {
     @Param('bookingId') bookingId: string,
   ) {
     return this.bookings.getBookingResult(user, bookingId);
+  }
+
+  @Get('by-payment/:paymentLinkId')
+  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
+  @ApiOperation({ summary: 'Lấy booking từ paymentLinkId (sau PayOS redirect)' })
+  getBookingByPaymentLink(
+    @User() user: UserDecoratorDtoResponse,
+    @Param('paymentLinkId') paymentLinkId: string,
+  ) {
+    return this.bookings.getBookingByPaymentLink(user, paymentLinkId);
   }
 }

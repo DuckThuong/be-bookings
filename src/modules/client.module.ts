@@ -22,6 +22,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { AuthModule } from './auth.module';
 import { CompanyModule } from './company.module';
 import { SalesModule } from './sales.module';
+import { PaymentModule } from './payment.module';
 import { ClientAccountController } from '../controllers/client/client-account.controller';
 import { ClientBookingsController } from '../controllers/client/client-bookings.controller';
 import { ClientPromoController } from '../controllers/client/client-promo.controller';
@@ -55,6 +56,7 @@ import { ClientHomeHighlightsService } from '../services/client/client-home-high
     AuthModule,
     CompanyModule,
     SalesModule,
+    PaymentModule,
   ],
   controllers: [
     ClientAccountController,

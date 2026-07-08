@@ -146,6 +146,16 @@ export class PayOSService {
     }
   }
 
+  async createPaymentRequest(data: {
+    orderCode: number;
+    amount: number;
+    description: string;
+    returnUrl: string;
+    cancelUrl: string;
+  }) {
+    return await this.payOS.paymentRequests.create(data);
+  }
+
   async cancelPaymentLink(paymentLinkId: string) {
     try {
       return await this.payOS.paymentRequests.cancel(paymentLinkId);

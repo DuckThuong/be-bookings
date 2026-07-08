@@ -19,6 +19,10 @@ export class PaymentRepository {
     return this.repo.find({ where: { ticketId }, order: { id: 'DESC' } });
   }
 
+  findByTransactionRef(transactionRef: string) {
+    return this.repo.findOne({ where: { transactionRef } });
+  }
+
   findByFilter(filter: {
     companyId?: number;
     tripId?: number;
