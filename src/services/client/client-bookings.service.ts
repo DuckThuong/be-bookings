@@ -596,7 +596,7 @@ export class ClientBookingsService {
     const paymentData = {
       orderCode,
       amount: Math.round(Number(booking.totalPrice)),
-      description: `Thanh toán vé #${ticket.code}`,
+      description: `TT vé #${ticket.code}`,
       returnUrl: config.returnUrl,
       cancelUrl: config.cancelUrl,
     };
