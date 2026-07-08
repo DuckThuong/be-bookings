@@ -34,6 +34,8 @@ import { ClientBookingPricingService } from '../services/client/client-booking-p
 import { ClientBookingTripResolverService } from '../services/client/client-booking-trip-resolver.service';
 import { ClientHomeHighlightsController } from '../controllers/client/client-home-highlights.controller';
 import { ClientHomeHighlightsService } from '../services/client/client-home-highlights.service';
+import { ClientInvoiceController } from '../controllers/client/client-invoice.controller';
+import { ClientInvoiceService } from '../services/client/client-invoice.service';
 
 @Module({
   imports: [
@@ -64,6 +66,7 @@ import { ClientHomeHighlightsService } from '../services/client/client-home-high
     ClientPromoController,
     ClientTripsController,
     ClientHomeHighlightsController,
+    ClientInvoiceController,
   ],
   providers: [
     ClientAccountService,
@@ -75,6 +78,7 @@ import { ClientHomeHighlightsService } from '../services/client/client-home-high
     ClientBookingPricingService,
     ClientTripsService,
     ClientHomeHighlightsService,
+    ClientInvoiceService,
     TripRepository,
     RolesGuard,
   ],

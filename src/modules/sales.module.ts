@@ -88,6 +88,7 @@ import { AuthModule } from './auth.module';
     CompanyStatService,
     BookingRepository,
     PaymentRepository,
+    RefundRepository,
     CommissionRepository,
     TypeOrmModule,
   ],
