@@ -12,11 +12,11 @@ export class DriverRepository {
   ) {}
 
   findById(id: number) {
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({ where: { id }, relations: ['company'] });
   }
 
   findByCode(code: string) {
-    return this.repo.findOne({ where: { code } });
+    return this.repo.findOne({ where: { code }, relations: ['company'] });
   }
 
   findByCompany(companyId: number) {
@@ -25,6 +25,7 @@ export class DriverRepository {
         company: { id: companyId },
         status: EntityStatus.ACTIVE || EntityStatus.INACTIVE,
       },
+      relations: ['company'],
       order: { id: 'DESC' },
     });
   }
