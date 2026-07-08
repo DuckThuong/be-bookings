@@ -9,7 +9,7 @@ import { PayOSService } from '../../services/payment/payos.service';
 import { User } from '../../user.decorator';
 
 @ApiTags('Payment - PayOS')
-@Controller('payments/payos')
+@Controller('api/payments/payos')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.USER)
 @ApiBearerAuth('JWT-auth')
