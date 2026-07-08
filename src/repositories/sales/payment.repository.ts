@@ -90,6 +90,11 @@ export class PaymentRepository {
       .take(limit)
       .getManyAndCount();
 
+    // Debug: log first item to check relations
+    if (items.length > 0) {
+      console.log('[PaymentRepo] First payment raw data:', JSON.stringify(items[0], null, 2));
+    }
+
     return {
       items,
       total,

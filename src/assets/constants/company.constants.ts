@@ -16,6 +16,12 @@ export enum TripStatus {
   DELAYED = 'DELAYED', // Trễ chuyến
 }
 
+// Các trạng thái cho phép restart (bắt đầu lại)
+export const TRIP_STATUSES_ALLOW_RESTART: TripStatus[] = [
+  TripStatus.COMPLETED,
+  TripStatus.CANCELLED,
+];
+
 export const VALID_TRIP_STATUSES = Object.values(TripStatus);
 
 export const CODE_PREFIX = {

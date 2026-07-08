@@ -13,6 +13,15 @@ import { EntityStatus, TripStatus, VALID_TRIP_STATUSES } from '../../assets/cons
 import { CmsTripValidationMessage } from '../../assets/messages/cms-trip.message';
 import { OptionalCompanyIdQueryDto } from '../transport/common.dto';
 
+// DTO for resetting trip operation status
+export class ResetTripOperationStatusPayloadDto {
+  @ApiProperty({ example: 1 })
+  @Type(() => Number)
+  @IsInt({ message: CmsTripValidationMessage.TRIP_ID_INVALID })
+  @Min(1, { message: CmsTripValidationMessage.TRIP_ID_INVALID })
+  id: number;
+}
+
 export class CmsTripListQueryDto extends OptionalCompanyIdQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()

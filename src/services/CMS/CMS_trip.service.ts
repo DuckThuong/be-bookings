@@ -12,6 +12,7 @@ import {
   CmsTripEntityDto,
   CmsTripListResponseDto,
   UpdateOperationStatusPayloadDto,
+  ResetTripOperationStatusPayloadDto,
 } from '../../dtos/CMS/CMS_trip.dto';
 import { CODE_PREFIX } from '../../assets/constants/company.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
@@ -20,6 +21,7 @@ import { TbRoad } from '../../entities/road.entity';
 import { TbDriver } from '../../entities/driver.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
+import { TripStatus, TRIP_STATUSES_ALLOW_RESTART } from '../../assets/constants/company.constants';
 
 @Injectable()
 export class CMSTripService {
@@ -112,6 +114,45 @@ export class CMSTripService {
       const enrichedTrip = (await this.enrichTrips([trip]))[0];
       return {
         message: CmsTripSuccessMessage.OPERATION_STATUS_UPDATE_SUCCESS,
+        trip: enrichedTrip,
+      };
+    } catch (error) {
+      this.rethrow(error);
+    }
+  }
+
+  async resetOperationStatus(
+    user: UserDecoratorDtoResponse,
+    payload: ResetTripOperationStatusPayloadDto,
+  ): Promise<{ message: string; trip: CmsTripEntityDto }> {
+    try {
+      // Get current trip to check operation status
+      const currentTrip = await this.tripService.findOne(user, payload.id);
+      
+      if (!currentTrip) {
+        throw new HttpException(
+          'Không tìm thấy chuyến xe',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      const currentStatus = currentTrip.operationStatus as TripStatus;
+      
+      // Check if current status allows restart
+      if (!TRIP_STATUSES_ALLOW_RESTART.includes(currentStatus)) {
+        throw new HttpException(
+          `Không thể bắt đầu lại chuyến xe có trạng thái "${currentStatus}". Chỉ chuyến xe đã hoàn thành hoặc đã hủy mới có thể bắt đầu lại.`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Reset to SCHEDULED
+      const trip = await this.tripService.update(user, payload.id, {
+        operationStatus: TripStatus.SCHEDULED,
+      });
+      const enrichedTrip = (await this.enrichTrips([trip]))[0];
+      return {
+        message: 'Bắt đầu lại chuyến xe thành công',
         trip: enrichedTrip,
       };
     } catch (error) {

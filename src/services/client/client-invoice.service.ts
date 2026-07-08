@@ -79,7 +79,7 @@ export class ClientInvoiceService {
     user: UserDecoratorDtoResponse,
     query: ClientInvoiceQueryDto,
   ): Promise<PaginatedResponse<PaymentInvoiceResponse>> {
-    const customerId = user.id.toString();
+    const customerId = user.userCode;
 
     const result = await this.paymentRepository.findByCustomerIdPaginated(customerId, {
       page: query.page,
@@ -103,7 +103,7 @@ export class ClientInvoiceService {
     user: UserDecoratorDtoResponse,
     query: ClientRefundQueryDto,
   ): Promise<PaginatedResponse<RefundInvoiceResponse>> {
-    const customerId = user.id.toString();
+    const customerId = user.userCode;
 
     const result = await this.refundRepository.findByCustomerIdPaginated(customerId, {
       page: query.page,
@@ -123,7 +123,7 @@ export class ClientInvoiceService {
   }
 
   async getPaymentSummary(user: UserDecoratorDtoResponse) {
-    const customerId = user.id.toString();
+    const customerId = user.userCode;
     const totalSpent = await this.paymentRepository.sumTotalByCustomer(customerId);
 
     const successPayments = await this.paymentRepository.findByCustomerIdPaginated(customerId, {
@@ -149,13 +149,11 @@ export class ClientInvoiceService {
     let tripInfo: PaymentInvoiceResponse['trip'] = null;
     if (payment.trip) {
       tripInfo = {
-        departure: payment.trip.road?.startPoint ?? undefined,
-        arrival: payment.trip.road?.endPoint ?? undefined,
+        departure: payment.trip.departure ?? payment.trip.road?.startPoint ?? undefined,
+        arrival: payment.trip.arrival ?? payment.trip.road?.endPoint ?? undefined,
         name: payment.trip.name ?? undefined,
-        date: payment.trip.departureDate
-          ? new Date(payment.trip.departureDate).toLocaleDateString('vi-VN')
-          : undefined,
-        time: payment.trip.departureTime ?? undefined,
+        date: undefined,
+        time: undefined,
       };
     }
 
@@ -196,13 +194,11 @@ export class ClientInvoiceService {
     let tripInfo: RefundInvoiceResponse['trip'] = null;
     if (refund.trip) {
       tripInfo = {
-        departure: refund.trip.road?.startPoint ?? undefined,
-        arrival: refund.trip.road?.endPoint ?? undefined,
+        departure: refund.trip.departure ?? refund.trip.road?.startPoint ?? undefined,
+        arrival: refund.trip.arrival ?? refund.trip.road?.endPoint ?? undefined,
         name: refund.trip.name ?? undefined,
-        date: refund.trip.departureDate
-          ? new Date(refund.trip.departureDate).toLocaleDateString('vi-VN')
-          : undefined,
-        time: refund.trip.departureTime ?? undefined,
+        date: undefined,
+        time: undefined,
       };
     }
 

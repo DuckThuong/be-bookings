@@ -3,4 +3,5 @@ export enum TicketStatus {
   PAID = 'PAID',
   CANCELLED = 'CANCELLED',
   REFUNDED = 'REFUNDED',
+  PENDING_REFUND = 'PENDING_REFUND',
 }

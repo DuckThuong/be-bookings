@@ -48,8 +48,17 @@ export class TbRefund {
   @Column({ type: 'int' })
   companyId: number;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  customerId: string;
+
+  @Column({ type: 'int', nullable: true })
+  userId: number;
+
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   amount: number;
+
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+  refundPercentage: number;
 
   @Column({ type: 'text', nullable: true })
   reason: string;
@@ -59,6 +68,12 @@ export class TbRefund {
 
   @Column({ type: 'datetime', nullable: true })
   refundedAt: Date;
+
+  @Column({ type: 'datetime', nullable: true })
+  cancelledAt: Date;
+
+  @Column({ type: 'datetime', nullable: true })
+  expiresAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
