@@ -2,88 +2,67 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbPayment } from './payment.entity';
+import { TbTrip } from '../trip.entity';
+import { TbCompany } from '../company/company.entity';
+import { TbTicket } from '../ticket.entity';
 
 @Entity('tb_refund')
 export class TbRefund {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column('varchar', {
-    length: 24,
-    unique: true,
-    comment: 'Mã hoàn tiền',
-  })
+  @ManyToOne(() => TbPayment, (payment) => payment.refunds)
+  @JoinColumn({ name: 'payment_id' })
+  payment: TbPayment;
+
+  @ManyToOne(() => TbTicket, (ticket) => ticket.refunds)
+  @JoinColumn({ name: 'ticket_id' })
+  ticket: TbTicket;
+
+  @ManyToOne(() => TbTrip, (trip) => trip.refunds)
+  @JoinColumn({ name: 'trip_id' })
+  trip: TbTrip;
+
+  @ManyToOne(() => TbCompany, (company) => company.refunds)
+  @JoinColumn({ name: 'company_id' })
+  company: TbCompany;
+
+  @Column('varchar', { length: 24, unique: true })
   code: string;
 
-  @Column({
-    type: 'int',
-    comment: 'ID thanh toán gốc (tb_payment)',
-  })
+  @Column({ type: 'int' })
   paymentId: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID vé (tb_ticket)',
-  })
+  @Column({ type: 'int' })
   ticketId: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID chuyến (tb_trip)',
-  })
+  @Column({ type: 'int' })
   tripId: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID công ty (tb_company)',
-  })
+  @Column({ type: 'int' })
   companyId: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-    comment: 'Số tiền hoàn',
-  })
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
   amount: number;
 
-  @Column({
-    type: 'text',
-    nullable: true,
-    comment: 'Lý do hoàn tiền',
-  })
+  @Column({ type: 'text', nullable: true })
   reason: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Trạng thái: PENDING, SUCCESS, REJECTED',
-  })
+  @Column({ type: 'varchar', length: 50 })
   status: string;
 
-  @Column({
-    type: 'datetime',
-    nullable: true,
-    comment: 'Thời điểm hoàn tiền thành công',
-  })
+  @Column({ type: 'datetime', nullable: true })
   refundedAt: Date;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Ngày tạo',
-  })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    comment: 'Ngày cập nhật',
-  })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

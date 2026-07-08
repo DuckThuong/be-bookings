@@ -2,115 +2,58 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbCompany } from '../company/company.entity';
 
 @Entity('tb_company_stat')
 export class TbCompanyStat {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID công ty (tb_company)',
-  })
+  @ManyToOne(() => TbCompany, (company) => company.companyStats)
+  @JoinColumn({ name: 'company_id' })
+  company: TbCompany;
+
+  @Column({ type: 'int' })
   companyId: number;
 
-  @Column({
-    type: 'date',
-    comment: 'Ngày thống kê',
-  })
+  @Column({ type: 'date' })
   statDate: string;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Số vé đã thanh toán',
-  })
+  @Column({ type: 'int', default: 0 })
   ticketCount: number;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Tổng số ghế bán',
-  })
+  @Column({ type: 'int', default: 0 })
   seatSold: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Doanh thu gộp (trước giảm giá)',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   grossRevenue: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Tổng tiền giảm giá',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   discountTotal: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Doanh thu ròng (đã thu - hoàn)',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   netRevenue: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Tổng tiền hoàn',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   refundTotal: number;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Số vé hủy',
-  })
+  @Column({ type: 'int', default: 0 })
   cancelledCount: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 5,
-    scale: 2,
-    default: 0,
-    comment: 'Tỷ lệ lấp đầy ghế (%)',
-  })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   occupancyRate: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-    default: 0,
-    comment: 'Giá trị trung bình mỗi vé',
-  })
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   avgTicketValue: number;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Ngày tạo',
-  })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    comment: 'Ngày cập nhật',
-  })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

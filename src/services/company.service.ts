@@ -68,7 +68,7 @@ export class CompanyService {
     return this.companyRepository.saveCompany({
       companyName: payload.companyName.trim(),
       description: payload.description ?? undefined,
-      userLeadId: user.id.toString(),
+      userLeadId: user.id,
       code: generateEntityCode(CODE_PREFIX.COMPANY),
       status: payload.status ?? EntityStatus.ACTIVE,
     });
@@ -82,17 +82,6 @@ export class CompanyService {
       return this.companyRepository.findCompaniesByUserLead(user.id.toString());
     }
     throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
-  }
-
-  async getMyCompany(user: UserDecoratorDtoResponse): Promise<TbCompany> {
-    const companies = await this.companyRepository.findCompaniesByUserLead(
-      user.id.toString(),
-    );
-    const active = companies.find((c) => c.status === EntityStatus.ACTIVE);
-    if (!active) {
-      throw new NotFoundException(CompanyErrorMessage.COMPANY_NOT_FOUND);
-    }
-    return active;
   }
 
   async getCompanyById(
@@ -120,7 +109,7 @@ export class CompanyService {
       update.status = payload.status;
     }
     if (payload.userLeadId !== undefined && user.role === UserRole.ADMIN) {
-      update.userLeadId = payload.userLeadId;
+      update.userLeadId = Number(payload.userLeadId as string);
     }
 
     if (Object.keys(update).length > 0) {

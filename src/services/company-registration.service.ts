@@ -11,11 +11,12 @@ import { UserRepository } from '../repositories/user.repository';
 import { RegistrationStatus } from '../entities/company-registration.entity';
 import { UserRole, UserStatus } from '../dtos/user/common.dto';
 import { TbCompany } from '../entities/company/company.entity';
-import { EntityStatus, CODE_PREFIX } from '../assets/constants/company.constants';
-import { randomUUID } from 'crypto';
 import {
-  CompanyRegistrationResponseDto,
-} from '../dtos/company-registration.dto';
+  EntityStatus,
+  CODE_PREFIX,
+} from '../assets/constants/company.constants';
+import { randomUUID } from 'crypto';
+import { CompanyRegistrationResponseDto } from '../dtos/company-registration.dto';
 import { TbCompanyRegistration } from '../entities/company-registration.entity';
 
 @Injectable()
@@ -81,8 +82,9 @@ export class CompanyRegistrationService {
   async findMyRegistration(
     userId: number,
   ): Promise<CompanyRegistrationResponseDto | null> {
-    const registrations =
-      await this.companyRegistrationRepository.findAll({ userId });
+    const registrations = await this.companyRegistrationRepository.findAll({
+      userId,
+    });
     const registration = registrations[0] ?? null;
     if (!registration) {
       return null;
@@ -91,8 +93,7 @@ export class CompanyRegistrationService {
   }
 
   async findById(id: number): Promise<CompanyRegistrationResponseDto> {
-    const registration =
-      await this.companyRegistrationRepository.findById(id);
+    const registration = await this.companyRegistrationRepository.findById(id);
     if (!registration) {
       throw new NotFoundException('Không tìm thấy yêu cầu đăng ký');
     }
@@ -123,14 +124,12 @@ export class CompanyRegistrationService {
       (c) => c.status === EntityStatus.ACTIVE,
     );
     if (activeCompany) {
-      throw new BadRequestException(
-        'Người dùng đã có nhà xe đang hoạt động',
-      );
+      throw new BadRequestException('Người dùng đã có nhà xe đang hoạt động');
     }
 
     const companyCode = this.generateCompanyCode();
     const company = await this.companyRepository.saveCompany({
-      userLeadId: registration.userId.toString(),
+      userLeadId: registration.userId,
       companyName: registration.companyName,
       code: companyCode,
       description: registration.description ?? '',

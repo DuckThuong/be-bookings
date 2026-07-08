@@ -2,46 +2,21 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('tb_master_data')
 export class TbMasterData {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Loại dữ liệu',
-  })
+  @Column({ type: 'varchar', length: 50 })
   type: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Mã dữ liệu',
-  })
+  @Column({ type: 'varchar', length: 50 })
   code: string;
 
-  @Column({
-    type: 'varchar',
-    length: 255,
-    comment: 'Tên hiển thị',
-  })
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-    comment: 'Quy tắc/giá trị bổ sung',
-  })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   rule: string;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Thứ tự sắp xếp',
-  })
+  @Column({ type: 'int', default: 0 })
   sort: number;
 }

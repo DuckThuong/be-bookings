@@ -10,6 +10,7 @@ import { generateEntityCode } from '../common/helpers/common.helper';
 import { CreateDriverDto } from '../dtos/company/company.dto';
 import { UserDecoratorDtoResponse } from '../dtos/user/common.dto';
 import { CompanyAccessService } from './company-access.service';
+import { TbCompany } from '../entities';
 
 @Injectable()
 export class DriverService {
@@ -25,7 +26,7 @@ export class DriverService {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
 
     return this.driverRepository.save({
-      companyId,
+      company: { id: companyId } as TbCompany,
       code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
       name: payload.name,
       license: payload.license,
@@ -50,7 +51,7 @@ export class DriverService {
     if (!driver) {
       throw new NotFoundException(CompanyErrorMessage.DRIVER_NOT_FOUND);
     }
-    await this.companyAccess.assertCompanyAccess(user, driver.companyId);
+    await this.companyAccess.assertCompanyAccess(user, driver.company.id);
     return driver;
   }
 

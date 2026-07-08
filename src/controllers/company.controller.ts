@@ -48,7 +48,7 @@ export class CompanyController {
   @Roles(UserRole.OWNER)
   @ApiOperation({ summary: '[Owner] Nhà xe của tôi' })
   getMyCompany(@User() user: UserDecoratorDtoResponse) {
-    return this.companyService.getMyCompany(user);
+    return this.companyService.getCompanies(user);
   }
 
   @Get(':companyId/overview')

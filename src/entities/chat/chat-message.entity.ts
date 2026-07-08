@@ -2,10 +2,16 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbChatConversation } from './chat-conversation.entity';
+import { TbBasicUser } from '../user/basic-user.entity';
+import { TbChatMessageRecipient } from './chat-message-recipient.entity';
+import { TbChatMessageAttachment } from './chat-message-attachment.entity';
 
 export enum ChatMessageType {
   TEXT = 'TEXT',
@@ -21,59 +27,40 @@ export enum ChatMessageStatus {
 }
 
 @Entity('tb_chat_message')
-@Index('idx_chat_msg_conversation', ['conversationId', 'createdAt'])
-@Index('idx_chat_msg_sender', ['senderId'])
 export class TbChatMessage {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'int',
-    name: 'conversation_id',
-    comment: 'FK tb_chat_conversation.id',
-  })
+  @ManyToOne(() => TbChatConversation, (conversation) => conversation.messages)
+  @JoinColumn({ name: 'conversation_id' })
+  conversation: TbChatConversation;
+
+  @ManyToOne(() => TbBasicUser)
+  @JoinColumn({ name: 'sender_id' })
+  sender: TbBasicUser;
+
+  @OneToMany(() => TbChatMessageRecipient, (recipient) => recipient.message)
+  recipients: TbChatMessageRecipient[];
+
+  @OneToMany(() => TbChatMessageAttachment, (attachment) => attachment.message)
+  attachments: TbChatMessageAttachment[];
+
+  @Column({ type: 'int', name: 'conversation_id' })
   conversationId: number;
 
-  @Column({
-    type: 'int',
-    name: 'sender_id',
-    comment: 'User id gửi tin nhắn',
-  })
+  @Column({ type: 'int', name: 'sender_id' })
   senderId: number;
 
-  @Column({
-    type: 'enum',
-    enum: ChatMessageType,
-    default: ChatMessageType.TEXT,
-    comment: 'Loại tin nhắn',
-  })
+  @Column({ type: 'enum', enum: ChatMessageType, default: ChatMessageType.TEXT })
   type: ChatMessageType;
 
-  @Column({
-    type: 'enum',
-    enum: ChatMessageStatus,
-    default: ChatMessageStatus.SENT,
-    comment: 'Trạng thái gửi',
-  })
+  @Column({ type: 'enum', enum: ChatMessageStatus, default: ChatMessageStatus.SENT })
   status: ChatMessageStatus;
 
-  @Column({
-    type: 'text',
-    nullable: true,
-    comment: 'Nội dung tin nhắn',
-  })
+  @Column({ type: 'text', nullable: true })
   content: string | null;
 
-  @Column({
-    type: 'json',
-    nullable: true,
-    name: 'metadata',
-    comment: 'Metadata tuỳ chỉnh (vd: clientMessageId, edit history)',
-  })
+  @Column({ type: 'json', nullable: true, name: 'metadata' })
   metadata: Record<string, unknown> | null;
 
   @CreateDateColumn({ name: 'created_at' })

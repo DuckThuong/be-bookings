@@ -2,10 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbBasicUser } from '../user/basic-user.entity';
+import { TbChatConversationMember } from './chat-conversation-member.entity';
+import { TbChatMessage } from './chat-message.entity';
 
 export enum ChatConversationType {
   OPERATOR = 'OPERATOR',
@@ -29,102 +34,59 @@ export enum ChatConversationPriority {
 }
 
 @Entity('tb_chat_conversation')
-@Index('idx_chat_conv_member_a', ['memberAUserId'])
-@Index('idx_chat_conv_member_b', ['memberBUserId'])
-@Index('idx_chat_conv_status', ['status'])
 export class TbChatConversation {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'enum',
-    enum: ChatConversationType,
-    default: ChatConversationType.OPERATOR,
-    comment: 'Loại cuộc trò chuyện',
-  })
+  @ManyToOne(() => TbBasicUser)
+  @JoinColumn({ name: 'member_a_user_id' })
+  memberAUser: TbBasicUser;
+
+  @ManyToOne(() => TbBasicUser)
+  @JoinColumn({ name: 'member_b_user_id' })
+  memberBUser: TbBasicUser;
+
+  @ManyToOne(() => TbBasicUser)
+  @JoinColumn({ name: 'assignee_user_id' })
+  assigneeUser: TbBasicUser | null;
+
+  @OneToMany(() => TbChatConversationMember, (member) => member.conversation)
+  members: TbChatConversationMember[];
+
+  @OneToMany(() => TbChatMessage, (message) => message.conversation)
+  messages: TbChatMessage[];
+
+  @Column({ type: 'enum', enum: ChatConversationType, default: ChatConversationType.OPERATOR })
   type: ChatConversationType;
 
-  @Column({
-    type: 'enum',
-    enum: ChatConversationStatus,
-    default: ChatConversationStatus.OPEN,
-    comment: 'Trạng thái xử lý',
-  })
+  @Column({ type: 'enum', enum: ChatConversationStatus, default: ChatConversationStatus.OPEN })
   status: ChatConversationStatus;
 
-  @Column({
-    type: 'enum',
-    enum: ChatConversationPriority,
-    default: ChatConversationPriority.NORMAL,
-    comment: 'Mức độ ưu tiên',
-  })
+  @Column({ type: 'enum', enum: ChatConversationPriority, default: ChatConversationPriority.NORMAL })
   priority: ChatConversationPriority;
 
-  @Column({
-    type: 'int',
-    name: 'member_a_user_id',
-    comment: 'User id phía khách hàng',
-  })
+  @Column({ type: 'int', name: 'member_a_user_id' })
   memberAUserId: number;
 
-  @Column({
-    type: 'int',
-    name: 'member_b_user_id',
-    comment: 'User id phía đối tác (nhà xe/admin/operator)',
-  })
+  @Column({ type: 'int', name: 'member_b_user_id' })
   memberBUserId: number;
 
-  @Column({
-    type: 'int',
-    nullable: true,
-    name: 'assignee_user_id',
-    comment: 'User id của CMS staff được phân công',
-  })
+  @Column({ type: 'int', nullable: true, name: 'assignee_user_id' })
   assigneeUserId: number | null;
 
-  @Column({
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-    name: 'related_booking_id',
-    comment: 'Mã booking liên quan (nếu có)',
-  })
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'related_booking_id' })
   relatedBookingId: string | null;
 
-  @Column({
-    type: 'varchar',
-    length: 500,
-    nullable: true,
-    comment: 'Tiêu đề/tên cuộc trò chuyện',
-  })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   title: string | null;
 
-  @Column({
-    type: 'varchar',
-    length: 1000,
-    nullable: true,
-    comment: 'Xem trước tin nhắn cuối',
-  })
+  @Column({ type: 'varchar', length: 1000, nullable: true })
   lastMessagePreview: string | null;
 
-  @Column({
-    type: 'datetime',
-    nullable: true,
-    name: 'last_message_at',
-    comment: 'Thời điểm tin nhắn cuối',
-  })
+  @Column({ type: 'datetime', nullable: true, name: 'last_message_at' })
   lastMessageAt: Date | null;
 
-  @Column({
-    type: 'int',
-    name: 'last_message_sender_id',
-    nullable: true,
-    comment: 'User id gửi tin nhắn cuối',
-  })
+  @Column({ type: 'int', nullable: true, name: 'last_message_sender_id' })
   lastMessageSenderId: number | null;
 
   @CreateDateColumn({ name: 'created_at' })

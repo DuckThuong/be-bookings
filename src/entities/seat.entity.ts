@@ -2,77 +2,46 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbVehicle } from './vehicle.entity';
 
 @Entity('tb_seat')
 export class TbSeat {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID phương tiện (tb_vehicle)',
-  })
+  @ManyToOne(() => TbVehicle, (vehicle) => vehicle.seats)
+  @JoinColumn({ name: 'vehicle_id' })
+  vehicle: TbVehicle;
+
+  @Column({ name: 'vehicle_id', type: 'int' })
   vehicleId: number;
 
-  @Column('varchar', {
-    length: 24,
-    unique: true,
-    comment: 'Mã ghế',
-  })
+  @Column('varchar', { length: 24, unique: true })
   code: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Loại ghế',
-  })
+  @Column({ type: 'varchar', length: 50 })
   type: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Tên ghế',
-  })
+  @Column({ type: 'varchar', length: 50 })
   name: string;
 
-  @Column({
-    name: 'seat_index',
-    type: 'varchar',
-    length: 20,
-    comment: 'Vị trí ghế (hàng/cột)',
-  })
+  @Column({ name: 'seat_index', type: 'varchar', length: 20 })
   index: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Trạng thái ghế',
-  })
+  @Column({ type: 'varchar', length: 50 })
   status: string;
 
-  @Column({
-    type: 'text',
-    nullable: true,
-    comment: 'Mô tả ghế',
-  })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Ngày tạo',
-  })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    comment: 'Ngày cập nhật',
-  })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

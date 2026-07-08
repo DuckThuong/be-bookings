@@ -22,7 +22,7 @@ export class DriverRepository {
   findByCompany(companyId: number) {
     return this.repo.find({
       where: {
-        companyId,
+        company: { id: companyId },
         status: EntityStatus.ACTIVE || EntityStatus.INACTIVE,
       },
       order: { id: 'DESC' },
@@ -39,7 +39,7 @@ export class DriverRepository {
 
   countActiveByCompany(companyId: number) {
     return this.repo.count({
-      where: { companyId, status: EntityStatus.ACTIVE },
+      where: { company: { id: companyId }, status: EntityStatus.ACTIVE },
     });
   }
 }

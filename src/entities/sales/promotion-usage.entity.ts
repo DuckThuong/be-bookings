@@ -2,56 +2,46 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { TbBooking } from './booking.entity';
+import { TbCompany } from '../company/company.entity';
+import { TbTicket } from '../ticket.entity';
 
 @Entity('tb_promotion_usage')
 export class TbPromotionUsage {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'int',
-    nullable: true,
-    comment: 'ID vé (tb_ticket)',
-  })
+  @ManyToOne(() => TbTicket, (ticket) => ticket.promotionUsages)
+  @JoinColumn({ name: 'ticket_id' })
+  ticket: TbTicket;
+
+  @ManyToOne(() => TbBooking, (booking) => booking.promotionUsages)
+  @JoinColumn({ name: 'booking_id' })
+  booking: TbBooking;
+
+  @ManyToOne(() => TbCompany, (company) => company.promotionUsages)
+  @JoinColumn({ name: 'company_id' })
+  company: TbCompany;
+
+  @Column({ type: 'int', nullable: true })
   ticketId: number;
 
-  @Column({
-    type: 'int',
-    nullable: true,
-    comment: 'ID đặt chỗ (tb_booking)',
-  })
+  @Column({ type: 'int', nullable: true })
   bookingId: number;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Mã khuyến mãi',
-  })
+  @Column({ type: 'varchar', length: 50 })
   promoCode: string;
 
-  @Column({
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-    comment: 'Số tiền được giảm',
-  })
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
   discountAmount: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID công ty (tb_company)',
-  })
+  @Column({ type: 'int' })
   companyId: number;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Ngày áp dụng',
-  })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

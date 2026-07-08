@@ -110,7 +110,7 @@ export class CMSDriverService {
     return {
       id: driver.id,
       code: driver.code,
-      companyId: driver.companyId,
+      companyId: driver.company.id,
       name: driver.name,
       license: driver.license,
       licenseNum: driver.licenseNum,
