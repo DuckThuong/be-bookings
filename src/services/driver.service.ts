@@ -4,7 +4,7 @@ import { TbDriver } from '../entities/driver.entity';
 import { DriverRepository } from '../repositories/driver.repository';
 import {
   CODE_PREFIX,
-  EntityStatus,
+  DriverStatus,
 } from '../assets/constants/company.constants';
 import { generateEntityCode } from '../common/helpers/common.helper';
 import { CreateDriverDto } from '../dtos/company/company.dto';
@@ -34,7 +34,7 @@ export class DriverService {
       phone: payload.phone,
       email: payload.email,
       description: payload.description ?? undefined,
-      status: payload.status ?? EntityStatus.ACTIVE,
+      status: payload.status ?? DriverStatus.AVAILABLE,
       rate: 0,
       totalTurn: 0,
     });
@@ -71,7 +71,7 @@ export class DriverService {
     id: number,
   ): Promise<{ message: string }> {
     await this.findOne(user, id);
-    await this.driverRepository.update(id, { status: EntityStatus.INACTIVE });
+    await this.driverRepository.update(id, { status: DriverStatus.LEAVE });
     return { message: 'Đã vô hiệu hóa tài xế' };
   }
 }

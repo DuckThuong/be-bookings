@@ -50,9 +50,6 @@ export class CmsVehicleFormPayloadDto {
   @ApiPropertyOptional({ example: EntityStatus.ACTIVE, enum: EntityStatus })
   @IsOptional()
   @IsString({ message: CmsVehicleValidationMessage.VEHICAL_STATUS_INVALID })
-  @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE], {
-    message: CmsVehicleValidationMessage.VEHICAL_STATUS_NOT_IN,
-  })
   status?: string;
 
   @ApiPropertyOptional()

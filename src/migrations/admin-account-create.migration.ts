@@ -4,6 +4,15 @@ export class AdminAccountCreate1752050000000 implements MigrationInterface {
   name = 'AdminAccountCreate1752050000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Check if admin account already exists
+    const [existingUser] = await queryRunner.query(
+      `SELECT id FROM tb_basic_user WHERE email = 'admin@gmail.com'`,
+    );
+
+    if (existingUser) {
+      return;
+    }
+
     await queryRunner.query(
       `INSERT INTO tb_basic_user (userCode, email, phone, password, status, role, isEmailVerified)
        VALUES ('ADMIN', 'admin@gmail.com', '0100000001', '123456', '0', '0', true)`,
@@ -23,7 +32,7 @@ export class AdminAccountCreate1752050000000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DELETE FROM tb_info_user WHERE userCode = 'ADMIN001'`,
+      `DELETE FROM tb_info_user WHERE userCode = 'ADMIN'`,
     );
     await queryRunner.query(
       `DELETE FROM tb_basic_user WHERE email = 'admin@gmail.com'`,

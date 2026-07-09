@@ -14,7 +14,7 @@ import {
   UpdateOperationStatusPayloadDto,
   ResetTripOperationStatusPayloadDto,
 } from '../../dtos/CMS/CMS_trip.dto';
-import { CODE_PREFIX } from '../../assets/constants/company.constants';
+import { CODE_PREFIX, MasterDataType } from '../../assets/constants/company.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
 import { TbTrip } from '../../entities/trip.entity';
 import { TbRoad } from '../../entities/road.entity';
@@ -22,11 +22,13 @@ import { TbDriver } from '../../entities/driver.entity';
 import { TbVehicle } from '../../entities/vehicle.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
 import { TripStatus, TRIP_STATUSES_ALLOW_RESTART } from '../../assets/constants/company.constants';
+import { MasterDataService } from '../master-data.service';
 
 @Injectable()
 export class CMSTripService {
   constructor(
     private readonly tripService: TripService,
+    private readonly masterDataService: MasterDataService,
     @InjectRepository(TbRoad)
     private readonly roadRepo: Repository<TbRoad>,
     @InjectRepository(TbDriver)
@@ -59,6 +61,9 @@ export class CMSTripService {
     user: UserDecoratorDtoResponse,
   ): Promise<TripResponseDto> {
     try {
+      await this.validateEntityStatus(payload.status);
+      await this.validateOperationStatus(payload.operationStatus);
+
       const trip = await this.tripService.create(user, {
         code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.TRIP),
         name: payload.name.trim(),
@@ -84,6 +89,9 @@ export class CMSTripService {
     user: UserDecoratorDtoResponse,
   ): Promise<TripResponseDto> {
     try {
+      await this.validateEntityStatus(payload.status);
+      await this.validateOperationStatus(payload.operationStatus);
+
       const trip = await this.tripService.update(user, payload.id, {
         name: payload.name.trim(),
         roadId: payload.roadId,
@@ -108,6 +116,8 @@ export class CMSTripService {
     payload: UpdateOperationStatusPayloadDto,
   ): Promise<{ message: string; trip: CmsTripEntityDto }> {
     try {
+      await this.validateOperationStatus(payload.operationStatus);
+
       const trip = await this.tripService.update(user, payload.id, {
         operationStatus: payload.operationStatus,
       });
@@ -244,6 +254,44 @@ export class CMSTripService {
         occupancyRate,
       };
     });
+  }
+
+  private async validateEntityStatus(status: string): Promise<void> {
+    const statuses = await this.masterDataService.getByTypes([MasterDataType.ROUTE_STATUS]);
+    const validStatuses = statuses[MasterDataType.ROUTE_STATUS] ?? [];
+    const validCodes = validStatuses.map((s) => s.code);
+
+    if (!validCodes.includes(status)) {
+      const validNames = validStatuses.map((s) => s.name).join(', ');
+      throw new HttpException(
+        {
+          message: [`Trạng thái không hợp lệ. Chọn: ${validNames}`],
+          error: 'Bad Request',
+          statusCode: 400,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private async validateOperationStatus(status: string | undefined): Promise<void> {
+    if (!status) return;
+    
+    const statuses = await this.masterDataService.getByTypes([MasterDataType.TRIP_STATUS]);
+    const validStatuses = statuses[MasterDataType.TRIP_STATUS] ?? [];
+    const validCodes = validStatuses.map((s) => s.code);
+
+    if (!validCodes.includes(status)) {
+      const validNames = validStatuses.map((s) => s.name).join(', ');
+      throw new HttpException(
+        {
+          message: [`Trạng thái vận hành không hợp lệ. Chọn: ${validNames}`],
+          error: 'Bad Request',
+          statusCode: 400,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   private rethrow(error: unknown): never {

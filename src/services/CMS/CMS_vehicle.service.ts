@@ -30,7 +30,7 @@ import {
   UpdateVehicleDto,
 } from '../../dtos/company/company.dto';
 import { TbSeat } from '../../entities/seat.entity';
-import { EntityStatus } from '../../assets/constants/company.constants';
+import { EntityStatus, MasterDataType } from '../../assets/constants/company.constants';
 import { parsePositiveInt } from '../../common/helpers/common.helper';
 import {
   buildVehicleLayout,
@@ -40,6 +40,7 @@ import {
 } from '../../common/seat-layout/seat-layout';
 import { TbBooking } from '../../entities/sales/booking.entity';
 import { BookingStatus } from '../../assets/constants/sales.constants';
+import { MasterDataService } from '../master-data.service';
 
 type NormalizedVehiclePayload = UpdateVehicleDto & {
   code?: string;
@@ -61,6 +62,7 @@ export class CMSVehicleService {
   constructor(
     private readonly vehicleService: VehicleService,
     private readonly seatService: SeatService,
+    private readonly masterDataService: MasterDataService,
     @InjectRepository(TbTrip)
     private readonly tripRepo: Repository<TbTrip>,
     @InjectRepository(TbRoad)
@@ -91,6 +93,8 @@ export class CMSVehicleService {
     user: UserDecoratorDtoResponse,
   ): Promise<VehicleResponseDto> {
     try {
+      await this.validateVehicleFields(payload);
+
       const layout = this.resolveVehicleLayout(payload);
       const normalized = {
         ...this.normalizePayload(payload, true),
@@ -122,6 +126,8 @@ export class CMSVehicleService {
     user: UserDecoratorDtoResponse,
   ): Promise<VehicleResponseDto> {
     try {
+      await this.validateVehicleFields(payload);
+
       const existing = await this.vehicleService.findOne(user, payload.id);
       const shouldSyncLayout =
         payload.layoutPreset !== undefined ||
@@ -507,6 +513,63 @@ export class CMSVehicleService {
       throw new BadRequestException(
         'Không thể đổi sơ đồ ghế khi xe đã có booking đang hoạt động',
       );
+    }
+  }
+
+  private async validateVehicleFields(payload: CreateVehiclePayloadDto | UpdateVehiclePayloadDto): Promise<void> {
+    const typesToFetch = [MasterDataType.VEHICLE_STATUS];
+    if (payload.status) typesToFetch.push(MasterDataType.VEHICLE_STATUS);
+    if (payload.type) typesToFetch.push(MasterDataType.VEHICLE_TYPE);
+    if (payload.seatType) typesToFetch.push(MasterDataType.SEAT_TYPE);
+
+    const masterData = await this.masterDataService.getByTypes(typesToFetch);
+
+    if (payload.status) {
+      const validStatuses = masterData[MasterDataType.VEHICLE_STATUS] ?? [];
+      const validCodes = validStatuses.map((s) => s.code);
+      if (!validCodes.includes(payload.status)) {
+        const validNames = validStatuses.map((s) => s.name).join(', ');
+        throw new HttpException(
+          {
+            message: [`Trạng thái không hợp lệ. Chọn: ${validNames}`],
+            error: 'Bad Request',
+            statusCode: 400,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    if (payload.type) {
+      const validTypes = masterData[MasterDataType.VEHICLE_TYPE] ?? [];
+      const validCodes = validTypes.map((s) => s.code);
+      if (!validCodes.includes(payload.type)) {
+        const validNames = validTypes.map((s) => s.name).join(', ');
+        throw new HttpException(
+          {
+            message: [`Loại xe không hợp lệ. Chọn: ${validNames}`],
+            error: 'Bad Request',
+            statusCode: 400,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    if (payload.seatType) {
+      const validSeatTypes = masterData[MasterDataType.SEAT_TYPE] ?? [];
+      const validCodes = validSeatTypes.map((s) => s.code);
+      if (!validCodes.includes(payload.seatType)) {
+        const validNames = validSeatTypes.map((s) => s.name).join(', ');
+        throw new HttpException(
+          {
+            message: [`Loại ghế không hợp lệ. Chọn: ${validNames}`],
+            error: 'Bad Request',
+            statusCode: 400,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
     }
   }
 

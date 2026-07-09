@@ -2,8 +2,9 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/jwt/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { MasterDataService } from '../services/master-data.service';
-import { MasterDataDtoPayload } from '../dtos/master-data.dto';
+import { MasterDataDtoPayload, MasterDataAllResponseDto } from '../dtos/master-data.dto';
 import { TbMasterData } from '../entities/master-data.entity';
+import { MasterDataType } from '../assets/constants/company.constants';
 
 @Controller('master-data')
 @UseGuards(JwtAuthGuard)
@@ -30,5 +31,18 @@ export class MasterDataController {
     @Query() payload: MasterDataDtoPayload,
   ): Promise<TbMasterData[] | []> {
     return this.masterDataService.findDataByTypeAndCode(payload);
+  }
+
+  @Get('all-statuses')
+  public async getAllStatuses(): Promise<MasterDataAllResponseDto> {
+    return this.masterDataService.getAllStatuses();
+  }
+
+  @Get('by-types')
+  public async getByTypes(
+    @Query('types') types: string,
+  ): Promise<Record<string, TbMasterData[]>> {
+    const typeList = types ? types.split(',') : [];
+    return this.masterDataService.getByTypes(typeList);
   }
 }

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TbDriver } from '../entities/driver.entity';
-import { EntityStatus } from '../assets/constants/company.constants';
 
 @Injectable()
 export class DriverRepository {
@@ -23,7 +22,6 @@ export class DriverRepository {
     return this.repo.find({
       where: {
         company: { id: companyId },
-        status: EntityStatus.ACTIVE || EntityStatus.INACTIVE,
       },
       relations: ['company'],
       order: { id: 'DESC' },
@@ -40,7 +38,7 @@ export class DriverRepository {
 
   countActiveByCompany(companyId: number) {
     return this.repo.count({
-      where: { company: { id: companyId }, status: EntityStatus.ACTIVE },
+      where: { company: { id: companyId }, status: 'ACTIVE' },
     });
   }
 }

@@ -21,12 +21,15 @@ import {
 } from '../../dtos/CMS/CMS_road.dto';
 import { TbRoad } from '../../entities/road.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
+import { MasterDataType } from '../../assets/constants/company.constants';
+import { MasterDataService } from '../master-data.service';
 
 @Injectable()
 export class CMSRoadService {
   constructor(
     private readonly roadService: RoadService,
     private readonly companyAccess: CompanyAccessService,
+    private readonly masterDataService: MasterDataService,
   ) {}
 
   async getRoadById(
@@ -50,6 +53,8 @@ export class CMSRoadService {
     user: UserDecoratorDtoResponse,
   ): Promise<RoadResponseDto> {
     try {
+      await this.validateEntityStatus(payload.status);
+
       const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
       const [startPoint, endPoint] = payload.name.split(/\s*-\s*/);
       const road = await this.roadService.create(user, {
@@ -85,6 +90,8 @@ export class CMSRoadService {
       if (!payload.id) {
         throw new BadRequestException(CmsRoadValidationMessage.ROAD_ID_INVALID);
       }
+
+      await this.validateEntityStatus(payload.status);
 
       const updatePayload = this.toRoadUpdatePayload(payload);
       const road =
@@ -178,6 +185,26 @@ export class CMSRoadService {
         ? { note: payload.note?.trim() || null }
         : {}),
     };
+  }
+
+  private async validateEntityStatus(status: string | undefined): Promise<void> {
+    if (!status) return;
+    
+    const statuses = await this.masterDataService.getByTypes([MasterDataType.ROUTE_STATUS]);
+    const validStatuses = statuses[MasterDataType.ROUTE_STATUS] ?? [];
+    const validCodes = validStatuses.map((s) => s.code);
+
+    if (!validCodes.includes(status)) {
+      const validNames = validStatuses.map((s) => s.name).join(', ');
+      throw new HttpException(
+        {
+          message: [`Trạng thái không hợp lệ. Chọn: ${validNames}`],
+          error: 'Bad Request',
+          statusCode: 400,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   private rethrow(error: unknown): never {

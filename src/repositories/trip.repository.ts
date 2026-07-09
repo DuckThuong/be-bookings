@@ -1,8 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TbTrip } from '../entities/trip.entity';
-import { EntityStatus } from '../assets/constants/company.constants';
+import { TripStatus } from '../assets/constants/company.constants';
+
+const ACTIVE_TRIP_STATUSES = [
+  TripStatus.SCHEDULED,
+  TripStatus.PREPARING,
+  TripStatus.BOARDING,
+  TripStatus.DEPARTED,
+  TripStatus.APPROACHING,
+  TripStatus.MOVING,
+  TripStatus.ARRIVED,
+  TripStatus.DELAYED,
+];
 
 @Injectable()
 export class TripRepository {
@@ -61,13 +72,15 @@ export class TripRepository {
     return this.repo
       .createQueryBuilder('trip')
       .where('trip.roadId IN (:...roadIds)', { roadIds })
-      .andWhere('trip.status = :status', { status: EntityStatus.ACTIVE })
+      .andWhere('trip.status IN (:...statuses)', {
+        statuses: ACTIVE_TRIP_STATUSES,
+      })
       .getCount();
   }
 
   countActiveByCompany(companyId: number) {
     return this.repo.count({
-      where: { companyId, status: EntityStatus.ACTIVE },
+      where: { companyId, status: In(ACTIVE_TRIP_STATUSES) },
     });
   }
 
@@ -79,8 +92,10 @@ export class TripRepository {
     const qb = this.repo
       .createQueryBuilder('trip')
       .innerJoin('tb_road', 'road', 'road.id = trip.roadId')
-      .where('trip.status = :active', { active: EntityStatus.ACTIVE })
-      .andWhere('road.status = :active', { active: EntityStatus.ACTIVE });
+      .where('trip.status IN (:...tripStatuses)', {
+        tripStatuses: ACTIVE_TRIP_STATUSES,
+      })
+      .andWhere('road.status = :roadStatus', { roadStatus: 'ACTIVE' });
 
     const fromCity = params.fromCity?.trim();
     const toCity = params.toCity?.trim();

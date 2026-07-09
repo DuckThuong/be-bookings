@@ -107,6 +107,7 @@ export class DashboardRepository {
     if (scope.companyId != null) {
       return 1;
     }
+    // Company uses EntityStatus for soft-delete (ACTIVE = chưa xóa)
     return this.companyRepo.count({
       where: { status: EntityStatus.ACTIVE },
     });

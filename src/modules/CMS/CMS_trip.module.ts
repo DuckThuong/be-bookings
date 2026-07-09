@@ -4,6 +4,7 @@ import { CMSTripController } from '../../controllers/CMS/CMS_trip.controller';
 import { CMSTripService } from '../../services/CMS/CMS_trip.service';
 import { CompanyModule } from '../company.module';
 import { AuthModule } from '../auth.module';
+import { MasterDataModule } from '../master-data.module';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TbRoad } from '../../entities/road.entity';
 import { TbDriver } from '../../entities/driver.entity';
@@ -15,6 +16,7 @@ import { TbTrip } from '../../entities/trip.entity';
     TypeOrmModule.forFeature([TbRoad, TbDriver, TbVehicle, TbTrip]),
     AuthModule,
     CompanyModule,
+    MasterDataModule,
   ],
   controllers: [CMSTripController],
   providers: [CMSTripService, RolesGuard],

@@ -32,6 +32,7 @@ export class SeatRepository {
   }
 
   deactivateByVehicleId(vehicleId: number) {
+    // Seat uses EntityStatus for soft-delete (INACTIVE = không hoạt động)
     return this.repo.update({ vehicleId }, { status: EntityStatus.INACTIVE });
   }
 
