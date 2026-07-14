@@ -29,6 +29,7 @@ import {
   CmsTripListResponseDto,
   CmsTripListQueryDto,
   UpdateOperationStatusPayloadDto,
+  ResetTripOperationStatusPayloadDto,
 } from '../../dtos/CMS/CMS_trip.dto';
 
 @ApiTags('CMS - Trip')
@@ -91,6 +92,16 @@ export class CMSTripController {
     @Body() payload: UpdateOperationStatusPayloadDto,
   ) {
     return this.cmsTripService.updateOperationStatus(user, payload);
+  }
+
+  @Patch('operation-status/reset')
+  @Roles(UserRole.OWNER)
+  @ApiOperation({ summary: '[Owner] Reset trạng thái vận hành chuyến về SCHEDULED (bắt đầu lại)' })
+  resetOperationStatus(
+    @User() user: UserDecoratorDtoResponse,
+    @Body() payload: ResetTripOperationStatusPayloadDto,
+  ) {
+    return this.cmsTripService.resetOperationStatus(user, payload);
   }
 
   @Delete(':id')

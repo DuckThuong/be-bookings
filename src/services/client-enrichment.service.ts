@@ -114,7 +114,9 @@ export class ClientEnrichmentService {
         company: company
           ? {
               ...company,
-              operatorUserId: company.userLeadId ? parseInt(company.userLeadId, 10) : undefined,
+              operatorUserId: company.userLeadId
+                ? Number(company.userLeadId)
+                : undefined,
             }
           : null,
         trip,
@@ -264,7 +266,8 @@ export class ClientEnrichmentService {
         schedule: scheduleMap.get(booking.tripId) ?? null,
         ticket,
         payment,
-        operationStatus: scheduleMap.get(booking.tripId)?.trip?.operationStatus ?? null,
+        operationStatus:
+          scheduleMap.get(booking.tripId)?.trip?.operationStatus ?? null,
       };
     });
   }

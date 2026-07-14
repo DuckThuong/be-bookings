@@ -2,94 +2,52 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbCompany } from '../company/company.entity';
 
 @Entity('tb_settlement')
 export class TbSettlement {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column('varchar', {
-    length: 24,
-    unique: true,
-    comment: 'Mã đối soát',
-  })
+  @ManyToOne(() => TbCompany, (company) => company.settlements)
+  @JoinColumn({ name: 'company_id' })
+  company: TbCompany;
+
+  @Column('varchar', { length: 24, unique: true })
   code: string;
 
-  @Column({
-    type: 'int',
-    comment: 'ID công ty (tb_company)',
-  })
+  @Column({ type: 'int' })
   companyId: number;
 
-  @Column({
-    type: 'date',
-    comment: 'Ngày bắt đầu kỳ',
-  })
+  @Column({ type: 'date' })
   periodFrom: string;
 
-  @Column({
-    type: 'date',
-    comment: 'Ngày kết thúc kỳ',
-  })
+  @Column({ type: 'date' })
   periodTo: string;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Tổng doanh số kỳ',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   totalSales: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Tổng hoa hồng platform',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   totalCommission: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Số tiền chuyển cho nhà xe',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   payoutAmount: number;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Trạng thái: DRAFT, PAID',
-  })
+  @Column({ type: 'varchar', length: 50 })
   status: string;
 
-  @Column({
-    type: 'datetime',
-    nullable: true,
-    comment: 'Thời điểm thanh toán cho nhà xe',
-  })
+  @Column({ type: 'datetime', nullable: true })
   paidAt: Date;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Ngày tạo',
-  })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    comment: 'Ngày cập nhật',
-  })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

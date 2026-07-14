@@ -2,112 +2,63 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbTrip } from '../trip.entity';
+import { TbCompany } from '../company/company.entity';
 
 @Entity('tb_trip_stat')
 export class TbTripStat {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'int',
-    comment: 'Trip ID (tb_trip)',
-  })
+  @ManyToOne(() => TbTrip, (trip) => trip.tripStats)
+  @JoinColumn({ name: 'trip_id' })
+  trip: TbTrip;
+
+  @ManyToOne(() => TbCompany, (company) => company.tripStats)
+  @JoinColumn({ name: 'company_id' })
+  company: TbCompany;
+
+  @Column({ type: 'int' })
   tripId: number;
 
-  @Column({
-    type: 'int',
-    comment: 'Company ID (tb_company)',
-  })
+  @Column({ type: 'int' })
   companyId: number;
 
-  @Column({
-    type: 'date',
-    comment: 'Stat date',
-  })
+  @Column({ type: 'date' })
   statDate: string;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Paid ticket count',
-  })
+  @Column({ type: 'int', default: 0 })
   ticketCount: number;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Total sold seats',
-  })
+  @Column({ type: 'int', default: 0 })
   seatSold: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Gross revenue',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   grossRevenue: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Total discount amount',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   discountTotal: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Net revenue',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   netRevenue: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-    comment: 'Total refund amount',
-  })
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   refundTotal: number;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Cancelled ticket count',
-  })
+  @Column({ type: 'int', default: 0 })
   cancelledCount: number;
 
-  @Column({
-    type: 'decimal',
-    precision: 5,
-    scale: 2,
-    default: 0,
-    comment: 'Occupancy rate (%)',
-  })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   occupancyRate: number;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    comment: 'Created date',
-  })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    comment: 'Updated date',
-  })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

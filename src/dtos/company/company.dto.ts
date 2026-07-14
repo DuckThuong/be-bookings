@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EntityStatus } from '../../assets/constants/company.constants';
+import { DriverStatus } from '../../assets/constants/company.constants';
 import { VehicleLayoutConfig } from '../../common/seat-layout/seat-layout';
 
 export class CreateCompanyDto {
@@ -291,7 +292,7 @@ export class CreateDriverDto {
   @ApiPropertyOptional()
   description?: string;
 
-  @ApiPropertyOptional({ enum: EntityStatus })
+  @ApiPropertyOptional({ enum: DriverStatus })
   status?: string;
 }
 
@@ -311,7 +312,7 @@ export class UpdateDriverDto {
   @ApiPropertyOptional()
   description?: string;
 
-  @ApiPropertyOptional({ enum: EntityStatus })
+  @ApiPropertyOptional({ enum: DriverStatus })
   status?: string;
 }
 

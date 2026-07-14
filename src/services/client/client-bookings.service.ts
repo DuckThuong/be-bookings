@@ -53,6 +53,9 @@ import { CompanyAccessService } from '../company-access.service';
 import { ClientBookingSeatMapService } from './client-booking-seat-map.service';
 import { ClientBookingPricingService } from './client-booking-pricing.service';
 import { ClientBookingTripResolverService } from './client-booking-trip-resolver.service';
+import { PayOSService } from '../payment/payos.service';
+import { ConfigService } from '@nestjs/config';
+import { getPayOSConfig } from '../../common/payos/payos.config';
 import {
   buildVehicleLayout,
   resolveVehicleLayoutConfig,
@@ -68,6 +71,8 @@ export class ClientBookingsService {
     private readonly ticketRepository: TicketRepository,
     private readonly paymentRepository: PaymentRepository,
     private readonly companyAccess: CompanyAccessService,
+    private readonly configService: ConfigService,
+    private readonly payOSService: PayOSService,
     @InjectRepository(TbInfoUser)
     private readonly infoUserRepo: Repository<TbInfoUser>,
   ) {}
@@ -561,6 +566,101 @@ export class ClientBookingsService {
         payment,
         ctx,
         booking.paymentMethodId ?? 'card',
+      ),
+    );
+  }
+
+  async createPayOSPaymentLink(
+    user: UserDecoratorDtoResponse,
+    holdId: string,
+  ) {
+    const booking = await this.getHoldBooking(holdId);
+    await this.assertBookingOwner(user, booking);
+    await this.assertHoldNotExpired(booking);
+
+    let ticket = booking.ticketId
+      ? await this.ticketRepository.findById(booking.ticketId)
+      : null;
+
+    if (!ticket) {
+      ticket = await this.issueTicket(booking);
+      await this.bookingRepository.update(booking.id, {
+        status: BookingStatus.CONVERTED,
+        ticketId: ticket.id,
+      });
+    }
+
+    const config = getPayOSConfig(this.configService);
+    const orderCode = Date.now();
+
+    const paymentData = {
+      orderCode,
+      amount: Math.round(Number(booking.totalPrice)),
+      description: `TT vé #${ticket.code}`,
+      returnUrl: config.returnUrl,
+      cancelUrl: config.cancelUrl,
+    };
+
+    const paymentLink = await this.payOSService.createPaymentRequest(paymentData);
+
+    await this.paymentRepository.save({
+      code: generateEntityCode(SALES_CODE_PREFIX.PAYMENT),
+      ticketId: ticket.id,
+      tripId: booking.tripId,
+      companyId: booking.companyId,
+      customerId: booking.customerId,
+      amount: booking.totalPrice,
+      method: 'PayOS',
+      status: PaymentStatus.PENDING,
+      transactionRef: paymentLink.paymentLinkId,
+    });
+
+    await this.bookingRepository.update(booking.id, {
+      paymentMethodId: 'payos',
+    });
+
+    return {
+      checkoutUrl: paymentLink.checkoutUrl,
+      paymentLinkId: paymentLink.paymentLinkId,
+      qrCode: paymentLink.qrCode || '',
+      orderCode,
+    };
+  }
+
+  async getBookingByPaymentLink(
+    user: UserDecoratorDtoResponse,
+    paymentLinkId: string,
+  ) {
+    const payment = await this.paymentRepository.findByTransactionRef(paymentLinkId);
+    if (!payment) {
+      throw new NotFoundException(ClientErrorMessage.BOOKING_NOT_FOUND);
+    }
+
+    const ticket = await this.ticketRepository.findById(payment.ticketId);
+    if (!ticket) {
+      throw new NotFoundException(ClientErrorMessage.BOOKING_NOT_FOUND);
+    }
+
+    const booking = await this.bookingRepository.findById(ticket.bookingId || 0);
+    if (!booking) {
+      throw new NotFoundException(ClientErrorMessage.BOOKING_NOT_FOUND);
+    }
+
+    await this.assertBookingOwner(user, booking);
+
+    const payments = await this.paymentRepository.findByTicketId(ticket.id);
+
+    const representativePayment = pickRepresentativePayment([payment, ...payments]);
+
+    const ctx = await this.tripResolver.resolve(String(booking.tripId));
+
+    return this.toFeBookingSuccessResponse(
+      await this.buildBookingResult(
+        booking,
+        ticket,
+        representativePayment,
+        ctx,
+        'payos',
       ),
     );
   }

@@ -64,7 +64,7 @@ export class ChatRepository {
     id: number,
     payload: Partial<TbChatConversation>,
   ): Promise<void> {
-    await this.convRepo.update({ id }, payload);
+    await this.convRepo.update({ id }, payload as object);
   }
 
   public async listConversationsForUser(userId: number) {
@@ -140,7 +140,7 @@ export class ChatRepository {
     userId: number,
     payload: Partial<TbChatConversationMember>,
   ): Promise<void> {
-    await this.memberRepo.update({ conversationId, userId }, payload);
+    await this.memberRepo.update({ conversationId, userId }, payload as object);
   }
 
   public async incrementUnread(
@@ -225,7 +225,7 @@ export class ChatRepository {
       .createQueryBuilder()
       .insert()
       .into(TbChatMessageRecipient)
-      .values(items)
+      .values(items as any[])
       .orIgnore()
       .execute();
   }
@@ -317,4 +317,9 @@ export class ChatRepository {
   }
 }
 
-export { ChatConversationStatus, ChatMemberRole, ChatMessageType, ChatMessageStatus };
+export {
+  ChatConversationStatus,
+  ChatMemberRole,
+  ChatMessageType,
+  ChatMessageStatus,
+};

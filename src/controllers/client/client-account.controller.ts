@@ -1,8 +1,12 @@
 import {
+  Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +22,7 @@ import {
   ClientMyInvoiceQueryDto,
   ClientMyTicketQueryDto,
 } from '../../dtos/client/client.dto';
+import { RequestRefundDto } from '../../dtos/client/account-refund.dto';
 
 /** Flow tài khoản: xem vé / hóa đơn / đặt chỗ (chỉ đọc) */
 @ApiTags('Client - Account')
@@ -88,5 +93,17 @@ export class ClientAccountController {
     @Query('customerId') customerId?: string,
   ) {
     return this.accountService.getMyBooking(user, id, customerId);
+  }
+
+  @Post('bookings/:id/refund')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.USER, UserRole.ADMIN, UserRole.OWNER)
+  @ApiOperation({ summary: 'Yêu cầu hoàn tiền cho đặt chỗ' })
+  requestRefund(
+    @User() user: UserDecoratorDtoResponse,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: RequestRefundDto,
+  ) {
+    return this.accountService.requestRefund(user, id, body);
   }
 }

@@ -2,10 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TbChatConversation } from './chat-conversation.entity';
+import { TbBasicUser } from '../user/basic-user.entity';
 
 export enum ChatMemberRole {
   CUSTOMER = 'CUSTOMER',
@@ -15,85 +18,43 @@ export enum ChatMemberRole {
 }
 
 @Entity('tb_chat_conversation_member')
-@Index('uk_chat_member_unique', ['conversationId', 'userId'], { unique: true })
-@Index('idx_chat_member_user', ['userId'])
 export class TbChatConversationMember {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column({
-    type: 'int',
-    name: 'conversation_id',
-    comment: 'FK tb_chat_conversation.id',
-  })
+  @ManyToOne(() => TbChatConversation, (conversation) => conversation.members)
+  @JoinColumn({ name: 'conversation_id' })
+  conversation: TbChatConversation;
+
+  @ManyToOne(() => TbBasicUser)
+  @JoinColumn({ name: 'user_id' })
+  user: TbBasicUser;
+
+  @Column({ type: 'int', name: 'conversation_id' })
   conversationId: number;
 
-  @Column({
-    type: 'int',
-    name: 'user_id',
-    comment: 'User id tham gia cuộc trò chuyện',
-  })
+  @Column({ type: 'int', name: 'user_id' })
   userId: number;
 
-  @Column({
-    type: 'enum',
-    enum: ChatMemberRole,
-    name: 'role_in_conversation',
-    comment: 'Vai trò trong cuộc trò chuyện',
-  })
+  @Column({ type: 'enum', enum: ChatMemberRole, name: 'role_in_conversation' })
   roleInConversation: ChatMemberRole;
 
-  @Column({
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-    name: 'nickname',
-    comment: 'Biệt danh do phía đối diện đặt',
-  })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   nickname: string | null;
 
-  @Column({
-    type: 'boolean',
-    default: false,
-    name: 'is_pinned',
-    comment: 'Ghim cuộc trò chuyện',
-  })
+  @Column({ type: 'boolean', default: false, name: 'is_pinned' })
   isPinned: boolean;
 
-  @Column({
-    type: 'boolean',
-    default: false,
-    name: 'is_muted',
-    comment: 'Tắt thông báo',
-  })
+  @Column({ type: 'boolean', default: false, name: 'is_muted' })
   isMuted: boolean;
 
-  @Column({
-    type: 'datetime',
-    nullable: true,
-    name: 'muted_until',
-    comment: 'Mute tới thời điểm (null = tắt vĩnh viễn)',
-  })
+  @Column({ type: 'datetime', nullable: true, name: 'muted_until' })
   mutedUntil: Date | null;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    name: 'unread_count',
-    comment: 'Số tin nhắn chưa đọc của user này',
-  })
+  @Column({ type: 'int', default: 0, name: 'unread_count' })
   unreadCount: number;
 
-  @Column({
-    type: 'datetime',
-    nullable: true,
-    name: 'last_read_at',
-    comment: 'Lần cuối user này đọc cuộc trò chuyện',
-  })
+  @Column({ type: 'datetime', nullable: true, name: 'last_read_at' })
   lastReadAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })

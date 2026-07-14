@@ -17,6 +17,7 @@ import {
 import { SalesErrorMessage } from '../../assets/messages/sales.message';
 import { CompanyErrorMessage } from '../../assets/messages/company.message';
 import { TicketStatus } from '../../assets/constants/ticket.constants';
+import { BookingErrorMessage } from '../../assets/messages/booking.message';
 import { generateEntityCode } from '../../common/helpers/common.helper';
 import { CreateRefundDto } from '../../dtos/sales/sales.dto';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
@@ -82,6 +83,59 @@ export class RefundService {
     const refund = await this.getRefundOrThrow(id);
     await this.companyAccess.assertCompanyAccess(user, refund.companyId);
     return refund;
+  }
+
+  async processRefund(
+    user: UserDecoratorDtoResponse,
+    refundId: number,
+    action: 'approve' | 'reject',
+    notes?: string,
+  ) {
+    const refund = await this.getRefundOrThrow(refundId);
+    await this.companyAccess.assertCompanyAccess(user, refund.companyId);
+
+    if (refund.status !== RefundStatus.PENDING) {
+      throw new HttpException(
+        SalesErrorMessage.REFUND_NOT_PENDING,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (action === 'reject') {
+      await this.refundRepository.update(refundId, {
+        status: RefundStatus.REJECTED,
+        reason: notes ?? refund.reason,
+      });
+
+      await this.ticketRepository.update(refund.ticketId, {
+        status: TicketStatus.PAID,
+      });
+
+      return this.refundRepository.findById(refundId);
+    }
+
+    const ticket = await this.ticketRepository.findById(refund.ticketId);
+    if (!ticket) {
+      throw new NotFoundException(CompanyErrorMessage.TICKET_NOT_FOUND);
+    }
+
+    const trip = await this.tripRepository.findById(ticket.tripId);
+
+    await this.refundRepository.update(refundId, {
+      status: RefundStatus.SUCCESS,
+      refundedAt: new Date(),
+      reason: notes ?? refund.reason,
+    });
+
+    await this.ticketRepository.update(ticket.id, {
+      status: TicketStatus.CANCELLED,
+    });
+
+    if (trip) {
+      await this.tripRepository.decrementBookedSeats(ticket.tripId, ticket.totalSeat);
+    }
+
+    return this.refundRepository.findById(refundId);
   }
 
   async confirm(user: UserDecoratorDtoResponse, id: number) {

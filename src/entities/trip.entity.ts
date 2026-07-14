@@ -1,101 +1,93 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { TbCompany } from './company/company.entity';
+import { TbDriver } from './driver.entity';
+import { TbRoad } from './road.entity';
+import { TbVehicle } from './vehicle.entity';
+import { TbBooking } from './sales/booking.entity';
+import { TbPayment } from './sales/payment.entity';
+import { TbRefund } from './sales/refund.entity';
+import { TbTripStat } from './sales/trip-stat.entity';
+import { TbTicket } from './ticket.entity';
 
 @Entity('tb_trip')
 export class TbTrip {
-  @PrimaryGeneratedColumn('increment', {
-    comment: 'Primary key',
-    type: 'int',
-    name: 'id',
-  })
+  @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @Column('varchar', {
-    length: 24,
-    unique: true,
-    comment: 'Mã chuyến',
-  })
+  @ManyToOne(() => TbCompany, (company) => company.trips)
+  @JoinColumn({ name: 'company_id', referencedColumnName: 'id' })
+  company: TbCompany;
+
+  @ManyToOne(() => TbRoad, (road) => road.trips)
+  @JoinColumn({ name: 'road_id', referencedColumnName: 'id' })
+  road: TbRoad;
+
+  @ManyToOne(() => TbDriver, (driver) => driver.trips)
+  @JoinColumn({ name: 'driver_id', referencedColumnName: 'id' })
+  driver: TbDriver;
+
+  @ManyToOne(() => TbVehicle, (vehicle) => vehicle.trips)
+  @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
+  vehicle: TbVehicle;
+
+  @OneToMany(() => TbBooking, (booking) => booking.trip)
+  bookings: TbBooking[];
+
+  @OneToMany(() => TbTicket, (ticket) => ticket.trip)
+  tickets: TbTicket[];
+
+  @OneToMany(() => TbPayment, (payment) => payment.trip)
+  payments: TbPayment[];
+
+  @OneToMany(() => TbRefund, (refund) => refund.trip)
+  refunds: TbRefund[];
+
+  @OneToMany(() => TbTripStat, (stat) => stat.trip)
+  tripStats: TbTripStat[];
+
+  @Column('varchar', { length: 24, unique: true })
   code: string;
 
-  @Column({
-    type: 'varchar',
-    length: 255,
-    comment: 'Tên chuyến',
-  })
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({
-    type: 'int',
-    comment: 'ID tuyến đường (tb_road)',
-  })
+  @Column({ type: 'int' })
   roadId: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID công ty (tb_company)',
-  })
+  @Column({ type: 'int' })
   companyId: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID tài xế (tb_driver)',
-  })
+  @Column({ type: 'int' })
   driverId: number;
 
-  @Column({
-    type: 'int',
-    comment: 'ID xe (tb_vehicle)',
-  })
+  @Column({ type: 'int' })
   vehicleId: number;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Trạng thái chuyến',
-  })
+  @Column({ type: 'varchar', length: 50 })
   status: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    default: 'SCHEDULED',
-    comment: 'Trạng thái vận hành chuyến (SCHEDULED, PREPARING, BOARDING, DEPARTED, APPROACHING, MOVING, ARRIVED, COMPLETED, CANCELLED, DELAYED)',
-  })
+  @Column({ type: 'varchar', length: 50, default: 'SCHEDULED' })
   operationStatus: string;
 
-  @Column({
-    type: 'text',
-    nullable: true,
-    comment: 'Mô tả / ghi chú chuyến',
-  })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    default: '',
-    comment: 'Giờ / thời điểm khởi hành chuyến',
-  })
+  @Column({ type: 'varchar', length: 50, default: '' })
   departure: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    default: '',
-    comment: 'Giờ / thời điểm đến chuyến',
-  })
+  @Column({ type: 'varchar', length: 50, default: '' })
   arrival: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    comment: 'Giá vé/chỗ ngồi(vnđ)',
-  })
+  @Column({ type: 'varchar', length: 50 })
   seatPrice: string;
 
-  @Column({
-    type: 'int',
-    default: 0,
-    comment: 'Tổng số ghế đã đặt',
-  })
+  @Column({ type: 'int', default: 0 })
   bookedSeats: number;
 }

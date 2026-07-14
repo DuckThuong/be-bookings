@@ -59,6 +59,16 @@ export class RefundController {
     return this.refundService.findOne(user, id);
   }
 
+  @Patch(':id/process')
+  @ApiOperation({ summary: 'Xử lý hoàn tiền (duyệt hoặc từ chối)' })
+  processRefund(
+    @User() user: UserDecoratorDtoResponse,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { action: 'approve' | 'reject'; notes?: string },
+  ) {
+    return this.refundService.processRefund(user, id, body.action, body.notes);
+  }
+
   @Patch(':id/confirm')
   @ApiOperation({ summary: 'Xác nhận hoàn tiền' })
   confirm(

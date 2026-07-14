@@ -1,7 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DriverService } from '../driver.service';
 import { CommonErrorMessage } from '../../assets/messages/common.message';
-import { CmsDriverSuccessMessage } from '../../assets/messages/cms-driver.message';
+import {
+  CmsDriverSuccessMessage,
+  CmsDriverValidationMessage,
+} from '../../assets/messages/cms-driver.message';
 import {
   CreateDriverPayloadDto,
   UpdateDriverPayloadDto,
@@ -10,14 +13,21 @@ import {
   CmsDriverEntityDto,
   CmsDriverListResponseDto,
 } from '../../dtos/CMS/CMS_driver.dto';
-import { CODE_PREFIX } from '../../assets/constants/company.constants';
+import {
+  CODE_PREFIX,
+  MasterDataType,
+} from '../../assets/constants/company.constants';
 import { generateEntityCode } from '../../common/helpers/common.helper';
 import { TbDriver } from '../../entities/driver.entity';
 import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
+import { MasterDataService } from '../master-data.service';
 
 @Injectable()
 export class CMSDriverService {
-  constructor(private readonly driverService: DriverService) {}
+  constructor(
+    private readonly driverService: DriverService,
+    private readonly masterDataService: MasterDataService,
+  ) {}
 
   async getDriverById(
     user: UserDecoratorDtoResponse,
@@ -39,6 +49,8 @@ export class CMSDriverService {
     user: UserDecoratorDtoResponse,
   ): Promise<DriverResponseDto> {
     try {
+      await this.validateDriverStatus(payload.status);
+
       const driver = await this.driverService.create(user, {
         companyId: payload.companyId,
         code: payload.code?.trim() || generateEntityCode(CODE_PREFIX.DRIVER),
@@ -74,6 +86,8 @@ export class CMSDriverService {
     user: UserDecoratorDtoResponse,
   ): Promise<DriverResponseDto> {
     try {
+      await this.validateDriverStatus(payload.status);
+
       const driver = await this.driverService.update(user, payload.id, {
         name: payload.name.trim(),
         license: payload.license.trim(),
@@ -106,11 +120,33 @@ export class CMSDriverService {
     }
   }
 
+  private async validateDriverStatus(status: string): Promise<void> {
+    const driverStatuses = await this.masterDataService.getByTypes([
+      MasterDataType.DRIVER_STATUS,
+    ]);
+    const validStatuses = driverStatuses[MasterDataType.DRIVER_STATUS] ?? [];
+    const validCodes = validStatuses.map((s) => s.code);
+    console.log(validCodes, status);
+    if (!validCodes.includes(status)) {
+      const validNames = validStatuses.map((s) => s.name).join(', ');
+      throw new HttpException(
+        {
+          message: [
+            `Trạng thái tài xế không hợp lệ. Vui lòng chọn: ${validNames}`,
+          ],
+          error: 'Bad Request',
+          statusCode: 400,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   private toResponse(driver: TbDriver): CmsDriverEntityDto {
     return {
       id: driver.id,
       code: driver.code,
-      companyId: driver.companyId,
+      companyId: driver.company.id,
       name: driver.name,
       license: driver.license,
       licenseNum: driver.licenseNum,

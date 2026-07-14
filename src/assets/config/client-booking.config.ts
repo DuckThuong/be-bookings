@@ -29,7 +29,7 @@ export const CLIENT_BOOKING_ENUMS = {
   seatStatus: ['available', 'booked', 'vip'] as const,
   vehicleType: ['16', '36', '45'] as const,
   promoType: ['fixed', 'percent'] as const,
-  paymentMethodId: ['card', 'ewallet', 'bank', 'cash'] as const,
+  paymentMethodId: ['payos', 'cash'] as const,
   notifColor: ['green', 'amber', 'blue'] as const,
 };
 
@@ -251,9 +251,7 @@ export const CLIENT_BOOKING_CATALOG = {
     { icon: 'shield-check', label: 'Bảo hiểm' },
   ] as ClientCatalogOperatorAmenity[],
   paymentMethods: [
-    { id: 'card', name: 'Thẻ tín dụng / ghi nợ' },
-    { id: 'ewallet', name: 'Ví điện tử' },
-    { id: 'bank', name: 'Chuyển khoản ngân hàng' },
+    { id: 'payos', name: 'PayOS (VietQR)' },
     { id: 'cash', name: 'Tiền mặt' },
   ],
   pickupPoints: [
@@ -269,8 +267,6 @@ export const CLIENT_BOOKING_CATALOG = {
 };
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  card: 'Thẻ tín dụng / ghi nợ',
-  ewallet: 'Ví điện tử',
-  bank: 'Chuyển khoản ngân hàng',
+  payos: 'PayOS (VietQR)',
   cash: 'Tiền mặt',
 };

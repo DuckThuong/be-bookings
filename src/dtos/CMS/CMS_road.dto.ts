@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -13,12 +12,6 @@ import {
 } from 'class-validator';
 import { EntityStatus } from '../../assets/constants/company.constants';
 import { CmsRoadValidationMessage } from '../../assets/messages/cms-road.message';
-
-const CMS_ROAD_STATUS_VALUES = [
-  EntityStatus.ACTIVE,
-  EntityStatus.INACTIVE,
-  ,
-] as const;
 
 export class CmsRoadFormPayloadDto {
   @ApiPropertyOptional({ example: 1 })
@@ -49,9 +42,6 @@ export class CmsRoadFormPayloadDto {
   @ApiProperty({ example: EntityStatus.ACTIVE, enum: EntityStatus })
   @IsNotEmpty({ message: CmsRoadValidationMessage.ROAD_STATUS_EMPTY })
   @IsString({ message: CmsRoadValidationMessage.ROAD_STATUS_INVALID })
-  @IsIn(CMS_ROAD_STATUS_VALUES, {
-    message: CmsRoadValidationMessage.ROAD_STATUS_NOT_IN,
-  })
   status: string;
 
   @ApiProperty({ example: 'BigC Thăng Long' })

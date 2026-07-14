@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TbVehicle } from '../entities/vehicle.entity';
-import { EntityStatus } from '../assets/constants/company.constants';
 
 @Injectable()
 export class VehicleRepository {
@@ -19,7 +18,6 @@ export class VehicleRepository {
     return this.repo.find({
       where: {
         companyId,
-        status: EntityStatus.ACTIVE || EntityStatus.INACTIVE,
       },
       order: { id: 'DESC' },
     });
@@ -38,8 +36,9 @@ export class VehicleRepository {
   }
 
   countActiveByCompany(companyId: number) {
+    // Count vehicles with status 'READY' from master data (Sẵn sàng)
     return this.repo.count({
-      where: { companyId, status: EntityStatus.ACTIVE },
+      where: { companyId, status: 'READY' },
     });
   }
 

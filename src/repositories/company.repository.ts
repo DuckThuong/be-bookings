@@ -19,7 +19,9 @@ export class CompanyRepository {
   }
 
   findCompaniesByUserLead(userLeadId: string) {
-    return this.companyRepo.find({ where: { userLeadId } });
+    return this.companyRepo.find({
+      where: { userLead: { id: Number(userLeadId) } },
+    });
   }
 
   findAllCompanies() {
@@ -31,6 +33,6 @@ export class CompanyRepository {
   }
 
   updateCompany(id: number, data: Partial<TbCompany>) {
-    return this.companyRepo.update({ id }, data);
+    return this.companyRepo.update({ id }, data as object);
   }
 }

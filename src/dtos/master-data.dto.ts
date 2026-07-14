@@ -23,6 +23,26 @@ export class MasterDataDtoPayload {
   code?: string;
 }
 
+export class MasterDataItemDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'DRIVER_STATUS' })
+  type: string;
+
+  @ApiProperty({ example: 'available' })
+  code: string;
+
+  @ApiProperty({ example: 'Sẵn sàng' })
+  name: string;
+
+  @ApiProperty({ example: '#22c55e', required: false })
+  rule?: string;
+
+  @ApiProperty({ example: 1 })
+  sort: number;
+}
+
 export class MasterDataDtoResponse {
   @ApiProperty({
     example: 'id',
@@ -71,4 +91,43 @@ export class MasterDataDtoResponse {
     type: String,
   })
   code: string;
+}
+
+// Response for all statuses endpoint
+export class MasterDataAllResponseDto {
+  @ApiProperty({ type: [MasterDataItemDto] })
+  driverStatuses: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  driverLicenses: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  vehicleStatuses: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  vehicleTypes: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  routeStatuses: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  customerStatuses: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  customerTiers: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  reportStatuses: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  reportTypes: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  seatTypes: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  registrationStatuses: MasterDataItemDto[];
+
+  @ApiProperty({ type: [MasterDataItemDto] })
+  bookingStatuses: MasterDataItemDto[];
 }

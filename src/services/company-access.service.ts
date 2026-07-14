@@ -48,10 +48,7 @@ export class CompanyAccessService {
       return company;
     }
 
-    if (
-      user.role === UserRole.OWNER &&
-      company.userLeadId === user.id.toString()
-    ) {
+    if (user.role === UserRole.OWNER && company.userLeadId === user.id) {
       return company;
     }
 
@@ -159,7 +156,7 @@ export class CompanyAccessService {
     if (!driver) {
       throw new NotFoundException(CompanyErrorMessage.DRIVER_NOT_FOUND);
     }
-    if (driver.companyId !== companyId) {
+    if (driver.company.id !== companyId) {
       throw new NotFoundException(
         CompanyErrorMessage.DRIVER_NOT_BELONG_COMPANY,
       );
@@ -237,7 +234,7 @@ export class CompanyAccessService {
     if (!driver) {
       throw new BadRequestException(CmsTripValidationMessage.DRIVER_NOT_FOUND);
     }
-    if (driver.companyId !== companyId) {
+    if (driver.company.id !== companyId) {
       throw new BadRequestException(
         CmsTripValidationMessage.DRIVER_NOT_BELONG_COMPANY,
       );

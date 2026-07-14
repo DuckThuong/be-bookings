@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsEmail,
-  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -11,8 +10,8 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { EntityStatus } from '../../assets/constants/company.constants';
 import { CmsDriverValidationMessage } from '../../assets/messages/cms-driver.message';
+import { DriverStatus } from '../../assets/constants/company.constants';
 
 export class CmsDriverFormPayloadDto {
   @ApiPropertyOptional({ example: 1 })
@@ -60,12 +59,9 @@ export class CmsDriverFormPayloadDto {
   @MaxLength(100, { message: CmsDriverValidationMessage.EMAIL_TOO_LONG })
   email: string;
 
-  @ApiProperty({ example: EntityStatus.ACTIVE, enum: EntityStatus })
+  @ApiProperty({ example: DriverStatus.AVAILABLE, enum: DriverStatus })
   @IsNotEmpty({ message: CmsDriverValidationMessage.DRIVER_STATUS_EMPTY })
   @IsString({ message: CmsDriverValidationMessage.DRIVER_STATUS_INVALID })
-  @IsIn([EntityStatus.ACTIVE, EntityStatus.INACTIVE], {
-    message: CmsDriverValidationMessage.DRIVER_STATUS_NOT_IN,
-  })
   status: string;
 
   @ApiPropertyOptional()
@@ -123,7 +119,7 @@ export class CmsDriverEntityDto {
   @ApiProperty({ example: 'driver@example.com' })
   email: string;
 
-  @ApiProperty({ example: EntityStatus.ACTIVE })
+  @ApiProperty({ example: DriverStatus.AVAILABLE })
   status: string;
 
   @ApiPropertyOptional()
