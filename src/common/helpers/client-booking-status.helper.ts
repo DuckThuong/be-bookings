@@ -1,11 +1,12 @@
-import { TbBooking } from '../../entities/sales/booking.entity';
-import { TbPayment } from '../../entities/sales/payment.entity';
-import { TbTicket } from '../../entities/ticket.entity';
 import {
   BookingStatus,
   PaymentStatus,
 } from '../../assets/constants/sales.constants';
 import { TicketStatus } from '../../assets/constants/ticket.constants';
+import { TbBooking } from '../../entities/sales/booking.entity';
+import { TbPayment } from '../../entities/sales/payment.entity';
+import { TbTicket } from '../../entities/ticket.entity';
+import { formatDDMMYYYYHHmm } from '../formator/price.format';
 
 export type ClientBookingDisplayStatus =
   | 'HOLD'
@@ -66,4 +67,21 @@ export function pickRepresentativePayment(
     payments.find((p) => p.status === PaymentStatus.SUCCESS) ??
     payments[0]
   );
+}
+
+export function getTimeTicket(createdAt: Date): string {
+  const now = new Date();
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  const nowTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const createdTimeStr = `${pad(createdAt.getHours())}:${pad(createdAt.getMinutes())}:${pad(createdAt.getSeconds())}`;
+
+  if (nowTimeStr < createdTimeStr) {
+    return formatDDMMYYYYHHmm(createdAt);
+  } else {
+    const nextDay = new Date(createdAt);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return formatDDMMYYYYHHmm(nextDay);
+  }
 }

@@ -58,7 +58,7 @@ export class ClientTripsService {
     private readonly masterDataRepo: Repository<TbMasterData>,
     @InjectRepository(TbCompany)
     private readonly companyRepo: Repository<TbCompany>,
-  ) {}
+  ) { }
 
   async searchTrips(
     query: ClientSearchTripsQueryDto,
@@ -72,11 +72,17 @@ export class ClientTripsService {
     const seatType: ClientTripSeatType = query.seatType ?? 'all';
     const filters = this.normalizeFilters(query.filters);
     const date = query.date?.trim() || this.formatDate(new Date());
+    const hhmm = new Date().toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
     const sourceTrips = await this.tripRepository.searchActiveForClient({
       fromCity: query.fromCity,
       toCity: query.toCity,
       companyId: query.companyId,
+      time: date === this.formatDate(new Date()) ? hhmm : undefined,
     });
 
     let companyName: string | undefined;

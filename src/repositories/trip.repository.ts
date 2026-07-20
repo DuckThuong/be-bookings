@@ -20,7 +20,7 @@ export class TripRepository {
   constructor(
     @InjectRepository(TbTrip)
     private readonly repo: Repository<TbTrip>,
-  ) {}
+  ) { }
 
   findById(id: number) {
     return this.repo.findOne({ where: { id } });
@@ -88,17 +88,19 @@ export class TripRepository {
     fromCity?: string;
     toCity?: string;
     companyId?: number;
+    time?: string;
   }) {
     const qb = this.repo
       .createQueryBuilder('trip')
       .innerJoin('tb_road', 'road', 'road.id = trip.roadId')
-      .where('trip.status IN (:...tripStatuses)', {
+      .where('trip.operationStatus IN (:...tripStatuses)', {
         tripStatuses: ACTIVE_TRIP_STATUSES,
       })
       .andWhere('road.status = :roadStatus', { roadStatus: 'ACTIVE' });
 
     const fromCity = params.fromCity?.trim();
     const toCity = params.toCity?.trim();
+    const time = params.time?.trim();
 
     if (fromCity) {
       qb.andWhere('road.startPoint LIKE :fromCity', {
@@ -110,6 +112,10 @@ export class TripRepository {
       qb.andWhere('road.endPoint LIKE :toCity', {
         toCity: `%${toCity}%`,
       });
+    }
+
+    if (time) {
+      qb.andWhere('trip.departure >= :time', { time });
     }
 
     if (params.companyId !== undefined) {
