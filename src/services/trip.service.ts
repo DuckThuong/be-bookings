@@ -153,9 +153,9 @@ export class TripService {
     if (road.status !== EntityStatus.ACTIVE) {
       throw new BadRequestException(CmsTripValidationMessage.ROAD_INACTIVE);
     }
-    if (vehicle.status !== EntityStatus.ACTIVE) {
-      throw new BadRequestException(CmsTripValidationMessage.VEHICLE_INACTIVE);
-    }
+    // if (vehicle.status !== EntityStatus.ACTIVE) {
+    //   throw new BadRequestException(CmsTripValidationMessage.VEHICLE_INACTIVE);
+    // }
     if (driver.status !== EntityStatus.ACTIVE) {
       throw new BadRequestException(CmsTripValidationMessage.DRIVER_INACTIVE);
     }

@@ -135,8 +135,6 @@ export class CMSRoadService {
       tripsPerDay: road.tripsPerDay ?? 0,
       averageOccupancy: Number(road.averageOccupancy ?? 0),
       estimatedRevenue: Number(road.estimatedRevenue ?? 0),
-      leadVehicle: road.leadVehicle,
-      demandLevel: road.demandLevel,
       note: road.note,
       totalTurn: road.totalTurn ?? 0,
     };
@@ -187,10 +185,14 @@ export class CMSRoadService {
     };
   }
 
-  private async validateEntityStatus(status: string | undefined): Promise<void> {
+  private async validateEntityStatus(
+    status: string | undefined,
+  ): Promise<void> {
     if (!status) return;
-    
-    const statuses = await this.masterDataService.getByTypes([MasterDataType.ROUTE_STATUS]);
+
+    const statuses = await this.masterDataService.getByTypes([
+      MasterDataType.ROUTE_STATUS,
+    ]);
     const validStatuses = statuses[MasterDataType.ROUTE_STATUS] ?? [];
     const validCodes = validStatuses.map((s) => s.code);
 

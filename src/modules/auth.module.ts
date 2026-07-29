@@ -38,4 +38,4 @@ import { TbInfoUser } from '../entities/user/info-user.entity';
   controllers: [AuthController],
   exports: [AuthService, JwtModule, AuthRepository, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule { }

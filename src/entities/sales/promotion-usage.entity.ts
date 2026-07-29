@@ -16,15 +16,12 @@ export class TbPromotionUsage {
   id: number;
 
   @ManyToOne(() => TbTicket, (ticket) => ticket.promotionUsages)
-  @JoinColumn({ name: 'ticket_id' })
   ticket: TbTicket;
 
   @ManyToOne(() => TbBooking, (booking) => booking.promotionUsages)
-  @JoinColumn({ name: 'booking_id' })
   booking: TbBooking;
 
   @ManyToOne(() => TbCompany, (company) => company.promotionUsages)
-  @JoinColumn({ name: 'company_id' })
   company: TbCompany;
 
   @Column({ type: 'int', nullable: true })

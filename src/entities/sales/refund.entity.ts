@@ -18,19 +18,15 @@ export class TbRefund {
   id: number;
 
   @ManyToOne(() => TbPayment, (payment) => payment.refunds)
-  @JoinColumn({ name: 'payment_id' })
   payment: TbPayment;
 
   @ManyToOne(() => TbTicket, (ticket) => ticket.refunds)
-  @JoinColumn({ name: 'ticket_id' })
   ticket: TbTicket;
 
   @ManyToOne(() => TbTrip, (trip) => trip.refunds)
-  @JoinColumn({ name: 'trip_id' })
   trip: TbTrip;
 
   @ManyToOne(() => TbCompany, (company) => company.refunds)
-  @JoinColumn({ name: 'company_id' })
   company: TbCompany;
 
   @Column('varchar', { length: 24, unique: true })

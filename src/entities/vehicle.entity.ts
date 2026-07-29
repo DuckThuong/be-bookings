@@ -17,7 +17,6 @@ export class TbVehicle {
   id: number;
 
   @ManyToOne(() => TbCompany, (company) => company.vehicles)
-  @JoinColumn({ name: 'company_id', referencedColumnName: 'id' })
   company: TbCompany;
 
   @Column({ type: 'int' })

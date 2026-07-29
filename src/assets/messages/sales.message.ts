@@ -1,5 +1,5 @@
 export class SalesErrorMessage {
-  static readonly BOOKING_NOT_FOUND = 'Không tìm thấy đặt chỗ';
+  static readonly BOOKING_NOT_FOUND = 'Không tìm thấy ghế đã đặt';
   static readonly PAYMENT_NOT_FOUND = 'Không tìm thấy thanh toán';
   static readonly REFUND_NOT_FOUND = 'Không tìm thấy hoàn tiền';
   static readonly COMMISSION_NOT_FOUND = 'Không tìm thấy hoa hồng';
@@ -7,9 +7,9 @@ export class SalesErrorMessage {
   static readonly STAT_NOT_FOUND = 'Không tìm thấy thống kê';
   static readonly PROMOTION_USAGE_NOT_FOUND =
     'Không tìm thấy lịch sử khuyến mãi';
-  static readonly BOOKING_EXPIRED = 'Đặt chỗ đã hết hạn';
-  static readonly BOOKING_NOT_HOLD = 'Đặt chỗ không ở trạng thái giữ chỗ';
-  static readonly BOOKING_ALREADY_CONVERTED = 'Đặt chỗ đã chuyển thành vé';
+  static readonly BOOKING_EXPIRED = 'Đã hết hạn giữ ghế';
+  static readonly BOOKING_NOT_HOLD = 'Trạng thái giữ ghế không tồn tại.';
+  static readonly BOOKING_ALREADY_CONVERTED = 'Ghế đã được đặt thành công trước đó.';
   static readonly PAYMENT_NOT_PENDING = 'Thanh toán không ở trạng thái chờ';
   static readonly PAYMENT_ALREADY_SUCCESS = 'Thanh toán đã thành công';
   static readonly REFUND_NOT_PENDING = 'Hoàn tiền không ở trạng thái chờ';

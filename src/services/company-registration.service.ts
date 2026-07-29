@@ -115,7 +115,6 @@ export class CompanyRegistrationService {
     if (registration.status !== RegistrationStatus.PENDING) {
       throw new BadRequestException('Yêu cầu này đã được xử lý');
     }
-
     const existingCompany =
       await this.companyRepository.findCompaniesByUserLead(
         registration.userId.toString(),

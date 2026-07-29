@@ -72,11 +72,17 @@ export class ClientTripsService {
     const seatType: ClientTripSeatType = query.seatType ?? 'all';
     const filters = this.normalizeFilters(query.filters);
     const date = query.date?.trim() || this.formatDate(new Date());
+    const hhmm = new Date().toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
 
     const sourceTrips = await this.tripRepository.searchActiveForClient({
       fromCity: query.fromCity,
       toCity: query.toCity,
       companyId: query.companyId,
+      time: date === this.formatDate(new Date()) ? hhmm : undefined,
     });
 
     let companyName: string | undefined;
@@ -260,7 +266,7 @@ export class ClientTripsService {
 
     return {
       id: String(row.id),
-      featured: this.isFeatured(road, seatsLeft, rating),
+      featured: true,
       operator: {
         code: company.code.slice(0, 2).toUpperCase(),
         logoColor:
@@ -399,16 +405,6 @@ export class ClientTripsService {
     }
 
     return badges;
-  }
-
-  private isFeatured(road: TbRoad, seatsLeft: number, rating: number): boolean {
-    if (road.demandLevel?.toUpperCase() === 'HIGH') {
-      return true;
-    }
-    if (Number(road.averageOccupancy) >= 80) {
-      return true;
-    }
-    return rating >= 4.8 && seatsLeft <= 6;
   }
 
   private pickLogoColor(companyId: number, companyCode: string): string {

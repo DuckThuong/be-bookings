@@ -75,7 +75,7 @@ export class ClientBookingsService {
     private readonly payOSService: PayOSService,
     @InjectRepository(TbInfoUser)
     private readonly infoUserRepo: Repository<TbInfoUser>,
-  ) {}
+  ) { }
 
   async getSeatSelectionPage(
     user: UserDecoratorDtoResponse,
@@ -405,7 +405,10 @@ export class ClientBookingsService {
     holdId: string,
     passenger: PassengerDto,
   ) {
-    const booking = await this.getHoldBooking(holdId);
+    const booking = await this.bookingRepository.findByCode(holdId);
+    if (!booking) {
+      throw new NotFoundException(ClientErrorMessage.HOLD_NOT_FOUND);
+    }
     await this.assertBookingOwner(user, booking);
     await this.bookingRepository.update(booking.id, { passenger });
     const updated = await this.bookingRepository.findById(booking.id);

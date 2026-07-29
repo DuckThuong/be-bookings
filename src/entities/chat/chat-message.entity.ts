@@ -32,11 +32,9 @@ export class TbChatMessage {
   id: number;
 
   @ManyToOne(() => TbChatConversation, (conversation) => conversation.messages)
-  @JoinColumn({ name: 'conversation_id' })
   conversation: TbChatConversation;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'sender_id' })
   sender: TbBasicUser;
 
   @OneToMany(() => TbChatMessageRecipient, (recipient) => recipient.message)
@@ -51,10 +49,18 @@ export class TbChatMessage {
   @Column({ type: 'int', name: 'sender_id' })
   senderId: number;
 
-  @Column({ type: 'enum', enum: ChatMessageType, default: ChatMessageType.TEXT })
+  @Column({
+    type: 'enum',
+    enum: ChatMessageType,
+    default: ChatMessageType.TEXT,
+  })
   type: ChatMessageType;
 
-  @Column({ type: 'enum', enum: ChatMessageStatus, default: ChatMessageStatus.SENT })
+  @Column({
+    type: 'enum',
+    enum: ChatMessageStatus,
+    default: ChatMessageStatus.SENT,
+  })
   status: ChatMessageStatus;
 
   @Column({ type: 'text', nullable: true })

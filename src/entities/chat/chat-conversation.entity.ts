@@ -39,15 +39,12 @@ export class TbChatConversation {
   id: number;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'member_a_user_id' })
   memberAUser: TbBasicUser;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'member_b_user_id' })
   memberBUser: TbBasicUser;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'assignee_user_id' })
   assigneeUser: TbBasicUser | null;
 
   @OneToMany(() => TbChatConversationMember, (member) => member.conversation)
@@ -56,13 +53,25 @@ export class TbChatConversation {
   @OneToMany(() => TbChatMessage, (message) => message.conversation)
   messages: TbChatMessage[];
 
-  @Column({ type: 'enum', enum: ChatConversationType, default: ChatConversationType.OPERATOR })
+  @Column({
+    type: 'enum',
+    enum: ChatConversationType,
+    default: ChatConversationType.OPERATOR,
+  })
   type: ChatConversationType;
 
-  @Column({ type: 'enum', enum: ChatConversationStatus, default: ChatConversationStatus.OPEN })
+  @Column({
+    type: 'enum',
+    enum: ChatConversationStatus,
+    default: ChatConversationStatus.OPEN,
+  })
   status: ChatConversationStatus;
 
-  @Column({ type: 'enum', enum: ChatConversationPriority, default: ChatConversationPriority.NORMAL })
+  @Column({
+    type: 'enum',
+    enum: ChatConversationPriority,
+    default: ChatConversationPriority.NORMAL,
+  })
   priority: ChatConversationPriority;
 
   @Column({ type: 'int', name: 'member_a_user_id' })
@@ -74,7 +83,12 @@ export class TbChatConversation {
   @Column({ type: 'int', nullable: true, name: 'assignee_user_id' })
   assigneeUserId: number | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true, name: 'related_booking_id' })
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    name: 'related_booking_id',
+  })
   relatedBookingId: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })

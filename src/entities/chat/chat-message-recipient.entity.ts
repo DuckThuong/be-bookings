@@ -16,15 +16,12 @@ export class TbChatMessageRecipient {
   id: number;
 
   @ManyToOne(() => TbChatMessage, (message) => message.recipients)
-  @JoinColumn({ name: 'message_id' })
   message: TbChatMessage;
 
   @ManyToOne(() => TbChatConversation)
-  @JoinColumn({ name: 'conversation_id' })
   conversation: TbChatConversation;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'user_id' })
   user: TbBasicUser;
 
   @Column({ type: 'int', name: 'message_id' })

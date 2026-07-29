@@ -15,7 +15,6 @@ export class TbRoad {
   id: number;
 
   @ManyToOne(() => TbCompany, (company) => company.roads)
-  @JoinColumn({ name: 'company_id', referencedColumnName: 'id' })
   company: TbCompany;
 
   @OneToMany(() => TbTrip, (trip) => trip.road)
@@ -62,12 +61,6 @@ export class TbRoad {
 
   @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
   estimatedRevenue: number;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  leadVehicle: string | null;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  demandLevel: string | null;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   note: string | null;
