@@ -55,8 +55,6 @@ export class RoadService {
         tripsPerDay: payload.tripsPerDay ?? 0,
         averageOccupancy: payload.averageOccupancy ?? 0,
         estimatedRevenue: payload.estimatedRevenue ?? 0,
-        leadVehicle: payload.leadVehicle ?? null,
-        demandLevel: payload.demandLevel ?? null,
         note: payload.note ?? null,
       });
     } catch (error) {
