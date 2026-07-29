@@ -10,12 +10,12 @@ export interface ServiceSeed {
 export const MASTER_DATA_TYPE_SERVICE = 'SERVICE';
 
 export const SERVICES: ServiceSeed[] = [
-  { id: 's1', icon: '🚌', label: 'Xe khách', desc: 'Liên tỉnh' },
+  { id: 's1', icon: '🚌', label: 'Xe khách giường nằm', desc: 'Liên tỉnh' },
   {
     id: 's2',
-    icon: '🛵',
-    label: 'Xe máy',
-    desc: 'Nội thành',
+    icon: '🚌',
+    label: 'Xe khách 45 chỗ',
+    desc: 'Liên tỉnh',
     tag: 'Hot',
     tagColor: 'red',
   },
@@ -28,15 +28,5 @@ export const SERVICES: ServiceSeed[] = [
     tag: 'Mới',
     tagColor: 'green',
   },
-  { id: 's5', icon: '🚂', label: 'Tàu hoả', desc: 'Liên tỉnh' },
-  {
-    id: 's6',
-    icon: '✈️',
-    label: 'Vé máy bay',
-    desc: 'Nội địa',
-    tag: 'Sale',
-    tagColor: 'amber',
-  },
-  { id: 's7', icon: '🏨', label: 'Khách sạn', desc: 'Combo tiết kiệm' },
-  { id: 's8', icon: '🗺️', label: 'Tour du lịch', desc: 'Khám phá' },
+  { id: 's5', icon: '🚐', label: 'Xe limousine', desc: 'Liên tỉnh' },
 ];
