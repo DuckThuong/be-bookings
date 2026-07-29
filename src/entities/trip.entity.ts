@@ -22,19 +22,15 @@ export class TbTrip {
   id: number;
 
   @ManyToOne(() => TbCompany, (company) => company.trips)
-  @JoinColumn({ name: 'company_id', referencedColumnName: 'id' })
   company: TbCompany;
 
   @ManyToOne(() => TbRoad, (road) => road.trips)
-  @JoinColumn({ name: 'road_id', referencedColumnName: 'id' })
   road: TbRoad;
 
   @ManyToOne(() => TbDriver, (driver) => driver.trips)
-  @JoinColumn({ name: 'driver_id', referencedColumnName: 'id' })
   driver: TbDriver;
 
   @ManyToOne(() => TbVehicle, (vehicle) => vehicle.trips)
-  @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
   vehicle: TbVehicle;
 
   @OneToMany(() => TbBooking, (booking) => booking.trip)

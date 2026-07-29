@@ -29,7 +29,6 @@ export class TbCompany {
   id: number;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'user_lead_id' })
   userLead: TbBasicUser;
 
   @Column({ name: 'user_lead_id', type: 'int' })

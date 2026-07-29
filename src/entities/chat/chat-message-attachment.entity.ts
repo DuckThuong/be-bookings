@@ -14,7 +14,6 @@ export class TbChatMessageAttachment {
   id: number;
 
   @ManyToOne(() => TbChatMessage, (message) => message.attachments)
-  @JoinColumn({ name: 'message_id' })
   message: TbChatMessage;
 
   @Column({ type: 'int', name: 'message_id' })

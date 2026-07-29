@@ -16,11 +16,9 @@ export class TbTripStat {
   id: number;
 
   @ManyToOne(() => TbTrip, (trip) => trip.tripStats)
-  @JoinColumn({ name: 'trip_id' })
   trip: TbTrip;
 
   @ManyToOne(() => TbCompany, (company) => company.tripStats)
-  @JoinColumn({ name: 'company_id' })
   company: TbCompany;
 
   @Column({ type: 'int' })

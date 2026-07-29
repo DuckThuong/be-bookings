@@ -19,11 +19,9 @@ export class TbBooking {
   id: number;
 
   @ManyToOne(() => TbTrip, (trip) => trip.bookings)
-  @JoinColumn({ name: 'trip_id' })
   trip: TbTrip;
 
   @ManyToOne(() => TbCompany, (company) => company.bookings)
-  @JoinColumn({ name: 'company_id' })
   company: TbCompany;
 
   @OneToMany(() => TbTicket, (ticket) => ticket.booking)
@@ -90,10 +88,22 @@ export class TbBooking {
     qty?: number;
   }[];
 
-  @Column({ name: 'service_fee', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'service_fee',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   serviceFee: number;
 
-  @Column({ name: 'addons_total', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'addons_total',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   addonsTotal: number;
 
   @Column({ name: 'vehicle_type', type: 'varchar', length: 10, nullable: true })
@@ -102,7 +112,12 @@ export class TbBooking {
   @Column({ type: 'int', nullable: true })
   floor: number;
 
-  @Column({ name: 'payment_method_id', type: 'varchar', length: 20, nullable: true })
+  @Column({
+    name: 'payment_method_id',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
   paymentMethodId: string;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -17,7 +17,6 @@ export class TbDriver {
   id: number;
 
   @ManyToOne(() => TbCompany, (company) => company.drivers)
-  @JoinColumn({ name: 'company_id', referencedColumnName: 'id' })
   company: TbCompany;
 
   @OneToMany(() => TbTrip, (trip) => trip.driver)

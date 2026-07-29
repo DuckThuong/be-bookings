@@ -21,7 +21,6 @@ export class TbCompanyRegistration {
   id: number;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'user_id' })
   user: TbBasicUser;
 
   @Column({ type: 'int' })
@@ -72,7 +71,11 @@ export class TbCompanyRegistration {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'enum', enum: RegistrationStatus, default: RegistrationStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: RegistrationStatus,
+    default: RegistrationStatus.PENDING,
+  })
   status: RegistrationStatus;
 
   @Column({ type: 'text', nullable: true })

@@ -20,15 +20,12 @@ export class TbPayment {
   id: number;
 
   @ManyToOne(() => TbTicket, (ticket) => ticket.payments)
-  @JoinColumn({ name: 'ticket_id' })
   ticket: TbTicket;
 
   @ManyToOne(() => TbTrip, (trip) => trip.payments)
-  @JoinColumn({ name: 'trip_id' })
   trip: TbTrip;
 
   @ManyToOne(() => TbCompany, (company) => company.payments)
-  @JoinColumn({ name: 'company_id' })
   company: TbCompany;
 
   @OneToMany(() => TbRefund, (refund) => refund.payment)

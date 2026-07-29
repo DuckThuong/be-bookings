@@ -15,7 +15,6 @@ export class TbSettlement {
   id: number;
 
   @ManyToOne(() => TbCompany, (company) => company.settlements)
-  @JoinColumn({ name: 'company_id' })
   company: TbCompany;
 
   @Column('varchar', { length: 24, unique: true })

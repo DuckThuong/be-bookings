@@ -16,11 +16,9 @@ export class TbCommission {
   id: number;
 
   @ManyToOne(() => TbPayment, (payment) => payment.commissions)
-  @JoinColumn({ name: 'payment_id' })
   payment: TbPayment;
 
   @ManyToOne(() => TbCompany, (company) => company.commissions)
-  @JoinColumn({ name: 'company_id' })
   company: TbCompany;
 
   @Column({ type: 'int' })

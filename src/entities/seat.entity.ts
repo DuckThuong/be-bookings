@@ -15,7 +15,6 @@ export class TbSeat {
   id: number;
 
   @ManyToOne(() => TbVehicle, (vehicle) => vehicle.seats)
-  @JoinColumn({ name: 'vehicle_id' })
   vehicle: TbVehicle;
 
   @Column({ name: 'vehicle_id', type: 'int' })

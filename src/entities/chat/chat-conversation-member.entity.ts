@@ -23,11 +23,9 @@ export class TbChatConversationMember {
   id: number;
 
   @ManyToOne(() => TbChatConversation, (conversation) => conversation.members)
-  @JoinColumn({ name: 'conversation_id' })
   conversation: TbChatConversation;
 
   @ManyToOne(() => TbBasicUser)
-  @JoinColumn({ name: 'user_id' })
   user: TbBasicUser;
 
   @Column({ type: 'int', name: 'conversation_id' })

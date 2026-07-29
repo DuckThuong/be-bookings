@@ -21,15 +21,12 @@ export class TbTicket {
   id: number;
 
   @ManyToOne(() => TbTrip, (trip) => trip.tickets)
-  @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
   trip: TbTrip;
 
   @ManyToOne(() => TbCompany, (company) => company.tickets)
-  @JoinColumn({ name: 'company_id', referencedColumnName: 'id' })
   company: TbCompany;
 
   @ManyToOne(() => TbBooking, (booking) => booking.tickets)
-  @JoinColumn({ name: 'booking_id', referencedColumnName: 'id' })
   booking: TbBooking;
 
   @OneToMany(() => TbPayment, (payment) => payment.ticket)
