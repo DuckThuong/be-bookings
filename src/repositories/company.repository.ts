@@ -20,7 +20,9 @@ export class CompanyRepository {
 
   findCompaniesByUserLead(userLeadId: string) {
     return this.companyRepo.find({
-      where: { userLead: { id: Number(userLeadId) } },
+      where: {
+        userLeadId: Number(userLeadId),
+      },
     });
   }
 
