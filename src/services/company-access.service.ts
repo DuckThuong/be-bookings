@@ -33,7 +33,7 @@ export class CompanyAccessService {
     private readonly vehicleRepository: VehicleRepository,
     private readonly driverRepository: DriverRepository,
     private readonly seatRepository: SeatRepository,
-  ) {}
+  ) { }
 
   async assertCompanyAccess(
     user: UserDecoratorDtoResponse,
@@ -89,14 +89,13 @@ export class CompanyAccessService {
   async resolveCompanyIdForUser(
     user: UserDecoratorDtoResponse,
   ): Promise<number> {
-    if (user.role === UserRole.ADMIN) {
+    if (Number(user.role) === Number(UserRole.ADMIN)) {
       throw new UnauthorizedException(CmsRoadValidationMessage.NO_PERMISSION);
     }
 
     const companies = await this.companyRepository.findCompaniesByUserLead(
       user.id.toString(),
     );
-    console.log('companies', companies);
     const active = companies.find((c) => c.status == EntityStatus.ACTIVE);
     if (!active) {
       throw new NotFoundException(CompanyErrorMessage.COMPANY_NOT_FOUND);

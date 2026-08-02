@@ -23,7 +23,7 @@ export class UserRepository {
 
     @InjectRepository(TbInfoUser)
     private readonly infoRepo: Repository<TbInfoUser>,
-  ) {}
+  ) { }
 
   public async findUserByUserCode(
     userCode: string,
@@ -46,7 +46,7 @@ export class UserRepository {
       return [];
     }
     const basicUsers = await this.repo.find({
-      where: { userCode: In(userCodes), role: UserRole.USER },
+      where: { userCode: In(userCodes), role: String(UserRole.USER) as any },
     });
     return this.loadMergedUsers(basicUsers);
   }

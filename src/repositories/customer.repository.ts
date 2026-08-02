@@ -7,6 +7,8 @@ import { TbPayment } from '../entities/sales/payment.entity';
 import { TbRefund } from '../entities/sales/refund.entity';
 import { PaymentStatus } from '../assets/constants/sales.constants';
 import { TicketStatus } from '../assets/constants/ticket.constants';
+import { UserRepository } from './user.repository';
+import { UserInformationResponseDto } from '../dtos/user/user.dto';
 
 export const CUSTOMER_RANKS = [
   { name: 'Bronze', threshold: 0 },
@@ -36,7 +38,8 @@ export class CustomerRepository {
     private readonly paymentRepo: Repository<TbPayment>,
     @InjectRepository(TbRefund)
     private readonly refundRepo: Repository<TbRefund>,
-  ) {}
+    private readonly userRepository: UserRepository,
+  ) { }
 
   async findDistinctCustomerIdsByCompany(companyId: number): Promise<string[]> {
     const ticketRows = await this.ticketRepo
@@ -57,6 +60,25 @@ export class CustomerRepository {
     return [...ids];
   }
 
+  public async getAllCustomer(): Promise<UserInformationResponseDto[]> {
+    const ticketRows = await this.ticketRepo
+      .createQueryBuilder('t')
+      .select('DISTINCT t.customerId', 'customerId')
+      .getRawMany<{ customerId: string }>();
+    const bookingRows = await this.bookingRepo
+      .createQueryBuilder('b')
+      .select('DISTINCT b.customerId', 'customerId')
+      .getRawMany<{ customerId: string }>();
+
+    const customerIds = [
+      ...new Set([
+        ...ticketRows.map(x => x.customerId),
+        ...bookingRows.map(x => x.customerId),
+      ]),
+    ];
+
+    return this.userRepository.findUsersByUserCodes(customerIds);
+  }
   async getActivityByCompany(
     companyId: number,
     customerId: string,
@@ -94,6 +116,63 @@ export class CustomerRepository {
     });
     const lastBooking = await this.bookingRepo.findOne({
       where: { companyId, customerId },
+      order: { createdAt: 'DESC' },
+    });
+
+    let lastActivityAt: Date | null = null;
+    if (lastTicket?.createdAt && lastBooking?.createdAt) {
+      lastActivityAt =
+        lastTicket.createdAt > lastBooking.createdAt
+          ? lastTicket.createdAt
+          : lastBooking.createdAt;
+    } else {
+      lastActivityAt = lastTicket?.createdAt ?? lastBooking?.createdAt ?? null;
+    }
+
+    return {
+      customerId,
+      ticketCount,
+      bookingCount,
+      totalPaid: Number(paidResult?.total ?? 0),
+      lastActivityAt,
+      pendingTicketCount,
+      refundCount,
+    };
+  }
+
+  async getActivityByCompanyAdmin(
+    customerId: string,
+  ): Promise<CustomerActivityRow> {
+    const ticketCount = await this.ticketRepo.count({
+      where: { customerId },
+    });
+    const bookingCount = await this.bookingRepo.count({
+      where: { customerId },
+    });
+    const pendingTicketCount = await this.ticketRepo.count({
+      where: {
+        customerId,
+        status: TicketStatus.PENDING,
+      },
+    });
+
+    const paidResult = await this.paymentRepo
+      .createQueryBuilder('p')
+      .select('COALESCE(SUM(p.amount), 0)', 'total')
+      .where('p.customerId = :customerId', { customerId })
+      .andWhere('p.status = :status', { status: PaymentStatus.SUCCESS })
+      .getRawOne<{ total: string }>();
+
+    const refundCount = await this.countRefundsForCustomerAdmin(
+      customerId,
+    );
+
+    const lastTicket = await this.ticketRepo.findOne({
+      where: { customerId },
+      order: { createdAt: 'DESC' },
+    });
+    const lastBooking = await this.bookingRepo.findOne({
+      where: { customerId },
       order: { createdAt: 'DESC' },
     });
 
@@ -204,6 +283,23 @@ export class CustomerRepository {
       where: {
         customerId,
         ...(companyId !== undefined && { companyId }),
+      },
+      select: ['id'],
+    });
+    if (tickets.length === 0) {
+      return 0;
+    }
+    return this.refundRepo.count({
+      where: { ticketId: In(tickets.map((t) => t.id)) },
+    });
+  }
+
+  private async countRefundsForCustomerAdmin(
+    customerId: string,
+  ) {
+    const tickets = await this.ticketRepo.find({
+      where: {
+        customerId,
       },
       select: ['id'],
     });

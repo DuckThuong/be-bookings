@@ -24,7 +24,7 @@ import { CMSCustomerService } from '../../services/CMS/CMS_customer.service';
 @Roles(UserRole.ADMIN, UserRole.OWNER)
 @ApiBearerAuth('JWT-auth')
 export class CMSCustomerController {
-  constructor(private readonly cmsCustomerService: CMSCustomerService) {}
+  constructor(private readonly cmsCustomerService: CMSCustomerService) { }
 
   @Get()
   @ApiOperation({ summary: 'Danh sách khách hàng của nhà xe (CMS)' })

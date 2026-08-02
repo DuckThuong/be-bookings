@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import {
@@ -14,7 +14,7 @@ import {
   CmsCustomerTier,
   CmsCustomerTripDto,
 } from '../../dtos/CMS/CMS_customer.dto';
-import { UserDecoratorDtoResponse } from '../../dtos/user/common.dto';
+import { UserDecoratorDtoResponse, UserRole } from '../../dtos/user/common.dto';
 import { UserInformationResponseDto } from '../../dtos/user/user.dto';
 import { TbBooking } from '../../entities/sales/booking.entity';
 import { TbPayment } from '../../entities/sales/payment.entity';
@@ -24,6 +24,7 @@ import { TbTrip } from '../../entities/trip.entity';
 import { CustomerRepository } from '../../repositories/customer.repository';
 import { UserRepository } from '../../repositories/user.repository';
 import { CompanyAccessService } from '../company-access.service';
+import { CmsRoadValidationMessage } from '../../assets/messages/cms-road.message';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -43,10 +44,20 @@ export class CMSCustomerService {
     private readonly tripRepo: Repository<TbTrip>,
     @InjectRepository(TbRoad)
     private readonly roadRepo: Repository<TbRoad>,
-  ) {}
+  ) { }
 
-  async list(
+  public async list(
     user: UserDecoratorDtoResponse,
+    query: CmsCustomerListQueryDto,
+  ): Promise<CmsCustomerListResponseDto> {
+    if (Number(user.role) === Number(UserRole.ADMIN)) {
+      return this.listAll(user, query);
+    } else {
+      return this.listCustomersForCompany(user, query);
+    }
+  }
+
+  public async listCustomersForCompany(user: UserDecoratorDtoResponse,
     query: CmsCustomerListQueryDto,
   ): Promise<CmsCustomerListResponseDto> {
     const companyId = await this.companyAccess.resolveCompanyIdForUser(user);
@@ -63,6 +74,32 @@ export class CMSCustomerService {
     const filtered = this.applyFilters(items, query);
     const summary = this.buildSummary(filtered);
 
+    return {
+      items: filtered,
+      total: filtered.length,
+      summary,
+    };
+  }
+
+  public async listAll(
+    user: UserDecoratorDtoResponse,
+    query: CmsCustomerListQueryDto,
+  ): Promise<CmsCustomerListResponseDto> {
+    if (Number(user.role) !== Number(UserRole.ADMIN)) {
+      throw new UnauthorizedException(CmsRoadValidationMessage.NO_PERMISSION);
+    }
+    const customer = await this.customerRepository.getAllCustomer();
+    const profiles =
+      await this.userRepository.findUsersByUserCodes(customer.map((c) => c.userCode));
+
+    const items = await Promise.all(
+      profiles.map((profile) => this.buildAdminCustomerItem(profile)),
+    );
+
+    console.log("items", items);
+
+    const filtered = this.applyFilters(items, query);
+    const summary = this.buildSummary(filtered);
     return {
       items: filtered,
       total: filtered.length,
@@ -127,6 +164,159 @@ export class CMSCustomerService {
       note: this.buildNote(tier, status, preferredRoute),
       recentTrips,
     };
+  }
+
+  private async buildAdminCustomerItem(
+    profile: UserInformationResponseDto,
+  ): Promise<CmsCustomerListItemDto> {
+    const activity = await this.customerRepository.getActivityByCompanyAdmin(
+      profile.userCode
+    );
+    const recentTrips = await this.loadAdminRecentTrips(profile.userCode);
+    const preferredRoute = await this.resolvePreferredRouteAdmin(
+      profile.userCode,
+      recentTrips,
+    );
+    const rank = this.getRankInfo(activity.totalPaid);
+    const tier = this.resolveTier(activity.bookingCount, activity.totalPaid);
+    const status = this.resolveStatus(activity.lastActivityAt);
+    const lastBooking = activity.lastActivityAt
+      ? this.formatDateTime(activity.lastActivityAt)
+      : '—';
+
+    return {
+      key: profile.userCode,
+      id: profile.userCode,
+      name: profile.userName || profile.userCode,
+      phone: profile.userPhone || '—',
+      email: profile.userEmail || '—',
+      tier,
+      rank,
+      bookingCount: activity.bookingCount,
+      totalSpent: activity.totalPaid,
+      lastBooking,
+      preferredRoute,
+      status,
+      note: this.buildNote(tier, status, preferredRoute),
+      recentTrips,
+    };
+  }
+
+  private async loadAdminRecentTrips(
+    customerId: string,
+    limit = 5,
+  ): Promise<CmsCustomerTripDto[]> {
+    const payments = await this.paymentRepo.find({
+      where: { customerId },
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+    if (payments.length === 0) {
+      return [];
+    }
+
+    const ticketIds = [
+      ...new Set(payments.map((p) => p.ticketId).filter(Boolean)),
+    ];
+    const tickets =
+      ticketIds.length > 0
+        ? await this.ticketRepo.find({ where: { id: In(ticketIds) } })
+        : [];
+    const ticketMap = new Map(tickets.map((t) => [t.id, t]));
+
+    const bookingIds = [
+      ...new Set(
+        tickets
+          .map((t) => t.bookingId)
+          .filter((id): id is number => id != null),
+      ),
+    ];
+    const bookings =
+      bookingIds.length > 0
+        ? await this.bookingRepo.find({ where: { id: In(bookingIds) } })
+        : [];
+    const bookingMap = new Map(bookings.map((b) => [b.id, b]));
+
+    const tripIds = [...new Set(tickets.map((t) => t.tripId))];
+    const trips =
+      tripIds.length > 0
+        ? await this.tripRepo.find({ where: { id: In(tripIds) } })
+        : [];
+    const tripMap = new Map(trips.map((t) => [t.id, t]));
+
+    const roadIds = [...new Set(trips.map((t) => t.roadId))];
+    const roads =
+      roadIds.length > 0
+        ? await this.roadRepo.find({ where: { id: In(roadIds) } })
+        : [];
+    const roadMap = new Map(roads.map((r) => [r.id, r]));
+
+    return payments.map((payment) => {
+      const ticket = ticketMap.get(payment.ticketId) ?? null;
+      const booking = ticket?.bookingId
+        ? (bookingMap.get(ticket.bookingId) ?? null)
+        : null;
+      const trip = ticket ? (tripMap.get(ticket.tripId) ?? null) : null;
+      const road = trip ? (roadMap.get(trip.roadId) ?? null) : null;
+      const route =
+        road?.startPoint && road?.endPoint
+          ? `${road.startPoint} → ${road.endPoint}`
+          : (trip?.name ?? '—');
+
+      return {
+        id: ticket?.code
+          ? `#${ticket.code}`
+          : booking?.code
+            ? `#${booking.code}`
+            : `#PAY-${payment.id}`,
+        route,
+        date: this.formatDate(payment.createdAt),
+        amount: Number(payment.amount),
+        status: this.resolveTripStatus(payment, ticket, booking),
+      };
+    });
+  }
+
+  private async resolvePreferredRouteAdmin(
+    customerId: string,
+    recentTrips: CmsCustomerTripDto[],
+  ): Promise<string> {
+    const tickets = await this.ticketRepo.find({
+      where: { customerId },
+      select: ['tripId'],
+    });
+    if (tickets.length === 0) {
+      return recentTrips[0]?.route ?? '—';
+    }
+
+    const tripIds = [...new Set(tickets.map((t) => t.tripId))];
+    const trips = await this.tripRepo.find({ where: { id: In(tripIds) } });
+    const roadIds = [...new Set(trips.map((t) => t.roadId))];
+    const roads =
+      roadIds.length > 0
+        ? await this.roadRepo.find({ where: { id: In(roadIds) } })
+        : [];
+    const roadMap = new Map(roads.map((r) => [r.id, r]));
+
+    const routeCounts = new Map<string, number>();
+    for (const trip of trips) {
+      const road = roadMap.get(trip.roadId);
+      const label =
+        road?.startPoint && road?.endPoint
+          ? `${road.startPoint} → ${road.endPoint}`
+          : (trip.name ?? '—');
+      routeCounts.set(label, (routeCounts.get(label) ?? 0) + 1);
+    }
+
+    let bestRoute = '—';
+    let bestCount = 0;
+    for (const [route, count] of routeCounts) {
+      if (count > bestCount) {
+        bestRoute = route;
+        bestCount = count;
+      }
+    }
+    return bestRoute;
   }
 
   private async loadRecentTrips(
