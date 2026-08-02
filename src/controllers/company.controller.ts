@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -20,6 +21,7 @@ import {
   CreateCompanyDto,
   UpdateCompanyDto,
 } from '../dtos/company/company.dto';
+import { CmsCompanyListQueryDto } from '../dtos/CMS/CMS_company.dto';
 
 @ApiTags('Company')
 @Controller('companies')
@@ -27,7 +29,7 @@ import {
 @Roles(UserRole.ADMIN, UserRole.OWNER)
 @ApiBearerAuth('JWT-auth')
 export class CompanyController {
-  constructor(private readonly companyService: CompanyService) {}
+  constructor(private readonly companyService: CompanyService) { }
 
   @Post()
   @ApiOperation({ summary: 'Đăng ký nhà xe' })
@@ -42,6 +44,15 @@ export class CompanyController {
   @ApiOperation({ summary: 'Danh sách nhà xe' })
   getCompanies(@User() user: UserDecoratorDtoResponse) {
     return this.companyService.getCompanies(user);
+  }
+
+  @Get('cms')
+  @ApiOperation({ summary: '[CMS] Danh sách nhà xe cho admin và userlead' })
+  getCmsCompanies(
+    @User() user: UserDecoratorDtoResponse,
+    @Query() query: CmsCompanyListQueryDto,
+  ) {
+    return this.companyService.getCmsCompanies(user, query);
   }
 
   @Get('my')

@@ -8,14 +8,20 @@ export class CompanyRepository {
   constructor(
     @InjectRepository(TbCompany)
     private readonly companyRepo: Repository<TbCompany>,
-  ) {}
+  ) { }
 
   findCompanyById(id: number) {
-    return this.companyRepo.findOne({ where: { id } });
+    return this.companyRepo.findOne({
+      where: { id },
+      relations: { userLead: true },
+    });
   }
 
   findCompanyByCode(code: string) {
-    return this.companyRepo.findOne({ where: { code } });
+    return this.companyRepo.findOne({
+      where: { code },
+      relations: { userLead: true },
+    });
   }
 
   findCompaniesByUserLead(userLeadId: string) {
@@ -23,11 +29,16 @@ export class CompanyRepository {
       where: {
         userLeadId: Number(userLeadId),
       },
+      relations: { userLead: true },
+      order: { id: 'DESC' },
     });
   }
 
   findAllCompanies() {
-    return this.companyRepo.find({ order: { id: 'DESC' } });
+    return this.companyRepo.find({
+      relations: { userLead: true },
+      order: { id: 'DESC' },
+    });
   }
 
   saveCompany(data: Partial<TbCompany>) {

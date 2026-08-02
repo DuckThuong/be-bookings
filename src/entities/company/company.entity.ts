@@ -28,7 +28,8 @@ export class TbCompany {
   @PrimaryGeneratedColumn('increment', { type: 'int', name: 'id' })
   id: number;
 
-  @ManyToOne(() => TbBasicUser)
+  @ManyToOne(() => TbBasicUser, { nullable: true })
+  @JoinColumn({ name: 'user_lead_id' })
   userLead: TbBasicUser;
 
   @Column({ name: 'user_lead_id', type: 'int' })

@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CmsCompanyListQueryDto, CmsCompanyListResponseDto } from '../dtos/CMS/CMS_company.dto';
 import { TbCompany } from '../entities/company/company.entity';
 import { CompanyRepository } from '../repositories/company.repository';
 import { RoadRepository } from '../repositories/road.repository';
@@ -39,7 +40,7 @@ export class CompanyService {
     private readonly driverRepository: DriverRepository,
     private readonly seatRepository: SeatRepository,
     private readonly companyAccess: CompanyAccessService,
-  ) {}
+  ) { }
 
   async createCompany(
     user: UserDecoratorDtoResponse,
@@ -82,6 +83,105 @@ export class CompanyService {
       return this.companyRepository.findCompaniesByUserLead(user.id.toString());
     }
     throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
+  }
+
+  async getCmsCompanies(
+    user: UserDecoratorDtoResponse,
+    query: CmsCompanyListQueryDto,
+  ): Promise<CmsCompanyListResponseDto> {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.OWNER) {
+      throw new ForbiddenException(CompanyErrorMessage.FORBIDDEN);
+    }
+
+    const companies =
+      user.role === UserRole.ADMIN
+        ? await this.companyRepository.findAllCompanies()
+        : await this.companyRepository.findCompaniesByUserLead(user.id.toString());
+
+    const items = await Promise.all(
+      companies.map(async (company) => {
+        const [routeCount, vehicleCount] = await Promise.all([
+          this.roadRepository.countActiveByCompany(company.id),
+          this.vehicleRepository.countActiveByCompany(company.id),
+        ]);
+
+        const status: 'active' | 'suspended' =
+          company.status === EntityStatus.ACTIVE ? 'active' : 'suspended';
+
+        return {
+          key: `provider-${company.id}`,
+          id: company.code || `CMP-${company.id}`,
+          name: company.companyName,
+          hotline: company.userLead?.phone ?? '—',
+          email: company.userLead?.email ?? '—',
+          routeCount,
+          vehicleCount,
+          status,
+          joinedAt: company.createdAt
+            ? this.formatDate(company.createdAt)
+            : '—',
+          note: company.description || 'Nhà xe đang hoạt động.',
+        };
+      }),
+    );
+
+    const filtered = this.applyCompanyFilters(items, query);
+
+    return {
+      items: filtered,
+      total: filtered.length,
+      summary: {
+        totalProviders: filtered.length,
+        activeCount: filtered.filter((item) => item.status === 'active').length,
+        totalRoutes: filtered.reduce((sum, item) => sum + item.routeCount, 0),
+        totalVehicles: filtered.reduce((sum, item) => sum + item.vehicleCount, 0),
+      },
+    };
+  }
+
+  private applyCompanyFilters(
+    items: Array<{
+      key: string;
+      id: string;
+      name: string;
+      hotline: string;
+      email: string;
+      routeCount: number;
+      vehicleCount: number;
+      status: 'active' | 'suspended';
+      joinedAt: string;
+      note: string;
+    }>,
+    query: CmsCompanyListQueryDto,
+  ) {
+    let result = [...items];
+
+    const keyword = query.search?.trim().toLowerCase();
+    if (keyword) {
+      result = result.filter((item) => {
+        return [
+          item.id,
+          item.name,
+          item.hotline,
+          item.email,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(keyword);
+      });
+    }
+
+    if (query.status && query.status !== 'all') {
+      result = result.filter((item) => item.status === query.status);
+    }
+
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  private formatDate(value: Date): string {
+    const date = new Date(value);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   }
 
   async getCompanyById(
